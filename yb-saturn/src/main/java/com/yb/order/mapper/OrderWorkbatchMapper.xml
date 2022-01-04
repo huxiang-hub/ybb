@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.order.mapper.OrderWorkbatchMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="orderWorkbatchResultMap" type="com.yb.order.entity.OrderWorkbatch">
+        <id column="id" property="id"/>
+        <result column="od_id" property="odId"/>
+        <result column="od_no" property="odNo"/>
+        <result column="batch_no" property="batchNo"/>
+        <result column="plan_num" property="planNum"/>
+        <result column="status" property="status"/>
+        <result column="user_id" property="userId"/>
+        <result column="create_at" property="createAt"/>
+    </resultMap>
+
+
+    <select id="selectOrderWorkbatchPage" resultMap="orderWorkbatchResultMap">
+        select * from yb_order_workbatch where is_deleted = 0
+    </select>
+
+    <select id="getOrderByInfo" resultType="java.util.HashMap" parameterType="int">
+        SELECT
+                b.plan_num "plan_num",
+                b.complete_num "complete_num",
+                b.incomplete_num "incomplete_num",
+                b.extra_num "extra_num",
+                o.limit_date "limit_date",
+                b.ma_id "ma_id",
+                o.indentor "indentor",
+                p.is_image "is_image"
+            FROM
+                yb_order_workbatch w
+                LEFT JOIN yb_order_ordinfo o ON w.od_id = o.pd_id
+                LEFT JOIN yb_prod_pdinfo p ON w.id = p.id
+                LEFT JOIN yb_workbatch_ordlink b ON w.id = b.wb_id
+            WHERE
+                b.STATUS = 1
+                AND b.run_status = 0
+                AND b.wb_id=#{mId}
+                and b.ma_id=#{wbId}
+
+             order by w.create_at desc
+    </select>
+    <select id="getWorkBatchByWbId" resultType="com.yb.order.vo.OrderWorkbatchVO">
+        SELECT
+            SUM(a.complete_num) as wb_num,
+            SUM(a.extra_num) as wb_extra_num,
+            SUM(a.waste) as wb_waste,
+            c.cm_name as indentor,
+			c.od_name,
+			c.remark,
+			c.od_no,
+			b.batch_no,
+			b.plan_num
+        FROM
+            yb_workbatch_ordlink a
+        LEFT JOIN yb_order_workbatch b ON a.wb_id = b.id
+        LEFT JOIN yb_order_ordinfo c ON b.od_id = c.id
+        WHERE
+            b.id = #{wbId}
+    </select>
+
+    <select id="findObjectBybatchNo" resultType="com.yb.order.vo.OrderWorkbatchVO">
+       SELECT * FROM yb_order_workbatch WHERE batch_no =#{batchNo} LIMIT 1
+    </select>
+
+    <select id="getOrderUnfinishedNum" resultType="int">
+        SELECT a.od_count-SUM(b.plan_num)
+        FROM yb_order_ordinfo a,yb_order_workbatch b
+        WHERE production_state != 2 AND a.id=#{odId}
+    </select>
+
+    <select id="selectOrderWorkbatchListByOdno" resultType="com.yb.order.vo.OrderWorkbatchVO">
+       SELECT * FROM yb_order_workbatch WHERE od_no =#{odNo}
+    </select>
+
+    <select id="getNewest" resultType="com.yb.order.entity.OrderWorkbatch">
+       SELECT * FROM yb_order_workbatch WHERE od_id = #{odId} ORDER BY id DESC LIMIT 1
+    </select>
+
+    <select id="selectOrderWorkbatchList" resultType="com.yb.order.vo.OrderWorkbatchVO">
+        select * from yb_order_workbatch where 1=1
+        AND od_Id = #{orderWorkbatch.odId}
+        <if test="orderWorkbatch.batchNo != null">
+            AND batch_no = #{orderWorkbatch.batchNo}
+        </if>
+    </select>
+
+    <select id="batchNumberList" resultType="com.yb.order.vo.OrderWorkbatchVO">
+        SELECT b.batch_no,b.plan_num,b.close_time,a.plan_number AS prNumber,a.id AS sdId
+        FROM yb_workbatch_ordlink a, yb_order_workbatch b
+        WHERE a.wb_id = b.id AND a.pr_id=#{prId} AND a.pt_id=#{ptId} AND a.wb_id=#{wbId}
+    </select>
+</mapper>

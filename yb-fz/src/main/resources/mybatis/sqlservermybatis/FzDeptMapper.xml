@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anaysis.sqlservermapper.FzDeptMapper">
+
+
+    <select id="list" resultType="com.anaysis.entity.BaseDeptInfo">
+	SELECT
+	dzBM.id AS id,
+	dzBM.cbmbh AS dpnum,
+	dzBM.cbmmc AS dpname,
+	dzBM.cbmmc AS fullname,
+	(
+		CASE dzBM.cbmlx
+		WHEN '管理' THEN
+			1
+		WHEN '生产' THEN
+			2
+		WHEN '经营' THEN
+			3
+		END
+	) AS classfiy,
+	0 AS pid,
+	100 AS sort,
+	isNull(dzZg.iCount, 0) AS iCount,
+	dzBM.idisabled
+	FROM
+		dzBM
+	LEFT JOIN (
+	SELECT
+		ibmid,
+		COUNT (1) AS iCount
+	FROM
+		dzZG
+	WHERE
+		1 = 1
+	GROUP BY
+		ibmid
+) AS dzZg ON dzBM.id = dzZg.ibmid
+	WHERE
+		1 = 1
+	ORDER BY
+	dzBM.ipId,
+	dzBM.iIndex
+    </select>
+</mapper>

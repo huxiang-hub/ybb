@@ -1,0 +1,15 @@
+server:
+  port: 2033
+
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driverClassName: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://39.98.57.236:3378/yb_test?useSSL=false&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&tinyInt1isBit=false&allowMultiQueries=true&serverTimezone=GMT%2B8
+    username: saturn
+    password: hopeybb!@#
+    bulk_insert_buffer_size: 100M
+
+#定义队列名称
+myqueue: test-que
+topicqueue: topicqueue

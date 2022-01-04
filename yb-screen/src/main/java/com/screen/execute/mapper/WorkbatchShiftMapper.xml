@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.screen.execute.mapper.WorkbatchShiftMapper">
+
+    <select id="getWorkShiftList" resultType="com.screen.execute.vo.WorkbatchShiftVO">
+        select a.id wf_id,a.sd_id,b.wb_no,b.pd_name,b.cm_name,a.shift_status,a.sd_date,a.ma_id
+        from yb_workbatch_shift a
+        LEFT JOIN yb_workbatch_ordlink b ON a.sd_id=b.id
+        where a.ma_id =#{maId}
+        AND a.sd_date &gt;= #{startDate} AND a.sd_date &lt;= #{endDate}
+        AND (a.status = 1 or a.status = 2)
+        AND (a.shift_status=0 OR a.shift_status = 1 OR a.shift_status = 3 OR a.shift_status = 4)
+        order by a.sd_sort;
+    </select>
+
+    <select id="getProcessDetail" resultType="com.screen.execute.vo.WorkbatchShiftProcessVO">
+       select a.sd_id,a.id wf_id,e.wb_no,c.pr_name,e.cm_id,d.cm_name,a.shift_status,a.sd_sort,a.ma_id,
+        a.plan_num,a.waste_num,b.remarks as proce_detail from yb_workbatch_shift a
+        LEFT JOIN yb_workbatch_ordlink b on b.id=a.sd_id
+        LEFT JOIN yb_process_workinfo c on c.id=b.pr_id
+        LEFT JOIN yb_order_workbatch e on e.id = b.wb_id
+        LEFT JOIN yb_crm_customer d on d.id = e.cm_id
+        where a.id #{wfId}
+    </select>
+
+    <select id="getUpProcess" resultType="com.screen.execute.vo.WorkbatchOrdlinkVO">
+        select c.*,d.pr_name from yb_workbatch_ordlink c
+        LEFT JOIN yb_process_workinfo d on c.pr_id=d.id
+        where c.sort &lt;(
+        select a.sort from yb_workbatch_ordlink a
+        LEFT JOIN yb_workbatch_shift b on b.sd_id = a.id
+        where b.id = #{wfId} ) and c.wb_no =(select a.wb_no from yb_workbatch_ordlink a
+        LEFT JOIN yb_workbatch_shift b on b.sd_id = a.id
+        where b.id = #{wfId})
+        ORDER BY c.sort desc
+        limit 1
+    </select>
+
+
+</mapper>

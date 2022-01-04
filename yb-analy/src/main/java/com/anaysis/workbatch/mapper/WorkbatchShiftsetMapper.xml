@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anaysis.workbatch.mapper.WorkbatchShiftsetMapper">
+
+
+<select id="getByFirst" resultType="com.anaysis.workbatch.entity.WorkbatchShiftset">
+select * from yb_workbatch_shiftset
+order by start_time asc
+limit 0,1
+</select>
+
+
+<select id="getNowWsTime" resultType="com.anaysis.workbatch.entity.WorkbatchShiftset">
+ select a.ws_id, a.start_time,a.end_time from (
+    select ws_id,CONCAT(date_sub(date_format(NOW() ,'%Y-%m-%d' ),interval 0 day),' ',start_time) as start_time ,
+    CASE
+    WHEN end_time &lt; start_time
+    then  CONCAT(date_sub(date_format(NOW() ,'%Y-%m-%d' ),interval -1 day),' ',end_time)
+    ELSE CONCAT(date_sub(date_format(NOW() ,'%Y-%m-%d' ),interval 0 day),' ',end_time)
+    end
+    as end_time
+    from v_machshift
+    where ma_id =#{maId}
+    HAVING NOW()>= start_time
+    and NOW() &lt;= end_time
+    and ws_id is not null ) a
+</select>
+
+<select id="getNowWsDate" resultType="com.anaysis.workbatch.entity.WorkbatchShiftset">
+select ws_id,CONCAT(date_sub(date_format(NOW() ,'%Y-%m-%d' ),interval +1 day),' ',start_time) as start_time ,
+    CASE
+    WHEN end_time &lt; start_time
+    then  CONCAT(date_sub(date_format(NOW() ,'%Y-%m-%d' ),interval 0 day),' ',end_time)
+    ELSE CONCAT(date_sub(date_format(NOW() ,'%Y-%m-%d' ),interval +1 day),' ',end_time)
+    end
+    as end_time
+    from v_machshift
+	where ma_id =#{maId}
+    HAVING NOW()>= start_time
+    and NOW() &lt;= end_time
+</select>
+
+</mapper>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.quality.mapper.QualityBfwasteMapper">
+
+    <select id="qualityBfwasteList" resultType="com.yb.quality.vo.QualityBfwasteVO">
+        SELECT
+        	a.id AS exId,
+        	b.id AS wfId,
+        	c.cm_name,
+        	c.pd_name,
+        	c.wb_no,
+        	c.pr_id
+        FROM
+            yb_execute_info a
+        LEFT JOIN yb_workbatch_shift b  ON b.id = a.wf_id
+        LEFT JOIN yb_workbatch_ordlink c ON c.id = b.sd_id
+        WHERE
+        	a.ma_id = #{maId}
+        AND a.ws_id = #{wsId}
+        AND a.target_day = #{targetDay}
+        GROUP BY b.id
+        ORDER BY a.id
+    </select>
+
+    <select id="qualityBfVOList" resultType="com.yb.quality.vo.QualityBfVO">
+        SELECT
+        	a.id,
+        	a.ex_id,
+        	a.start_at,
+        	a.waste_type,
+        	a.waste_type_id,
+        	a.quantity_declared,
+        	a.waste_num,
+        	IFNULL(a.report_status,0) AS reportStatus,
+        	a.end_at,
+        	( a.end_num - a.start_num ) AS productNum,
+        	(a.end_at - a.start_at) AS hourTotal
+        FROM
+        	yb_quality_bfwaste a
+        	LEFT JOIN yb_execute_info b ON b.id = a.ex_id
+        WHERE b.id = #{exId}
+        GROUP BY a.id
+        ORDER BY a.report_status
+    </select>
+</mapper>

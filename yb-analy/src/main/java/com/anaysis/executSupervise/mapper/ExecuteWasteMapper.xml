@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anaysis.executSupervise.mapper.ExecuteWasteMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="executeWasteResultMap" type="com.anaysis.executSupervise.entity.ExecuteWaste">
+        <id column="id" property="id"/>
+        <result column="es_id" property="esId"/>
+        <result column="us_id" property="usId"/>
+        <result column="handle" property="handle"/>
+        <result column="ws_type" property="wsType"/>
+        <result column="handle_time" property="handleTime"/>
+        <result column="waste" property="waste"/>
+        <result column="reason" property="reason"/>
+        <result column="remarks" property="remarks"/>
+        <result column="delay_time" property="delayTime"/>
+        <result column="create_at" property="createAt"/>
+    </resultMap>
+
+
+
+</mapper>

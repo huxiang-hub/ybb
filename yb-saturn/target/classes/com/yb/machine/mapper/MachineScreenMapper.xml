@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.machine.mapper.MachineScreenMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="machineScreenResultMap" type="com.yb.machine.entity.MachineScreen">
+        <id column="id" property="id"/>
+        <result column="ma_id" property="maId"/>
+        <result column="sc_type" property="scType"/>
+        <result column="sc_brand" property="scBrand"/>
+        <result column="hd_id" property="hdId"/>
+    </resultMap>
+
+
+    <select id="selectMachineScreenPage" resultMap="machineScreenResultMap">
+        select * from yb_machine_screen where is_deleted = 0
+    </select>
+
+    <select id="getScreenInfo" resultType="com.yb.machine.entity.MachineScreen">
+        SELECT * FROM yb_machine_screen WHERE  ma_id = -1 OR ma_id IS NULL
+    </select>
+    <update id="addBlindScreen" >
+        UPDATE yb_machine_screen SET ma_id =#{maId}
+        <where>
+            <if test="uuid!=null">
+                uuid = #{uuid}
+            </if>
+        </where>
+    </update>
+    <update id="setBlindScreen" >
+        UPDATE yb_machine_screen SET ma_id = null
+        <where>
+            <if test="uuid!=null">
+                uuid = #{uuid}
+            </if>
+        </where>
+    </update>
+</mapper>

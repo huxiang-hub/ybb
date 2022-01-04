@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anaysis.sqlservermapper.HrSalesOrdMapper">
+
+
+    <select id="list" resultType="com.anaysis.entity.HrSalesOrd">
+
+    </select>
+    <select id="getByErpIds" resultType="com.anaysis.entity.OrderOrdinfo">
+        SELECT
+            s.SO AS odNo,
+            s.ObjID AS customerErpId,
+            s.OrderQty AS odCount,
+--             s.SOCategory AS 订单类别,
+            p.ProdDescShort AS odName,
+            s.KeyInOn AS createAt,
+--             s.Status AS auditStatus,
+            3 AS auditStatus, -- 只导入已核价
+            c.CustShortName AS cmName,
+            p.BOM AS prodNo,
+            p.ObjID AS prodErpId
+        FROM
+            SalesOrd s
+            JOIN Product p ON s.BOM = p.BOM
+            AND s.CustID = p.CustID
+            JOIN Customer c ON s.CustID = c.CustID
+        WHERE
+            s.Status = '已核价' AND
+            s.ObjID IN
+            <foreach item="item" collection="list" separator="," open="(" close=")" index="">
+                #{item}
+            </foreach>
+    </select>
+</mapper>

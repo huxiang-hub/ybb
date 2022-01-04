@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anaysis.sqlservermapper.FzProessWorkinfoDao">
+    <select id="list" resultType="com.anaysis.entity.ProcessWorkinfo">
+		SELECT
+            sh.ID AS Id,
+            sh.cCode AS prNo,
+            sh.cName AS prName,
+            sh.ID AS sort,
+            sh.istate AS status
+        FROM
+            sysTech sh
+        LEFT JOIN sysTech_MaterialClass ss1 ON sh.ID = ss1.ID_Tech
+        LEFT JOIN scvZMaterialClass ss2 ON ss2.cCode = ss1.cCode_Mat
+        WHERE
+            sh.iState > -1
+        ORDER BY
+            iType,
+            sh.iIndex
+	</select>
+    <select id="getClasslink" resultType="com.anaysis.entity.ProcessClasslink">
+        SELECT
+            sh.ID AS Id,
+            sh.ID AS prId,
+            sh.iType as pyId
+        FROM
+            sysTech sh
+        LEFT JOIN sysTech_MaterialClass ss1 ON sh.ID = ss1.ID_Tech
+        LEFT JOIN scvZMaterialClass ss2 ON ss2.cCode = ss1.cCode_Mat
+        WHERE
+            sh.iState > -1
+            AND sh.ID = #{Id}
+        ORDER BY
+            iType,
+            sh.iIndex
+    </select>
+</mapper>

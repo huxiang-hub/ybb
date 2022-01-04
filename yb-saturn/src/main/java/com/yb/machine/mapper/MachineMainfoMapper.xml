@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.machine.mapper.MachineMainfoMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="machineMainfoResultMap" type="com.yb.machine.entity.MachineMainfo">
+        <id column="id" property="id"/>
+        <result column="mt_id" property="mtId"/>
+        <result column="mno" property="mno"/>
+        <result column="ma_type" property="maType"/>
+        <result column="name" property="name"/>
+        <result column="dp_id" property="dpId"/>
+        <result column="pro_id" property="proId"/>
+        <result column="sort" property="proId"/>
+        <result column="is_recepro" property="isRecepro"/>
+        <result column="erp_id" property="erpId"/>
+    </resultMap>
+
+
+    <select id="selectMachineMainfoPage" resultMap="machineMainfoResultMap">
+        select * from yb_machine_mainfo where is_deleted = 0
+    </select>
+
+    <select id="getMachineMainfo" resultType="com.yb.machine.vo.MachineMainfoVO">
+        SELECT ymm.*,
+        ypw.pr_name AS prName,
+        ybd.dp_name AS dpName
+        FROM  yb_machine_mainfo ymm
+        LEFT JOIN  yb_process_workinfo ypw
+        ON ymm.pro_id = ypw.id
+        LEFT JOIN yb_base_deptinfo ybd
+        ON ymm.dp_id = ybd.id
+        <where>
+            <if test="maId!=null">
+                ymm.id = #{maId}
+            </if>
+        </where>
+    </select>
+    <select id="getMachineMainfoById" resultType="com.yb.machine.vo.MachineMainfoVO">
+        SELECT t1.*,
+        t5.dict_value,
+        t3.dp_name AS dpName,
+        t3.id AS dpId,
+        t2.brand,
+        t2.model,
+        t2.specs,
+        t2.image,
+        t2.speed,
+        t4.pr_name AS prName
+        FROM yb_machine_mainfo t1
+        LEFT JOIN yb_machine_classify t2 ON t1.mt_id = t2.id
+        LEFT JOIN yb_base_deptinfo t3 ON t3.id = t1.dp_id
+        LEFT JOIN yb_process_workinfo t4 ON t4.id=t1.pro_id
+        LEFT JOIN blade_dict t5 ON t5.dict_key=t1.ma_type
+        WHERE 1=1 AND  t5.code="maType"
+        <if test="id!=null"> AND t1.id = #{id}</if>
+         group by t1.id
+    </select>
+
+    <select id="getMachineMainfoByType" resultType="com.yb.machine.vo.MachineMainfoVO">
+        SELECT t1.id,
+        t1.name,
+        t1.mno,
+        t1.mt_id AS mtId,
+        t1.pro_id AS proId,
+        t1.sort as sort,
+        t1.is_recepro,
+        t1.erp_id,
+        t3.dp_name AS dpName,
+        t3.id AS dpId,
+        t2.brand,
+        t2.model,
+        t2.specs,
+        t2.image,
+        t2.speed
+        FROM yb_machine_mainfo t1
+        LEFT JOIN yb_machine_classify t2 ON t1.mt_id = t2.id
+        LEFT JOIN yb_base_deptinfo t3 ON t3.id = t1.dp_id
+        WHERE 1=1 and t1.is_used = 1
+        <if test="maType != null"> AND t1.ma_type = #{maType}</if>
+        ORDER BY t1.sort
+    </select>
+    <update id="updateMachineMaInfo" >
+        UPDATE yb_machine_mainfo SET
+        brand = #{brand},
+        model = #{model},
+        specs = #{specs},
+        image = #{image}
+        <where>
+            <if test="maId!=null">
+                id = #{maId}
+            </if>
+        </where>
+    </update>
+
+    <select id="getMachins" resultType="com.yb.machine.entity.MachineMainfo">
+        SELECT * FROM yb_machine_mainfo WHERE is_used = 1
+        <if test="name!=null and name!='null' and name!=''">
+           and `name` LIKE CONCAT('%',#{name},'%')
+        </if>
+    </select>
+
+    <select id="getMachinsByDpIdPrId" resultType="com.yb.machine.vo.MachineMainfoVO">
+        SELECT t1.id AS maId,t1.mno,t1.name AS maName,t4.status AS maStatus
+        FROM  yb_machine_mainfo t1
+        LEFT JOIN yb_process_machlink t2
+        ON t1.id = t2.ma_id
+        LEFT JOIN yb_process_classify t3
+        ON t2.pr_id = t3.id
+        LEFT JOIN yb_supervise_boxinfo t4
+        ON t4.ma_id = t1.id
+        <where>
+            1=1
+            <if test="dpId!=null"> AND t1.dp_id=#{dpId}</if>
+            <if test="maId!=null"> AND t1.id=#{maId}</if>
+            <if test="prId!=null"> AND t2.pr_id =#{prId}</if>
+            <if test="status!=null"> AND t4.status =#{status}</if>
+        </where>
+    </select>
+
+    <select id="getAllMachinePages"  resultType="com.yb.machine.vo.MachineMainfoVO">
+        SELECT t1.*,
+        t3.dp_name AS dpName,
+        t3.id AS dpId,
+        t2.brand,
+        t2.model,
+        t2.specs,
+        t2.image,
+        t2.speed,
+        t4.pr_name AS prName
+        FROM yb_machine_mainfo t1
+        LEFT JOIN yb_machine_classify t2 ON t1.mt_id = t2.id
+        LEFT JOIN yb_base_deptinfo t3 ON t3.id = t1.dp_id
+        LEFT JOIN yb_process_workinfo t4 ON t4.id=t1.pro_id
+        WHERE 1=1
+        <if test="mainfoVO.id!=null"> AND t1.id = #{mainfoVO.id}</if>
+        <if test="mainfoVO.dpId!=null"> AND t3.id = #{mainfoVO.dpId}</if>
+        <if test="mainfoVO.proId!=null"> AND t4.id = #{mainfoVO.proId}</if>
+
+        <if test="mainfoVO.maTypeList!=null and  mainfoVO.maTypeList.size() > 0">
+            AND t1.ma_type IN
+            <foreach collection="mainfoVO.maTypeList" item="maType" open="(" close=")" separator=",">
+            #{maType}
+            </foreach>
+        </if>
+
+        <if test="mainfoVO.name!=null"> AND t1.name LIKE CONCAT('%',#{mainfoVO.name},'%')</if>
+        <if test="mainfoVO.mtId!=null"> AND t1.mt_id = #{mainfoVO.mtId}</if>
+        <if test="mainfoVO.idList!=null and  mainfoVO.idList.size()>0">
+        AND t1.id IN
+            <foreach collection="mainfoVO.idList" item="maId" separator="," open="(" close=")">
+                 #{maId}
+            </foreach>
+        </if>
+    </select>
+
+
+    <select id="getMachineInfoByCondition" resultType="com.yb.machine.vo.MachineMainfoVO">
+        SELECT * FROM yb_machine_mainfo ymm WHERE ymm.`name`=#{machineName} AND ymm.mno=#{machineNo}
+    </select>
+    <select id="getAllBrand" resultType="java.lang.String">
+        SELECT  brand FROM  yb_machine_classify
+    </select>
+
+    <select id="getRateByMachineId" resultType="com.yb.machine.vo.MachineMainfoVO">
+      SELECT * from yb_process_workinfo  ypw JOIN yb_process_machlink ypm on ypm.pr_id = ypw.id WHERE pr_name=#{prName} AND ma_id =#{maId}
+    </select>
+    <select id="getMachineByDpId" resultType="com.yb.machine.vo.MachineMainfoVO">
+        SELECT
+        t1.id AS maId,
+        t1.name AS maName,
+        t2.pr_name AS prName
+        FROM yb_machine_mainfo t1
+        LEFT JOIN yb_process_workinfo t2
+        ON t1.pro_id = t2.id
+        WHERE t1.dp_id = #{dpId}
+    </select>
+    <select id="getCompanyInfoByMaId" resultType="com.yb.machine.vo.CompanyVO">
+        SELECT
+        ybf.fname AS fName,
+        ybd.dp_name AS dpName,
+        ypw.pr_name AS PrName,
+        ymc.brand,
+        ymc.model,
+        ymm.name AS maName
+        FROM
+        (SELECT * FROM yb_machine_mainfo WHERE id =#{maId}) ymm
+        LEFT JOIN yb_base_deptinfo ybd
+        ON ymm.dp_id = ybd.id
+        LEFT JOIN yb_machine_classify ymc
+        ON ymm.mt_id = ymc.id
+        LEFT JOIN yb_process_workinfo ypw
+        ON ymm.pro_id = ypw.id
+        LEFT JOIN yb_base_factory ybf
+	    ON ybf.tenant_id = ybd.tenant_id
+    </select>
+
+    <select id="machineListByDeptId" resultType="com.yb.machine.entity.MachineMainfo">
+        SELECT *
+        FROM yb_machine_mainfo a
+        JOIN yb_process_machlink b ON b.ma_id=a.id
+        WHERE
+        1 = 1
+        <if test="dpId != null and dpId != ''">
+            and  a.dp_id=#{dpId}
+        </if>
+        <if test="prId != null and prId != ''">
+            and  b.pr_id=#{prId}
+        </if>
+    </select>
+    <select id="findByMaType" resultMap="machineMainfoResultMap">
+    select * from yb_machine_mainfo
+    where 1=1
+    <if test="maType != null and maType != ''">
+    and ma_type = #{maType}
+    </if>
+    </select>
+
+    <select id="monitor" resultType="com.yb.machine.response.MachineMonitorVO">
+      select ymm.id as maId, ymm.name as maName,ysb.status,ybd.full_name as dpName,ywo.pr_name,ywo.wb_no as currOrder,ysb.dspeed as speed,ysb.number,ysb.us_ids as userIds,ymm.mno,ysb.bln_accept
+      ,ybd.dp_name
+      from yb_machine_mainfo ymm
+      inner join yb_supervise_boxinfo ysb on ymm.id = ysb.ma_id
+       join yb_base_deptinfo ybd on ymm.dp_id = ybd.id
+       join yb_supervise_execute yse on ymm.id = yse.ma_id
+      left join yb_workbatch_ordlink ywo on ywo.id = yse.sd_id
+      <where>
+      <if test="request.dpId != null">
+      and ymm.dp_id = #{request.dpId}
+      </if>
+      <if test="request.query != null and request.query != ''">
+      and (ymm.mno = #{request.query} or ymm.name like #{request.query})
+      </if>
+      </where>
+    </select>
+
+    <select id="monitorCapacityAnaly" resultType="com.yb.machine.response.MonitorCapacityAnalyVO">
+   SELECT ymm.id as maId ,name,
+    IFNULL( ( select ws_id from (
+    select ma_id,ws_id,CONCAT(date_sub(date_format(NOW() ,'%Y-%m-%d' ),interval 0 day),' ',start_time) as start_time ,
+    CASE
+    WHEN end_time &lt; start_time
+    then  CONCAT(date_sub(date_format(NOW() ,'%Y-%m-%d' ),interval -1 day),' ',end_time)
+    ELSE CONCAT(date_sub(date_format(NOW() ,'%Y-%m-%d' ),interval 0 day),' ',end_time)
+    end
+    as end_time
+    from v_machshift
+    HAVING NOW()>= start_time
+    and NOW()&lt;= end_time
+	and ma_id = 11) a),( select ws_id from (
+    select ma_id,ws_id,CONCAT(date_sub(date_format(NOW() ,'%Y-%m-%d' ),interval +1 day),' ',start_time) as start_time ,
+    CASE
+    WHEN end_time &lt; start_time
+    then  CONCAT(date_sub(date_format(NOW() ,'%Y-%m-%d' ),interval 0 day),' ',end_time)
+    ELSE CONCAT(date_sub(date_format(NOW() ,'%Y-%m-%d' ),interval +1 day),' ',end_time)
+    end
+    as end_time
+    from v_machshift
+    HAVING NOW()>= start_time
+    and NOW() &lt;= end_time
+	and ma_id = 11) a)) wsId
+    from yb_supervise_regular ysr
+    inner join yb_machine_mainfo ymm on ysr.ma_id = ymm.id
+    GROUP BY ma_id
+    </select>
+    <select id="getMachineTree" resultType="com.yb.machine.vo.MachineMainfoVO">
+          SELECT t1.id,
+        t1.name,
+        t1.mno,
+        t1.mt_id AS mtId,
+        t1.pro_id AS proId,
+        t1.sort as sort,
+        t1.is_recepro,
+        t1.erp_id,
+        t3.dp_name AS dpName,
+        t3.id AS dpId,
+        t2.brand,
+        t2.model,
+        t2.specs,
+        t2.image,
+        t2.speed
+        FROM yb_machine_mainfo t1
+        LEFT JOIN yb_machine_classify t2 ON t1.mt_id = t2.id
+        LEFT JOIN yb_base_deptinfo t3 ON t3.id = t1.dp_id
+        WHERE 1=1
+        <if test="maType != null"> AND t1.ma_type = #{maType}</if>
+        ORDER BY t1.sort
+    </select>
+<select id="getListAll" resultType="com.yb.machine.entity.MachineMainfo">
+    select * from yb_machine_mainfo where is_used = 1
+</select>
+</mapper>

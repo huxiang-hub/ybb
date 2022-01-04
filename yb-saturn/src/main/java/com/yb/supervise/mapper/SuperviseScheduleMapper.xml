@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.supervise.mapper.SuperviseScheduleMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="superviseScheduleResultMap" type="com.yb.supervise.entity.SuperviseSchedule">
+        <id column="id" property="id"/>
+        <result column="order_id" property="orderId"/>
+        <result column="batch_id" property="batchId"/>
+        <result column="pt_id" property="ptId"/>
+        <result column="pr_id" property="prId"/>
+        <result column="m_id" property="mId"/>
+        <result column="report_num" property="reportNum"/>
+        <result column="waste_num" property="wasteNum"/>
+        <result column="now_num" property="nowNum"/>
+        <result column="update_at" property="updateAt"/>
+        <result column="total" property="total"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+    </resultMap>
+
+
+    <select id="selectSuperviseSchedulePage" resultType="com.yb.supervise.vo.SuperviseScheduleVO">
+        select * from yb_supervise_schedule
+    </select>
+    <select id="getOrderSchedule" resultType="com.yb.supervise.vo.SuperviseScheduleVO">
+        SELECT
+        a.order_id,
+        b.od_no,
+        b.od_name,
+        SUM(a.report_num) as orderNum,
+        SUM(a.waste_num) as wasteNum,
+        SUM(a.now_num) as nowNum,
+        AVG(a.total) as total
+        FROM
+        yb_supervise_schedule a
+        JOIN yb_order_ordinfo b
+        ON a.order_id = b.id
+        <where>
+            <if test="superviseSchedule.odName!=null and superviseSchedule.odName!=''">
+                b.od_name like CONCAt('%','${superviseSchedule.odName}','%')
+            </if>
+        </where>
+        GROUP BY a.order_id
+    </select>
+
+
+    <select id="getBatchSchedule" resultType="com.yb.supervise.vo.SuperviseScheduleBatchVO">
+        SELECT
+        a.batch_id as batchId,
+        b.batch_no as batchNo,
+        AVG(a.total) as total
+        FROM
+        yb_supervise_schedule a
+        JOIN yb_order_workbatch b
+        ON a.batch_id = b.id
+        WHERE a.order_id = #{odId}
+        <if test="request.batchNo!=null and request.batchNo!=''">
+            and b.batch_no like CONCAt('%','${request.batchNo}','%')
+        </if>
+        <if test="request.batchStatus!=null">
+            and b.status = #{request.batchStatus}
+        </if>
+        GROUP BY a.batch_id
+    </select>
+    <select id="getProcessSchedule" resultType="com.yb.supervise.vo.SuperviseScheduleVO">
+        SELECT
+        a.pr_id ,
+        b.pr_name ,
+        a.report_num,
+        a.waste_num,
+        a.now_num,
+        a.total
+        FROM
+        yb_supervise_schedule a
+        JOIN yb_process_workinfo b
+        ON a.pr_id = b.id
+        WHERE a.pt_id = #{ptId}
+    </select>
+    <select id="getSchedule" resultType="com.yb.supervise.entity.SuperviseSchedule">
+        select * from yb_supervise_schedule
+        where order_id = #{odId} and batch_id = #{wbId} and pt_id = #{ptId}
+        and m_id = #{maId} and pr_id = #{prId}
+    </select>
+    <select id="getPartSchedule" resultType="com.yb.supervise.vo.SuperviseSchedulePtVO">
+        SELECT
+        a.pt_id as ptId,
+        b.pt_name as ptName,
+        AVG(a.total) as total
+        FROM
+        yb_supervise_schedule a
+        JOIN yb_prod_partsinfo b
+        ON a.pt_id = b.id
+        WHERE a.batch_id = #{batchId}
+        GROUP BY a.pt_id
+    </select>
+
+    <select id="getOrderScheduleByOrder" resultType="com.yb.supervise.vo.SuperviseScheduleOrderVO">
+    SELECT
+        a.order_id as odId,
+        b.od_no as odNo,
+        b.od_name as odName,
+        AVG(a.total) as total
+        FROM
+        yb_supervise_schedule a
+        JOIN yb_order_ordinfo b
+        ON a.order_id = b.id
+        <where>
+            <if test="request.odName!=null and request.odName!=''">
+                b.od_name like CONCAt('%','${request.odName}','%')
+            </if>
+            <if test="request.orderStatus!=null ">
+                and b.production_state = #{request.orderStatus}
+            </if>
+            <if test="request.odName!=null and request.odName!=''">
+               and b.od_name like CONCAt('%','${request.odName}','%')
+            </if>
+            <if test="request.startTime!=null">
+               and b.create_at >= #{request.startTime}
+            </if>
+            <if test="request.endTime!=null">
+               and b.create_at &lt;= #{request.endTime}
+            </if>
+        </where>
+        GROUP BY a.order_id
+    </select>
+
+    <select id="getPrSchedule" resultType="com.yb.supervise.vo.SuperviseSchedulePrVO">
+        SELECT
+        a.pr_id as prId,
+        b.pr_name as prName,
+        a.total
+        FROM
+        yb_supervise_schedule a
+        JOIN yb_process_workinfo b
+        ON a.pr_id = b.id
+        WHERE a.pt_id = #{ptId}
+    </select>
+
+</mapper>

@@ -1,0 +1,9 @@
+net.dreamlu.mica.feign.MicaFeignAutoConfiguration=\
+  org.springblade.system.feign.ICheckClient,\
+  org.springblade.system.feign.IChatSysTenantClient,\
+  org.springblade.system.feign.XunYueClient,\
+  org.springblade.system.feign.ISysClient
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  org.springblade.system.feign.CheckClientFallBack,\
+  org.springblade.system.feign.ISysClientFallback,\
+  org.springblade.system.feign.ChatSysTenantClientFallback

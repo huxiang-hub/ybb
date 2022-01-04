@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anaysis.sqlservermapper.XyMachineDao">
+    <select id="list" resultType="com.anaysis.sqlservermapper.domain.XyMachineDO">
+	select a.id as id,a.cJzbh as cJzbh,a.cJzmc as cJzmc,a.iGzzxId as iGzzxId,a.cbmbh as cbmbh,b.cbmmc as cbmmc, a.cjzlxmc as cjzlxmc FROM dbo.MKerJzmb a
+	LEFT JOIN dbo.scvDevice b on b.id=a.id
+	where a.iGzzxId in(${iGzzxId}) and a.iStopUse=0
+	<choose>
+		<when test="sort != null and sort.trim() != ''">
+			order by ${sort} ${order}
+		</when>
+	</choose>
+</select>
+	<select id="getMachineList" resultType="com.anaysis.entity.MachineMainfoVO">
+	    SELECT
+        a.SBBM AS mno,--设备编号
+        a.SBMC AS name,--设备名称
+        a.SYBMBM AS dpNum,--使用部门编号
+        a.ID AS erpId,
+        a.SBLBID AS mtErp--设备类别id
+<!--        b.GXID AS prErp&#45;&#45;工序id-->
+        FROM
+        Base_SBDA a
+<!--        LEFT JOIN V_JLZC_SBXSCN b ON a.ID = b.SBID-->
+        WHERE a.SBLX = '生产型'
+    </select>
+
+    <select id="getMachineClassify" resultType="com.anaysis.entity.MachineClassify" >
+        SELECT
+            ID AS erpId,
+            SBLB AS model
+        FROM
+        Base_SBLB
+    </select>
+
+
+
+	<select id="getProcessMachlink" resultType="com.anaysis.entity.ProcessMachlinkVO">
+        SELECT
+        DISTINCT
+            GXID AS prErp,--工序id
+            MAX(XSCN) AS speed,--速度（产能）
+            MAX(ZBSJ) *60 AS prepareTime--准备时间（原数据单位为小时）
+        FROM
+            V_JLZC_SBXSCN
+        WHERE SBID = #{maId} GROUP BY GXID --设备UUid
+    </select>
+</mapper>

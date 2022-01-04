@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.xunyue.mapper.ExecuteFormalcMapper">
+
+<select id="getCount" resultType="int">
+select  ifnull(sum(total_num),0)
+from yb_execute_formalc
+where ex_id = #{exId}
+</select>
+
+</mapper>

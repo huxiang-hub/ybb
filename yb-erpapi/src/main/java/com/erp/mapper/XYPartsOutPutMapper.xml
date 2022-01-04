@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.erp.mapper.XYPartsOutPutMapper">
+
+<select id="get" resultType="com.erp.entity.XYPartsOutPut">
+select top 1  * from XYPartsOutPut
+where maId = #{maId}
+and planGUID = #{wbNo}
+and  endTime is  null
+order by beginTime desc
+</select>
+
+
+<select id="getByMaId" resultType="com.erp.entity.XYPartsOutPut">
+select top 1  * from XYPartsOutPut
+where maId = #{maId}
+order by id desc
+</select>
+
+</mapper>

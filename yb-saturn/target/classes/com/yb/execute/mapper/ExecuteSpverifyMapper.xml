@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.execute.mapper.ExecuteSpverifyMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="executeSpverifyResultMap" type="com.yb.execute.entity.ExecuteSpverify">
+        <id column="id" property="id"/>
+        <result column="sp_id" property="spId"/>
+        <result column="accept_usids" property="acceptUsids"/>
+        <result column="ex_status" property="exStatus"/>
+        <result column="ex_approve" property="exApprove"/>
+        <result column="ex_operator" property="exOperator"/>
+        <result column="ex_time" property="exTime"/>
+        <result column="create_at" property="createAt"/>
+    </resultMap>
+
+
+    <select id="selectExecuteSpverifyPage" resultMap="executeSpverifyResultMap">
+        select * from yb_execute_spverify where is_deleted = 0
+    </select>
+    <select id="getByExId" resultType="com.yb.execute.vo.ProcessInstanceVO">
+        SELECT
+            b.process_instance_id,
+            a.sp_mold
+        FROM
+            yb_execute_scrap a
+            LEFT JOIN yb_execute_spverify b ON a.id = b.sp_id
+        where a.ex_id = #{exId}
+    </select>
+
+</mapper>

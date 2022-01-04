@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.mater.mapper.MaterProdlinkMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="materProdlinkResultMap" type="com.yb.mater.entity.MaterProdlink">
+        <id column="id" property="id"/>
+        <result column="pd_id" property="pdId"/>
+        <result column="ml_id" property="mlId"/>
+        <result column="mt_num" property="mtNum"/>
+        <result column="pd_num" property="pdNum"/>
+        <result column="material" property="material"/>
+        <result column="model" property="model"/>
+        <result column="size" property="size"/>
+        <result column="specification" property="specification"/>
+        <result column="create_at" property="createAt"/>
+        <result column="update_at" property="updateAt"/>
+    </resultMap>
+
+
+    <select id="selectMaterProdlinkPage" resultMap="materProdlinkResultMap">
+        select * from yb_mater_prodlink where is_deleted = 0
+    </select>
+
+    <select id="selectMaterProdlinkVOListByPdId" resultType="com.yb.mater.vo.MaterProdlinkVO">
+        SELECT prodlink.*,mtinfo.ml_name AS mlName FROM yb_mater_prodlink prodlink
+        JOIN yb_mater_mtinfo mtinfo
+        ON prodlink.ml_id = mtinfo.id where prodlink.pd_id IN (SELECT id FROM yb_prod_partsinfo where pd_id=#{pdId} and pd_type=#{pdType})
+    </select>
+
+    <select id="selectMaterProdlinkVOListById" resultType="com.yb.mater.vo.MaterProdlinkVO">
+        SELECT prodlink.*,mtinfo.ml_name AS mlName FROM yb_mater_prodlink prodlink
+        JOIN yb_mater_mtinfo mtinfo
+        ON prodlink.ml_id = mtinfo.id
+        where prodlink.pd_id = #{Id}
+    </select>
+
+    <delete id="removeByPdIdAndPdType" parameterType="java.lang.Integer">
+        DELETE FROM yb_mater_prodlink WHERE pd_id IN (SELECT id FROM yb_prod_partsinfo where pd_id = #{pdId} AND pd_type = #{pdType});
+    </delete>
+</mapper>

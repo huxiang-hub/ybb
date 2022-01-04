@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.springblade.saturn.mapper.MixboxMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="machineMixboxResultMap" type="org.springblade.saturn.entity.Mixbox">
+        <id column="id" property="id"/>
+        <result column="ma_id" property="maId"/>
+        <result column="uuid" property="uuid"/>
+        <result column="hd_id" property="hdId"/>
+        <result column="batch" property="batch"/>
+        <result column="remark" property="remark"/>
+        <result column="active" property="active"/>
+        <result column="depository" property="depository"/>
+        <result column="mac" property="mac"/>
+        <result column="create_at" property="createAt"/>
+    </resultMap>
+
+
+<select id="getDeptInfo" resultType="org.springblade.saturn.entity.BaseDeptinfo">
+    SELECT dp_name FROM
+</select>
+    <select id="getMachineMixboxPage" resultType="org.springblade.saturn.vo.MixboxVO">
+        SELECT t1.*,
+        t2.name
+        FROM yb_machine_mixbox t1
+        LEFT JOIN yb_machine_mainfo t2
+        ON t1.ma_id = t2.id
+        WHERE 1=1
+        <if test="mixboxVO.uuid!=null">AND t1.uuid LIKE CONCAT('%',#{mixboxVO.uuid},'%')</if>
+        <if test="mixboxVO.name!=null">AND t2.name LIKE CONCAT('%',#{mixboxVO.name},'%')</if>
+    </select>
+    <select id="findMixboxIsExit"  resultType="org.springblade.saturn.vo.MixboxVO" >
+        SELECT  * FROM yb_machine_mixbox WHERE  uuid = #{uuid}
+    </select>
+
+</mapper>

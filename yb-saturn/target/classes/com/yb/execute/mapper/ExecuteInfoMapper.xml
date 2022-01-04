@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.execute.mapper.ExecuteInfoMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="executeFaultResultMap" type="com.yb.execute.entity.ExecuteInfo">
+        <id column="id" property="id"/>
+        <result column="ma_id" property="maId"/>
+        <result column="sd_id" property="sdId"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="status" property="status"/>
+        <result column="create_at" property="createAt"/>
+        <result column="update_at" property="updateAt"/>
+    </resultMap>
+
+
+    <select id="selectExecuteInfoPage" resultMap="executeFaultResultMap">
+        select * from yb_execute_info
+    </select>
+
+    <select id="getSdIdsbyTime" resultType="com.yb.execute.vo.ExecuteInfoVO">
+    SELECT
+        *
+    FROM
+        yb_execute_info
+    WHERE
+        start_time BETWEEN #{startTime}
+        AND #{endTime}
+        AND ma_id = #{maId}
+        and end_time  is not null
+    </select>
+
+    <select id="findByStartTimeAndEndTimeAndMaId" resultMap="executeFaultResultMap">
+        SELECT
+    	*
+        FROM
+            yb_execute_info
+        WHERE
+    	start_time BETWEEN #{startTime}
+    	AND #{endTime}
+    	AND ma_id = #{maId}
+    	and end_time is not null
+    </select>
+
+    <select id="getByMaId" resultMap="executeFaultResultMap">
+    select * from yb_execute_info where ma_id = #{maId}
+    order by create_at desc
+    limit 0,1
+    </select>
+
+    <select id="getByMaIdAndSdId" resultMap="executeFaultResultMap">
+       select * from yb_execute_info
+       where ma_id = #{maId}
+       and sd_id = #{sdId}
+       order by create_at desc
+       limit 0,1
+    </select>
+    <select id="getWorshiftByMaIdAndSdId" resultType="com.yb.execute.entity.ExecuteInfo">
+        select * from yb_execute_info
+        where ma_id = #{maId} and sd_id = #{sdId} and wf_id = #{wfId}
+        order by create_at desc
+        limit 0,1
+    </select>
+
+    <select id="wbNoInfo" resultType="com.yb.yilong.response.WbNoInfoVO">
+        select yei.id as exId, yei.ma_id, ymm.name as maName, (SELECT sum(ysi.pcout) from yb_supervise_intervalalg ysi
+        where ysi.ma_id = #{request.maId} and ysi.target_time = #{request.targetTime}) as numberOfDay
+        ,IFNULL(yse.curr_num,0) as currNum
+        ,IFNULL(yeb.box_num,0) as box_num, ysb.dspeed, ysb.status,yei.wb_no,
+        ysb.bln_accept , yei.start_time as acceptTime, yei.exe_time as proTime, yei.end_time as finishTime,yei.us_id as
+        operator,
+        yeb.handle_time as reportTime
+        from yb_execute_info yei
+        left join yb_supervise_execute yse on yse.ex_id = yei.id
+        left join yb_machine_mainfo ymm on yei.ma_id = ymm.id
+        left join yb_supervise_boxinfo ysb on yei.ma_id = ysb.ma_id
+        left join yb_execute_briefer yeb on yei.id = yeb.ex_id
+        <where>
+            <if test="request.maId != null and request.maId != ''">and yei.ma_id = #{request.maId}</if>
+            <if test="request.wbNo != null and request.wbNo != ''">and yei.wb_no = #{request.wbNo}</if>
+            <if test="request.targetDay != null and request.targetDay != ''">and yei.target_day = #{request.targetDay}
+            </if>
+        </where>
+        order by yei.start_time desc
+    </select>
+
+    <!--TODO yb_base_staffinfo 操作人需要关联对应的用户名全称，需要再执行表增加操作人Usid-->
+    <select id="getExecutinfoList" resultType="com.yb.execute.vo.ExecuteInfoVO">
+        select a.id as ex_id,a.ma_id,a.wf_id,a.sd_id,a.start_time,a.exe_time,a.end_time,a.`status`,a.create_at,a.update_at,a.ws_id,
+        a.us_id,a.target_day,b.wb_no,c.`name` as ma_name
+        ,d.id as bf_id,d.count_num,d.waste_num,d.box_num,d.product_num,d.handle,d.handle_time,d.ex_status
+        ,(select count(*) from yb_execute_traycard e where e.ex_id=a.id and e.wf_id = a.wf_id) as traycard_num,f.`name` as us_name
+        from yb_execute_info a
+        LEFT JOIN yb_workbatch_ordlink b on b.id = a.sd_id
+        LEFT JOIN yb_machine_mainfo c on c.id = a.ma_id
+		LEFT JOIN yb_execute_briefer d on d.sd_id = a.sd_id and d.wf_id= a.wf_id and a.id=d.ex_id
+		LEFT JOIN yb_base_staffinfo f on f.user_id = d.handle
+        where a.wf_id= #{wfId}
+        ORDER BY a.ma_id,a.start_time asc
+    </select>
+    <!-- 更新结束生产的状态和时间-->
+    <update id="upEndTime">
+        update yb_execute_info SET status=3, end_time = #{currTime},us_id =#{operator} where id = #{exId}
+    </update>
+    <!-- 更新正在生产的状态和时间-->
+    <update id="upExeTime">
+        update yb_execute_info SET status=1, exe_time = #{currTime} where id = #{exId}
+    </update>
+
+    <!-- 更新结束生产的状态和时间-->
+    <update id="upFinishTime">
+        update yb_execute_info SET status=2 where id = #{exId}
+    </update>
+
+
+    <select id="getReachExecuteInfo" resultType="com.yb.execute.vo.ExecuteInfoVO">
+        select a.id as ex_id,a.ma_id,a.wf_id,a.sd_id,a.start_time,a.exe_time,a.end_time,a.`status`,a.create_at,a.update_at,a.ws_id,
+        a.us_id,a.target_day,b.wb_no,c.`name` as ma_name
+        ,d.id as bf_id,d.count_num,d.waste_num,d.box_num,d.product_num,d.handle,d.handle_time,d.ex_status
+        ,(select count(*) from yb_execute_traycard e where e.ex_id=a.id and e.wf_id = a.wf_id) as traycard_num,f.`name` as us_name
+        from yb_execute_info a
+        LEFT JOIN yb_workbatch_ordlink b on b.id = a.sd_id
+        LEFT JOIN yb_machine_mainfo c on c.id = a.ma_id
+		LEFT JOIN yb_execute_briefer d on d.sd_id = a.sd_id and d.wf_id= a.wf_id and a.id=d.ex_id
+		LEFT JOIN yb_base_staffinfo f on f.user_id = d.handle
+        where a.ma_id =#{request.maId} and a.target_day=#{request.targetDay} and a.ws_id=#{request.wsId}
+        ORDER BY a.ma_id,a.start_time asc
+    </select>
+</mapper>

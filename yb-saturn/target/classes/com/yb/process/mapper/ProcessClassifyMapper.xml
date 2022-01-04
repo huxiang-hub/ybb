@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.process.mapper.ProcessClassifyMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="processClassifyResultMap" type="com.yb.process.entity.ProcessClassify">
+        <id column="id" property="id"/>
+        <result column="py_name" property="pyName"/>
+        <result column="py_num" property="pyNum"/>
+        <result column="sort" property="sort"/>
+        <result column="status" property="status"/>
+        <result column="create_at" property="createAt"/>
+    </resultMap>
+
+
+    <select id="selectProcessClassifyPage" resultType="com.yb.process.vo.ProcessClassifyVO">
+        select * from yb_process_classify where is_deleted = 0
+    </select>
+
+    <select id="getProClassifys"  resultType="com.yb.process.vo.ProcessClassifyVO">
+        SELECT classify.*,classlink.pr_id FROM yb_process_classify classify JOIN yb_process_classlink classlink on classify.id = classlink.py_id
+    </select>
+    <select id="getSortProClassifys"  resultType="com.yb.process.vo.ProcessClassifyVO">
+        SELECT * FROM yb_process_classify
+        WHERE 1=1
+        <if test="processClassify.pyName!=null"> AND py_name LIKE CONCAT('%',#{processClassify.pyName})</if>
+        <if test="processClassify.pyNum!=null"> AND py_num LIKE CONCAT('%',#{processClassify.pyNum})</if>
+        ORDER BY sort ASC
+    </select>
+    <!-- foreach标签，进行遍历 -->
+    <!-- collection：遍历的集合 -->
+    <!-- item：遍历的项目，可以随便写，，但是和后面的#{}里面要一致 -->
+    <!-- open：在前面添加的sql片段 -->
+    <!-- close：在结尾处添加的sql片段 -->
+    <!-- separator：指定遍历的元素之间使用的分隔符 -->
+    <update id="updateIsDel" parameterType="java.util.List">
+        UPDATE yb_process_classify SET is_del = 0
+        <where>
+            <foreach collection="ids" item="id" open="id IN (" close=")" separator=",">
+                #{id}
+            </foreach>
+        </where>
+    </update>
+    <select id="getPrModelVO"  resultType="com.yb.process.vo.PyModelVO">
+        SELECT id AS proType,
+        py_name AS pyName
+        FROM yb_process_classify
+    </select>
+    <select id="getProcessClassifyByWfId" resultType="com.yb.process.entity.ProcessClassify">
+        SELECT
+        	ypc.*
+        FROM
+        	yb_process_classify ypc
+        JOIN yb_process_classlink yp ON yp.py_id = ypc.id
+        JOIN yb_workbatch_ordlink ywo ON ywo.pr_id = yp.pr_id
+        JOIN yb_workbatch_shift yws ON yws.sd_id = ywo.id
+        WHERE
+            yws.id=#{wfId}
+        GROUP BY
+        	ypc.id
+    </select>
+</mapper>

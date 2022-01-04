@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anaysis.sqlservermapper.FzProcedureDao">
+    <select id="list" resultType="com.anaysis.sqlservermapper.domain.FzProcedureDO">
+		SELECT id,cName,cContent,iPlan_Job,iPlan_InTime,cGzzxIDStr,iicon,iisprinting
+		FROM scJobSchedulingDef a WHERE a.iPlan_Job = 1
+	</select>
+	<select id="getId" resultType="com.anaysis.sqlservermapper.domain.FzProcedureDO">
+		SELECT id,cName,cContent,iPlan_Job,iPlan_InTime,cGzzxIDStr,iicon,iisprinting FROM scJobSchedulingDef a
+		WHERE a.iPlan_Job = 1 and id=#{value}
+	</select>
+</mapper>

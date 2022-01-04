@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.mater.mapper.MaterMtinfoMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="materMtinfoResultMap" type="com.yb.mater.entity.MaterMtinfo">
+        <id column="id" property="id"/>
+        <result column="ml_name" property="mlName"/>
+        <result column="ml_no" property="mlNo"/>
+        <result column="mc_id" property="mcId"/>
+        <result column="material" property="material"/>
+        <result column="model" property="model"/>
+        <result column="mold" property="mold"/>
+        <result column="specification" property="specification"/>
+        <result column="size" property="size"/>
+        <result column="brand" property="brand"/>
+        <result column="manufactor" property="manufactor"/>
+        <result column="islocal" property="islocal"/>
+        <result column="isdel" property="isdel"/>
+        <result column="create_at" property="createAt"/>
+        <result column="update_at" property="updateAt"/>
+    </resultMap>
+
+
+    <select id="selectMaterMtinfoPage" resultMap="materMtinfoResultMap">
+        select * from yb_mater_mtinfo where 1=1
+        <if test="materMtinfo.mlName != null">
+            AND ml_name LIKE CONCAT('%',#{materMtinfo.mlName},'%')
+        </if>
+        <if test="materMtinfo.mcId != null">
+            AND mc_id = #{materMtinfo.mcId}
+        </if>
+    </select>
+
+    <select id="selectMaterMtinfos" resultType="com.yb.mater.entity.MaterMtinfo">
+        SELECT a.ml_name
+        FROM yb_mater_mtinfo a
+        JOIN yb_mater_prodlink b ON b.ml_id=a.id
+        WHERE b.pd_id=#{pdId} a.isdel = 0
+
+    </select>
+
+    <update id="updatemtinfoIsdelById" parameterType="java.lang.Integer">
+        update yb_mater_mtinfo set isdel=1 where id = #{id}
+    </update>
+
+    <select id="mtinfoByType" resultType="com.yb.mater.vo.MaterMtinfoVO">
+        SELECT * FROM yb_mater_mtinfo
+        WHERE mc_id=#{mcId} and isdel = 0
+    </select>
+    <select id="findBySdId" resultType="com.yb.mater.vo.MaterMtinfoVO">
+    select d.*,e.id as materBatchlinkId,c.mt_num as mtNum
+    ,e.in_time as inTime,e.instorage_time as instorageTime,e.status as status
+    from yb_workbatch_ordlink a
+    left join yb_prod_partsinfo b on a.pt_id = b.id
+    left join yb_mater_prodlink c on c.pd_id = b.id
+    left join yb_mater_mtinfo d on  d.id = c.ml_id
+    left join yb_mater_batchlink e on d.id = e.ml_id
+    where a.id = #{sdId}
+     <if test="ingredientName != null and ingredientName != ''">
+        and e.material_name like concat('%',#{ingredientName},'%')
+        </if>
+        <if test="materialName != null and materialName != ''">
+        and e.material_name like concat('%',#{materialName},'%')
+        </if>
+        <if test="materialDifference != null ">
+        and (e.process_num -e.realaccept_num) = #{materialDifference}
+        </if>
+    </select>
+    <select id="findBySdIds" resultType="com.yb.mater.vo.MaterMtinfoVO">
+        select d.*,e.id as materBatchlinkId,c.mt_num as mtNum
+    ,e.in_time as inTime,e.instorage_time as instorageTime,e.status as status, a.id as sdId
+    from yb_workbatch_ordlink a
+    left join yb_prod_partsinfo b on a.pt_id = b.id
+    left join yb_mater_prodlink c on c.pd_id = b.id
+    left join yb_mater_mtinfo d on  d.id = c.ml_id
+    left join yb_mater_batchlink e on d.id = e.ml_id
+
+    where a.id in
+        <foreach collection="sdIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+     <if test="ingredientName != null and ingredientName != ''">
+        and e.material_name like concat('%',#{ingredientName},'%')
+        </if>
+        <if test="materialName != null and materialName != ''">
+        and e.material_name like concat('%',#{materialName},'%')
+        </if>
+        <if test="materialDifference != null ">
+        and (e.process_num -e.realaccept_num) = #{materialDifference}
+        </if>
+    </select>
+</mapper>

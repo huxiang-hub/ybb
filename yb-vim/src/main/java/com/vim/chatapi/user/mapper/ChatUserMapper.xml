@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.vim.chatapi.user.mapper.ChatUserMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="userResultMap" type="org.springblade.system.user.entity.User">
+        <result column="id" property="id"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="create_user" property="createUser"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_user" property="updateUser"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="status" property="status"/>
+        <result column="is_deleted" property="isDeleted"/>
+        <result column="account" property="account"/>
+        <result column="password" property="password"/>
+        <result column="name" property="name"/>
+        <result column="real_name" property="realName"/>
+        <result column="email" property="email"/>
+        <result column="phone" property="phone"/>
+        <result column="birthday" property="birthday"/>
+        <result column="sex" property="sex"/>
+        <result column="role_id" property="roleId"/>
+        <result column="dept_id" property="deptId"/>
+        <result column="chat_No" property="chatNo"/>
+        <result column="curraddr" property="curraddr"/>
+        <result column="unionid" property="unionid"/>
+
+
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="baseColumnList">
+        select id,
+        create_user AS createUser,
+        create_time AS createTime,
+        update_user AS updateUser,
+        update_time AS updateTime,
+        status,
+        is_deleted AS isDeleted,
+        account, password, name, real_name, email, phone, birthday, sex, role_id, dept_id,curraddr
+    </sql>
+
+    <select id="selectUserPage" resultMap="userResultMap">
+        select * from blade_user where is_deleted = 0
+    </select>
+
+    <select id="getUser" resultMap="userResultMap">
+        SELECT
+        *
+        FROM
+        blade_user
+        WHERE 1=1
+        <if test="tenant_id!=null">AND tenant_id = #{tenantId}</if>
+        <if test="account!=null">AND account = #{account}</if>
+        <if test="password!=null">AND password = #{password}</if>
+        AND is_deleted = 0
+    </select>
+
+    <select id="getRoleName" resultType="java.lang.String">
+        SELECT
+        role_name
+        FROM
+        blade_role
+        WHERE
+        id IN
+        <foreach collection="array" item="ids" index="index" open="(" close=")" separator=",">
+            #{ids}
+        </foreach>
+        and is_deleted = 0
+    </select>
+
+    <select id="getRoleAlias" resultType="java.lang.String">
+        SELECT
+        role_alias
+        FROM
+        blade_role
+        WHERE
+        id IN
+        <foreach collection="array" item="ids" index="index" open="(" close=")" separator=",">
+            #{ids}
+        </foreach>
+        and is_deleted = 0
+    </select>
+
+    <select id="getDeptName" resultType="java.lang.String">
+        SELECT
+        dept_name
+        FROM
+        blade_dept
+        WHERE
+        id IN
+        <foreach collection="array" item="ids" index="index" open="(" close=")" separator=",">
+            #{ids}
+        </foreach>
+        and is_deleted = 0
+    </select>
+    <insert id="saveBladeUser" parameterType="org.springblade.system.user.entity.User">
+        INSERT  INTO blade_user(account,password,phone,chat_no) VALUES (#{account},#{password},#{phone},#{chatNo})
+    </insert>
+    <select id="getMaxChatNo" resultType="java.lang.Integer">
+        SELECT chat_no  from blade_user  ORDER BY chat_no DESC LIMIT 1
+    </select>
+    <select id="getUserByPhone" resultType="org.springblade.system.user.entity.User">
+        SELECT  * FROM blade_user WHERE phone=#{phoneNum}
+    </select>
+    <select id="getUserInfo" resultType="com.vim.chatapi.user.vo.UserDto">
+        SELECT
+        b.jobnum,
+        e.dict_value AS jobs,
+        c.fname,
+        c.address,
+        d.dp_name
+        FROM
+        blade_user a
+        LEFT JOIN yb_base_staffinfo b ON b.user_id = a.id
+        LEFT JOIN yb_base_factory c ON a.tenant_id = c.tenant_id
+        LEFT JOIN yb_base_deptinfo d ON b.dp_id = d.id
+        LEFT JOIN blade_dict e ON e.id = b.jobs
+        WHERE a.id=#{userId}
+        <if test="tenantId!=null">
+        AND a.tenant_id = #{tenantId}
+        </if>
+    </select>
+    <update id="updataUserPhone" parameterType="java.lang.String">
+        UPDATE blade_user SET phone = #{newPhone} WHERE id =#{id}
+    </update>
+    <update id="updatePasswordById" parameterType="java.lang.String">
+        UPDATE blade_user SET password = #{newPassword} WHERE id = #{id}
+    </update>
+    <select id="selectUser" parameterType="org.springblade.system.user.entity.User"
+            resultType="org.springblade.system.user.vo.UserVO">
+        SELECT t1.*,t2.dp_name FROM blade_user t1
+        lEFT JOIN yb_base_deptinfo t2
+        ON t1.dept_id = t2.id
+        WHERE  (t1.phone = #{account} AND t1.password = #{password})
+        <if test="unionid!=null">OR t1.unionid =#{unionid}</if>
+    </select>
+    <select id="getBaseStaffextVO" resultType="com.vim.chatapi.user.vo.BaseStaffextVO">
+        SELECT t1.*,t3.*,t4.dp_name,t3.ID  staffextId,t2.ID staffinfoId FROM blade_user t1
+        LEFT JOIN yb_base_staffinfo t2 ON t1.id = t2.user_id
+        LEFT JOIN yb_base_staffext t3 ON t2.id = t3.sf_id
+        LEFT JOIN yb_base_deptinfo t4 ON t1.dept_id = t4.id
+        WHERE  t1.id = #{userId}
+    </select>
+    <select id="selectUserInfo" resultType="org.springblade.system.user.entity.User">
+        SELECT
+            a.id,
+            a.account,
+            a.name,
+            a.avatar,
+            a.email,
+            a.phone,
+            a.sex,
+            a.chat_no,
+            c.curraddr
+        FROM
+            blade_user a
+        LEFT JOIN yb_base_staffinfo b
+        ON a.id = b.user_id
+        LEFT JOIN yb_base_staffext c
+        ON b.ID = c.sf_id
+        WHERE
+            a.id = #{userId}
+    </select>
+    <update id="updateStaffinfo" parameterType="org.springblade.saturn.entity.BaseStaffext">
+        UPDATE yb_base_staffext
+        <set>
+        <if test="curraddr!=null">curraddr = #{curraddr},</if>
+        <if test="sex!=null">sex = #{sex},</if>
+        <if test="hometown!=null">hometown = #{hometown},</if>
+        <if test="education!=null">education = #{education}</if>
+        </set>
+        WHERE ID =#{id}
+    </update>
+
+
+    <select id="getbaseStaffInfoByJobnNum"  resultType="com.vim.chatapi.user.entity.BaseStaffinfo">
+          SELECT * FROM yb_base_staffinfo WHERE jobnum = #{jobNum}
+    </select>
+
+    <update id="updateBaseSatffinfo">
+        UPDATE  yb_base_staffinfo SET user_id = #{userId}
+        WHERE jobnum = #{jobNum}
+    </update>
+</mapper>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.stroe.mapper.StoreSeatMapper">
+
+    <select id="upStoreSeatList" resultType="com.yb.stroe.vo.StoreSeatVO">
+        SELECT
+        	a.*,
+            COUNT(b.id) AS totalNum
+        FROM
+        	yb_store_seat a
+        	LEFT JOIN yb_execute_traycard b ON b.mp_id = a.id
+        	LEFT JOIN yb_workbatch_shift c ON c.id = b.wf_id
+        WHERE
+        	c.sd_id = #{upProcessSdId}
+        GROUP BY
+        	a.id
+    </select>
+
+    <select id="getStoreSeatByExId" resultType="com.yb.stroe.vo.StoreSeatVO">
+        SELECT
+        	a.*, COUNT(b.id) AS totalNum
+        FROM
+        	yb_store_seat a
+        LEFT JOIN yb_execute_traycard b ON b.mp_id = a.id
+        WHERE
+        	b.ex_id = #{exId}
+        GROUP BY
+        	a.id
+    </select>
+</mapper>

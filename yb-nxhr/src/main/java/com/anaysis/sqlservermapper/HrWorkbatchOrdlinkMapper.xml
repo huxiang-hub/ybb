@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anaysis.sqlservermapper.HrWorkbatchOrdlinkMapper">
+
+
+    <select id="getAllErpIds" resultType="java.lang.String">
+        SELECT
+            DISTINCT
+            WP.ObjID
+        FROM
+        WorkPlan AS WP WITH ( NOLOCK )
+        INNER JOIN WorkplanDTCtn AS DT ON WP.BOM= DT.BOM
+        AND WP.Item= DT.Item
+        AND WP.WO= DT.WO
+--         AND WP.ProcessNo= DT.ProcessNo
+        INNER JOIN MainStatus AS MS ON WP.Status= MS.InternalStatus
+        INNER JOIN Machines AS M ON WP.Machine= M.MachCode
+        INNER JOIN Customer AS C ON C.CustID = WP.CustID
+        LEFT JOIN Product AS P ON WP.BOM = P.BOM
+        AND WP.CustID = P.CustID
+        WHERE
+--         未排程
+        1 = 1
+        AND MS.TableName= 'WORKPLAN'
+--         AND ISNULL( M.Schedulable, 0 ) = 1
+        AND ISNULL( M.SubConed, '' ) != 'V'
+        AND ISNULL( M.ProcessTableName, '' ) != 'BOMCTNCR'
+        AND ( WP.Status IS NULL OR WP.Status= 'New' OR WP.Status= 'Scheduling' )
+--         已排程
+--         1 = 1
+--         AND MS.TableName= 'WORKPLAN'
+--         AND ISNULL( M.Schedulable, 0 ) = 1
+--         AND ISNULL( M.SubConed, '' ) != 'V'
+--         AND ISNULL( M.ProcessTableName, '' ) != 'BOMCTNCR'
+--         AND ( WP.Status= 'Scheduled' )
+        AND WP.ProdDate > '2020-12-01 00:00:00.000'
+    </select>
+    <select id="getByErpIds" resultType="com.anaysis.entity.WorkbatchOrdlink">
+        SELECT
+        a.*,
+        b.*
+        FROM
+        (
+        SELECT
+        distinct
+        WP.Machine AS machine,
+        P.CustID,
+        P.ObjID AS erpPdId,
+        C.CustShortName cmName,-- 客户简称
+        WP.ObjID AS erpId,-- 工单id
+        M.ProcessCode AS prName,-- 工序
+        --             MS.FontColor, -- 字体颜色
+        --             WP.KeyInBy, -- 创建人
+        WP.ProdQty AS planNumber,-- 工序数包含损耗
+        WP.ProdQty AS planNum,-- 工序数包含损耗
+        WP.NextProcess AS downPorcess,-- 下道工序
+        WP.PreProcess AS upPorcess,-- 上道工序
+        M.ObjID AS erpMaId,-- 设备id
+        --             WP.Machine, -- 设备机床
+        --             WP.Status, -- 状态
+        WP.KeyInON AS createAt,-- 生成时间
+        CONVERT ( VARCHAR ( 10 ), WP.ProdDate, 120 ) AS closeTime,-- 交货日期
+        WP.BOM AS pdCode,-- 产品编号
+        WP.WOCategory AS odType,-- 工单类别
+        WP.AllowQty AS extraNum,-- 损耗数量
+        WP.ProcessNo AS sort,-- 工序排序号
+--         WP.WorkPlanID as 排程编号,
+        --             WP.CustID, -- 客户编号
+        WP.WO AS odNo,-- 工单号
+        WP.WPRemarks AS prDes,-- 工单说明
+        --             DT.ProductCategory, -- 产品类别
+        DT.ProcessInfo AS remarks,-- 排程备注
+        DT.ProdDescShort AS pdName -- 产品信息简称
+
+        FROM
+        WorkPlan AS WP WITH ( NOLOCK )
+        INNER JOIN WorkplanDTCtn AS DT ON WP.BOM= DT.BOM
+        AND WP.Item= DT.Item
+        AND WP.WO= DT.WO
+--         AND WP.ProcessNo= DT.ProcessNo
+        INNER JOIN MainStatus AS MS ON WP.Status= MS.InternalStatus
+        INNER JOIN Machines AS M ON WP.Machine= M.MachCode
+        INNER JOIN Customer AS C ON C.CustID = WP.CustID
+        LEFT JOIN Product AS P ON WP.BOM = P.BOM
+        AND WP.CustID = P.CustID
+        WHERE
+--         未排程
+        1 = 1
+        AND MS.TableName= 'WORKPLAN'
+--         AND ISNULL( M.Schedulable, 0 ) = 1
+        AND ISNULL( M.SubConed, '' ) != 'V'
+        AND ISNULL( M.ProcessTableName, '' ) != 'BOMCTNCR'
+        AND ( WP.Status IS NULL OR WP.Status= 'New' OR WP.Status= 'Scheduling' )
+--         已排程
+--         1 = 1
+--         AND MS.TableName= 'WORKPLAN'
+--         AND ISNULL( M.Schedulable, 0 ) = 1
+--         AND ISNULL( M.SubConed, '' ) != 'V'
+--         AND ISNULL( M.ProcessTableName, '' ) != 'BOMCTNCR'
+--         AND WP.Status= 'Scheduled'
+--         AND WP.WorkPlanDate > '2020-12-01 00:00:00.000'
+        AND WP.ObjID IN
+        <foreach item="item" collection="list" separator="," open="(" close=")" index="">
+            #{item}
+        </foreach>
+        ) AS a
+        LEFT JOIN (
+        SELECT
+        p.CustID,
+--         p.ObjID AS erpId,
+        p.BOM AS pdNo,
+        (p.ProductCategory + '(' + ( CASE p.ProductType WHEN 'CTN' THEN '纸箱' WHEN 'OFFSET' THEN '彩盒' WHEN 'SheetBoard' THEN '平板' END ) + ')' ) AS pdType,
+--         p.ProdDesc AS pdName,
+        c.Length AS length, -- 长
+        c.Width AS width, -- 宽
+        c.Height AS height, -- 高
+        c.M2PerPiece 单片面积,
+        c.BoardQuality AS 材质,
+        c.BoxType AS 箱型, -- 箱型
+        c.BoardQuality AS ingredientName, -- 材料名称
+        c.Flute AS 楞型,
+        c.DimensionOf AS 维度 -- 内径，外径，生产，null
+        -- 	c.PrintType AS 打印类型 -- 水印，null
+        FROM
+        Product p
+        LEFT JOIN PRODCTN c ON p.BOM = c.BOM
+        AND p.CustID = c.CustID
+        WHERE
+        ( p.ProductStatus NOT IN ( '作废' ) OR p.ProductStatus IS NULL )
+        AND p.BOM != 'CTN'
+        AND p.ProductType = 'CTN' UNION
+        SELECT
+        p.CustID,
+--         p.ObjID AS erpId,
+        p.BOM AS pdNo,
+        (p.ProductCategory + '(' + ( CASE p.ProductType WHEN 'CTN' THEN '纸箱' WHEN 'OFFSET' THEN '彩盒' WHEN 'SheetBoard' THEN '平板' END ) + ')' ) AS pdType,
+--         p.ProdDesc AS pdName,
+        c.Length AS length, -- 长
+        c.Width AS width, -- 宽
+        c.Height AS height, -- 高
+        c.M2PerPiece 单片面积,
+        c.BoardQuality AS 材质,
+        c.BoxType AS 箱型, -- 箱型
+        c.BoardQuality AS ingredientName, -- 材料名称
+        c.Flute AS 楞型,
+        c.DimensionOf AS 维度 -- 内径，外径，生产，null
+        -- 	c.PrintType AS 打印类型 -- 水印，null
+        FROM
+        Product p
+        LEFT JOIN PRODOffSet c ON p.BOM = c.BOM
+        AND p.CustID = c.CustID
+        WHERE
+        ( p.ProductStatus NOT IN ( '作废' ) OR p.ProductStatus IS NULL )
+        AND p.BOM != 'CTN'
+        AND p.ProductType = 'OFFSET' UNION
+        SELECT
+        p.CustID,
+--         p.ObjID AS erpId,
+        p.BOM AS pdNo,
+        (p.ProductCategory + '(' + ( CASE p.ProductType WHEN 'CTN' THEN '纸箱' WHEN 'OFFSET' THEN '彩盒' WHEN 'SheetBoard' THEN '平板' END ) + ')' ) AS pdType,
+--         p.ProdDesc AS pdName,
+        c.Length AS length, -- 长
+        c.Width AS width, -- 宽
+        c.Height AS height, -- 高
+        c.M2PerPiece 单片面积,
+        c.BoardQuality AS 材质,
+        c.BoxType AS 箱型, -- 箱型
+        c.BoardQuality AS ingredientName, -- 材料名称
+        c.Flute AS 楞型,
+        c.DimensionOf AS 维度 -- 内径，外径，生产，null
+        -- 	c.PrintType AS 打印类型 -- 水印，null
+        FROM
+        Product p
+        LEFT JOIN SalesOrdSheetBoard c ON p.BOM = c.BOM
+        AND p.CustID = c.CustID
+        WHERE
+        ( p.ProductStatus NOT IN ( '作废' ) OR p.ProductStatus IS NULL )
+        AND p.BOM != 'CTN'
+        AND p.ProductType = 'SheetBoard'
+        ) b ON a.pdCode = b.pdNo
+        AND a.CustID = b.CustID
+    </select>
+    <select id="getSplit" resultType="com.anaysis.entity.WorkbatchOrdlink">
+        SELECT
+        WP.ObjID AS erpId,-- 工单id
+        WP.ProdQty AS planNum,-- 工序数包含损耗
+        WP.AllowQty AS extraNum -- 损耗数
+        FROM
+        WorkPlan AS WP WITH ( NOLOCK )
+        INNER JOIN WorkplanDTCtn AS DT ON WP.BOM= DT.BOM
+        AND WP.Item= DT.Item
+        AND WP.WO= DT.WO
+--         AND WP.ProcessNo= DT.ProcessNo
+        INNER JOIN MainStatus AS MS ON WP.Status= MS.InternalStatus
+        INNER JOIN Machines AS M ON WP.Machine= M.MachCode
+        WHERE
+        1 = 1
+        AND MS.TableName= 'WORKPLAN'
+        AND ISNULL( M.Schedulable, 0 ) = 1
+        AND ISNULL( M.SubConed, '' ) != 'V'
+        AND ISNULL( M.ProcessTableName, '' ) != 'BOMCTNCR'
+        AND WP.Status= 'Scheduled'
+        AND WP.WorkPlanDate > '2020-12-01 00:00:00.000'
+        AND WP.OrgProdQty != WP.ProdQty
+        AND WP.ObjID IN
+        <foreach item="item" collection="list" separator="," open="(" close=")" index="">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

@@ -1,0 +1,518 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anaysis.sqlservermapper.XyWorkBatchMapper">
+
+    <select id="listIGzzxId" resultType="java.lang.Integer">
+        SELECT DISTINCT iGzzxId FROM scvDevice
+    </select>
+    <select id="listByIGzzxId" resultType="com.anaysis.entity.WorkbatchOrdlinkVO">
+       select
+            a.ID AS erpId,
+            a.DDBH AS odNo,--订单编号
+            a.SCDHID AS wbErp,--工单UUID/批次ID
+            a.SCDH AS  wbNo,--工单编号
+            a.KHDDH AS crmOdNo,--客户订单编号
+            a.JTID AS maErp,--设备UUID
+            b.ID AS partErp,--部件UUid
+            a.BJMC AS partName,--部件名称
+            a.GXID AS prErp,--工序ID
+            a.DDSL AS odCount,--订单数量
+            a.GXMC AS prName,--工序名称
+            a.CPID AS pdErp,--产品UUID
+            b.CPID AS pdErp1,--产品UUID(查部件)
+            a.KHID AS cmErp,--订货厂家UUID
+            a.CPBH AS pdCode,--产品编号
+            a.CPMC AS pdName,--产品名称
+            a.LBID AS typeErp,--产品类型
+            a.GXYCS AS planNum,--计划数量
+            a.GXJHS AS planNumber,--应交数量
+            a.YWCSL AS completeNum,--完成数量
+            (a.GXJHS-a.YWCSL)  AS incompleteNum,--未完成数量
+            (GXYCS - GXJHS) AS extraNum,--冗余数
+            a.GG AS pdSize,--产品尺寸
+            Datename(year,a.JCKSRQ)+'-'+Datename (month,a.JCKSRQ)+'-'+
+            (CASE
+            WHEN Datename(day,a.JCKSRQ) &lt; 10 THEN '0'+Datename(day,a.JCKSRQ)
+            ELSE Datename(day,a.JCKSRQ) END)
+            AS sdDate,--截至日期
+            a.JHRQ AS closeTime,--截至日期
+            -1 AS status,--工单状态
+            0 AS runStatus,--生产状态
+            (CASE WHEN (ISNULL(a.GYYQ, '') &lt;&gt;  '' AND ISNULL(a.ZLYQ, '') &lt;&gt;  '')THEN a.GYYQ + ',' + a.ZLYQ + ',' + a.Remark
+            WHEN ISNULL(a.GYYQ, '') &lt;&gt;  '' THEN a.GYYQ + ',' + a.Remark
+            WHEN ISNULL(a.ZLYQ, '') &lt;&gt;  '' THEN a.ZLYQ + ',' + a.Remark ELSE a.Remark END)
+            AS remarks,--备注
+            a.GYLC AS prRoute,--工艺流程
+            a.GDLX AS odType,--工单类型
+            a.ZDRID AS usErp,--操作人UUID
+            a.SGXMC AS upPorcess,--上工序
+            a.XGXMC AS downPorcess,--下工序
+            (CAST(a.SJK as varchar(20))+'*'+CAST(a.SJC as varchar(20))) AS operateSize,--上机尺寸
+            a.BJCD as ptCD,--部件长度
+            a.BJKD as ptKD,--部件宽度
+            CASE
+            WHEN a.WLID = A.WLID_FL THEN null
+            ELSE b.WLMC
+            END AS materialName,--主料
+            a.WLMC_FL AS ingredientName,--辅料
+            CASE
+            WHEN a.GXMC LIKE '印刷%' AND a.TYSCGXLC != '' THEN a.GXMC +'+'+ a.TYSCGXLC
+            WHEN a.GXMC LIKE '印刷%' AND a.TYSCGXLC = '' THEN a.GXMC
+            ELSE null END
+            AS versionClass,--版类
+            a.YSSS AS colorNum,--总印色数
+            a.YSYS AS paintColour,--印色
+            a.XZLDSJ AS ctpTime,--下资料袋时间
+            a.MJBH AS ctpNo,--ctp号
+            a.MJBH AS cutNo,--刀模号
+            a.GZSJ * 60 AS planTime,--计划时间（小时转分钟）（工作时间）
+            a.XSCN AS erpSpeed, --erp速度 单位（/小时）
+            reverse(substring(reverse(a.SGXZT),1,LEN(reverse(a.SGXZT)) - 1)) AS upprocessStatus, --	上工序状态
+            a.SGXSCRQ AS upprocessTime,--上工序生产时间
+            a.BJB AS isCompare,--校板
+            ISNULL(a.BSF, 0) AS patchNum,--补数，0-FALSE，1-TRUE
+            a.TYSCGXLC AS craftSame, --同印工艺
+            a.JHRQ AS deliveryDate, -- 大货交期
+            --a.KZ,--克重
+            a.KSMS AS colorDesc,--看色描述
+            ISNULL(a.BZSYDZ, 0) AS basePaper,--不装水油底纸1是0否
+            ISNULL(a.GDSC, 0) AS mutual,--共单生产（一样订单）1是0否
+            ISNULL(a.TXLSC, 0) AS sameSeries,--同系列生产1是0否
+            ISNULL(a.HTYSCF, 0) AS includePrint,--含同印生产否1是0否
+            --a.KCSL,--主料库存数量
+            a.KCSL AS reelStock,----卷筒库存
+            --a.KCSL_FL,--辅料库存数量
+            a.ZDRQ AS pushDate,--推送日期
+            a.XDZT AS revisionStatus,--修订状态
+            a.Remark1 AS followUp,--跟进信息1
+            a.Remark2 AS followUpto,--跟进信息2
+            a.JTMC_YS AS printStation, --印刷机台
+            c.ID AS erpWbid --施工单UUID
+            FROM SC_WWKHDDList_SCJH a
+            LEFT JOIN SC_SCSGD_D1_D1 b ON a.SCDHBJID = b.ID
+            LEFT JOIN SC_SCSGD_M c ON A.SCDH = c.BDBH
+            WHERE a.SCZT NOT IN ( '3已完工', '强制完工') and (len(a.JTID)>30 or a.JTID ='SGBZ013')  --设定手工和标准设备
+            AND a.JTID IN
+            <foreach item="item" collection="list" separator="," open="(" close=")" index="">
+                #{item}
+            </foreach>
+<!--            ('b5dc56db-dfca-4e50-a0eb-0d4e104e8c95','ef5b61fa-f132-4a31-b18f-b79a11332a45','dbf85a71-1695-4b6b-822d-a4717835b99c','49c15c0d-98e3-4638-b1c5-56c00f3cc8ef','6925fab3-cca7-456b-af21-3dfc73cfd310','5bbd694d-a057-4a8d-b7bb-00cc2c9e6994','2fa486cb-6469-4806-bc7b-f0038d9425b8','edbf2178-7a99-49b3-bf1d-c062123afd74','e129e0b6-6346-419a-b122-ba5c547ee058')-->
+    </select>
+
+    <select id="selectById" resultType="com.anaysis.entity.WorkbatchOrdlink">
+        SELECT
+        Job.ID AS id,
+        Job.id_Machine AS maId, --设备id
+        SUBSTRING(Job.cJobCode,0 , CHARINDEX('_', Job.cJobCode ,0)) AS odNo,--订单编号
+        Job.cPartName AS partName, -- 部件名称(差部件id,部件编号)
+        Job.cProductCode AS pdCode,--产品编号
+        Job.cProductName AS pdName, --产品名称(差产品类型)
+        tech.ID_ATech AS prId, -- 工序id
+        pr.prName AS prName, -- 工序名称
+        Job.nStdAmount AS planNum, -- 计划数量
+        Job.nDeliverAmount AS planNumber, --应交数量
+        Job.nConsumeAmount AS extraNum,--冗余数
+        Job.nCompleteAmount AS completeNum,--完成数量
+        Job.nDeliverAmount - Job.nCompleteAmount AS incompleteNum, -- 未完成数量
+        CONVERT(varchar(100), Job.dPlanStart, 20) AS startTime,--计划开始时间
+        Job.iStatus AS runStatus,--生产状态
+        CONVERT(varchar(100), Job.dFactStart, 20) AS actuallyStarttime,--实际开始时间   CONVERT(varchar(100), Job.dFactEnd, 20) AS endTime,  --实际结束时间
+        Job.nPlanTime_R AS planTime,--计划用时
+        jobRemark.cPlanRemark AS remarks, -- 备注
+        CONVERT(varchar(100), Job.dCreate, 20) AS sdDate, -- 下单时间
+        CONVERT(varchar(100), Job.dCreate, 20) AS createAt, -- 下单时间
+        machine.dpId AS dpId
+        FROM
+            scMachineJob Job
+        LEFT JOIN scvDevice Dev ON Dev.iType &lt;&gt; 3 AND Job.id_Machine = Dev.Id
+        LEFT JOIN scMachineJobTech tech ON tech.ID_scMachineJob = job.ID
+        LEFT JOIN scMachineJobRemark jobRemark ON jobRemark.ID_scMachineJob = job.ID
+        LEFT JOIN (
+            SELECT
+                sh.ID AS Id,
+                sh.cCode AS prNo,
+                sh.cName AS prName,
+                sh.ID AS sort,
+                sh.istate AS status
+            FROM
+                sysTech sh
+            LEFT JOIN sysTech_MaterialClass ss1 ON sh.ID = ss1.ID_Tech
+            LEFT JOIN scvZMaterialClass ss2 ON ss2.cCode = ss1.cCode_Mat
+            WHERE
+                sh.iState > -1
+        ) pr ON tech.ID_ATech = pr.Id
+        JOIN (
+            SELECT
+                A.ID AS Id,
+                cJzbh AS mno,
+                A.cJzmc AS name,
+                A.cjzlxmc AS MachStyle,
+                A.cRemark AS Remark,
+                b.id as dpid,
+            CASE
+                    A.iStopUse
+                    WHEN 1 THEN
+                    'TRUE' ELSE 'FALSE'
+                END AS StopUse,
+                b.cbmmc AS Dept,
+                c.cgzzxmc AS Center,
+                c.cgzzxlx AS cType
+            FROM
+                MKerJzmb A
+                LEFT JOIN dzbm B ON A.cbmbh= B.cbmbh
+                LEFT JOIN MKernel C ON A.cBh= C.cBh
+        ) machine ON Job.id_Machine = machine.Id
+        AND Job.iType_Res = 0
+        WHERE Job.iStatus IN (0, 1, 2, 10, 20)
+        AND Job.iJobType IN (0, 4)
+        AND Job.iType_Res = 0
+        AND Job.ID = #{Id}
+    </select>
+
+    <select id="listByerpId" resultType="com.anaysis.entity.WorkbatchOrdlinkVO">
+       select
+            a.ID AS erpId,
+            a.DDBH AS odNo,--订单编号
+            a.SCDHID AS wbErp,--工单UUID/批次ID
+            a.SCDH AS  wbNo,--工单编号
+            a.KHDDH AS crmOdNo,--客户订单编号
+            a.JTID AS maErp,--设备UUID
+            b.ID AS partErp,--部件UUid
+            a.BJMC AS partName,--部件名称
+            a.GXID AS prErp,--工序ID
+            a.DDSL AS odCount,--订单数量
+            a.GXMC AS prName,--工序名称
+            a.CPID AS pdErp,--产品UUID
+            b.CPID AS pdErp1,--产品UUID(查部件)
+            a.KHID AS cmErp,--订货厂家UUID
+            a.CPBH AS pdCode,--产品编号
+            a.CPMC AS pdName,--产品名称
+            a.LBID AS typeErp,--产品类型
+            a.GXYCS AS planNum,--计划数量
+            a.GXJHS AS planNumber,--应交数量
+            a.YWCSL AS completeNum,--完成数量
+            (a.GXJHS-a.YWCSL)  AS incompleteNum,--未完成数量
+            (GXYCS - GXJHS) AS extraNum,--冗余数
+            a.GG AS pdSize,--产品尺寸
+            Datename(year,a.JCKSRQ)+'-'+Datename (month,a.JCKSRQ)+'-'+
+            (CASE
+            WHEN Datename(day,a.JCKSRQ) &lt; 10 THEN '0'+Datename(day,a.JCKSRQ)
+            ELSE Datename(day,a.JCKSRQ) END)
+            AS sdDate,--截至日期
+            a.JHRQ AS closeTime,--截至日期
+            -1 AS status,--工单状态
+            0 AS runStatus,--生产状态
+            (CASE WHEN (ISNULL(a.GYYQ, '') &lt;&gt;  '' AND ISNULL(a.ZLYQ, '') &lt;&gt;  '')THEN a.GYYQ + ',' + a.ZLYQ + ',' + a.Remark
+            WHEN ISNULL(a.GYYQ, '') &lt;&gt;  '' THEN a.GYYQ + ',' + a.Remark
+            WHEN ISNULL(a.ZLYQ, '') &lt;&gt;  '' THEN a.ZLYQ + ',' + a.Remark ELSE a.Remark END)
+            AS remarks,--备注
+            a.GYLC AS prRoute,--工艺流程
+            a.GDLX AS odType,--工单类型
+            a.ZDRID AS usErp,--操作人UUID
+            a.SGXMC AS upPorcess,--上工序
+            a.XGXMC AS downPorcess,--下工序
+            (CAST(a.SJK as varchar(20))+'*'+CAST(a.SJC as varchar(20))) AS operateSize,--上机尺寸
+            a.BJCD as ptCD,--部件长度
+            a.BJKD as ptKD,--部件宽度
+            CASE
+            WHEN a.WLID = A.WLID_FL THEN null
+            ELSE b.WLMC
+            END AS materialName,--主料
+            a.WLMC_FL AS ingredientName,--辅料
+            CASE
+            WHEN a.GXMC LIKE '印刷%' AND a.TYSCGXLC != '' THEN a.GXMC +'+'+ a.TYSCGXLC
+            WHEN a.GXMC LIKE '印刷%' AND a.TYSCGXLC = '' THEN a.GXMC
+            ELSE null END
+            AS versionClass,--版类
+            a.YSSS AS colorNum,--总印色数
+            a.YSYS AS paintColour,--印色
+            a.XZLDSJ AS ctpTime,--下资料袋时间
+            a.MJBH AS ctpNo,--ctp号
+            a.MJBH AS cutNo,--刀模号
+            a.GZSJ * 60 AS planTime,--计划时间（小时转分钟）（工作时间）
+            a.XSCN AS erpSpeed, --erp速度 单位（/小时）
+            reverse(substring(reverse(a.SGXZT),1,LEN(reverse(a.SGXZT)) - 1)) AS upprocessStatus, --	上工序状态
+            a.SGXSCRQ AS upprocessTime,--上工序生产时间
+            a.BJB AS isCompare,--校板
+            ISNULL(a.BSF, 0) AS patchNum,--补数，0-FALSE，1-TRUE
+            a.TYSCGXLC AS craftSame, --同印工艺
+            a.JHRQ AS deliveryDate, -- 大货交期
+            --a.KZ,--克重
+            a.KSMS AS colorDesc,--看色描述
+            ISNULL(a.BZSYDZ, 0) AS basePaper,--不装水油底纸1是0否
+            ISNULL(a.GDSC, 0) AS mutual,--共单生产（一样订单）1是0否
+            ISNULL(a.TXLSC, 0) AS sameSeries,--同系列生产1是0否
+            ISNULL(a.HTYSCF, 0) AS includePrint,--含同印生产否1是0否
+            --a.KCSL,--主料库存数量
+            --a.KCSL_FL,--辅料库存数量
+            a.KCSL AS reelStock,--卷筒库存
+            a.ZDRQ AS pushDate,--推送日期
+            a.XDZT AS revisionStatus,--修订状态
+            a.Remark1 AS followUp,--跟进信息1
+            a.Remark2 AS followUpto,--跟进信息2
+            a.JTMC_YS AS printStation,--印刷机台
+            c.ID AS erpWbid --施工单UUID
+            FROM SC_WWKHDDList_SCJH a
+            LEFT JOIN SC_SCSGD_D1_D1 b ON a.SCDHBJID = b.ID
+            LEFT JOIN SC_SCSGD_M c ON A.SCDH = c.BDBH
+            WHERE a.SCZT NOT IN ( '3已完工', '强制完工') and (len(a.JTID)>30 or a.JTID ='SGBZ013')  --设定手工和标准设备
+            AND a.JTID = #{erpId}
+<!--            ('b5dc56db-dfca-4e50-a0eb-0d4e104e8c95','ef5b61fa-f132-4a31-b18f-b79a11332a45','dbf85a71-1695-4b6b-822d-a4717835b99c','49c15c0d-98e3-4638-b1c5-56c00f3cc8ef','6925fab3-cca7-456b-af21-3dfc73cfd310','5bbd694d-a057-4a8d-b7bb-00cc2c9e6994','2fa486cb-6469-4806-bc7b-f0038d9425b8','edbf2178-7a99-49b3-bf1d-c062123afd74','e129e0b6-6346-419a-b122-ba5c547ee058')-->
+    </select>
+
+    <update id="creatTMP">
+        create table TMP --创建临时表#Tmp
+        (
+            id   int IDENTITY (1,1)     not null, --创建列ID,并且每次新增一条记录就会加1
+            erp_id varchar(150),             --UUID
+            status varchar(11),  --状态
+            primary key (ID)      --定义ID为临时表#Tmp的主键
+        );
+    </update>
+    <update id="dropTMP">
+        drop table Tmp   --删除临时表#Tmp
+    </update>
+
+    <insert id="insterTMP" parameterType="com.anaysis.entity.tmp">
+        INSERT INTO TMP (erp_id,status) VALUES
+        <foreach item="item" collection="list" separator="," index="">
+                (#{item.erpId}, #{item.status})
+        </foreach>
+    </insert>
+
+    <select id="selectStatusListw" resultType="java.lang.String">
+        select erp_id from Tmp a
+        left join SC_WWKHDDList_SCJH b ON a.erp_id = b.ID
+        where b.SCZT IN ('3已完工', '4强制完工', '强制完工') and (len(b.JTID)>30 or b.JTID ='SGBZ013') --设定手工和标准设备
+    </select>
+    <select id="selectStatusListy" resultType="java.lang.String">
+        select erp_id from Tmp a
+        join SC_yWKHDDList_SCJH b ON a.erp_id = b.ID
+        where b.SCZT IN ('3已完工', '4强制完工', '强制完工') and (len(b.JTID)>30 or b.JTID ='SGBZ013')  --设定手工和标准设备
+    </select>
+
+    <select id="erpAll" resultType="java.lang.String">
+       select
+       distinct
+        a.ID
+        FROM SC_WWKHDDList_SCJH a
+        WHERE (len(a.JTID)>30 or a.JTID ='SGBZ013')
+        and a.JTID IN
+        <foreach item="item" collection="list" separator="," open="(" close=")" index="">
+            #{item.erpId}
+        </foreach>
+        union
+        select
+       distinct
+        a.ID
+        FROM SC_yWKHDDList_SCJH a
+        WHERE (len(a.JTID)>30 or a.JTID ='SGBZ013')
+         and a.JTID IN
+        <foreach item="item" collection="list" separator="," open="(" close=")" index="">
+            #{item.erpId}
+        </foreach>
+<!--            ('b5dc56db-dfca-4e50-a0eb-0d4e104e8c95','ef5b61fa-f132-4a31-b18f-b79a11332a45','dbf85a71-1695-4b6b-822d-a4717835b99c','49c15c0d-98e3-4638-b1c5-56c00f3cc8ef','6925fab3-cca7-456b-af21-3dfc73cfd310','5bbd694d-a057-4a8d-b7bb-00cc2c9e6994','2fa486cb-6469-4806-bc7b-f0038d9425b8','edbf2178-7a99-49b3-bf1d-c062123afd74','e129e0b6-6346-419a-b122-ba5c547ee058')-->
+    </select>
+    <select id="selectByErpId" resultType="java.lang.String">
+        select a.ID FROM SC_WWKHDDList_SCJH a where a.SCZT NOT IN ( '3已完工', '强制完工') and (len(a.JTID)>30 or a.JTID ='SGBZ013')  --设定手工和标准设备
+            AND a.ID = #{erpId}
+    </select>
+    <select id="getIdsByMaIds" resultType="java.lang.String">
+        SELECT a.ID FROM SC_WWKHDDList_SCJH a
+            WHERE a.SCZT NOT IN ( '3已完工', '强制完工') and (len(a.JTID)>30 or a.JTID ='SGBZ013')
+            and a.JTID IN
+            <foreach item="item" collection="list" separator="," open="(" close=")" index="">
+                #{item}
+            </foreach>
+    </select>
+    <select id="getByIds" resultType="com.anaysis.entity.WorkbatchOrdlinkVO">
+        select
+        a.ID AS erpId,
+        a.DDBH AS odNo,--订单编号
+        a.SCDHID AS wbErp,--工单UUID/批次ID
+        a.SCDH AS  wbNo,--工单编号
+        a.KHDDH AS crmOdNo,--客户订单编号
+        a.JTID AS maErp,--设备UUID
+        b.ID AS partErp,--部件UUid
+        a.BJMC AS partName,--部件名称
+        a.GXID AS prErp,--工序ID
+        a.DDSL AS odCount,--订单数量
+        a.GXMC AS prName,--工序名称
+        a.CPID AS pdErp,--产品UUID
+        b.CPID AS pdErp1,--产品UUID(查部件)
+        a.KHID AS cmErp,--订货厂家UUID
+        a.CPBH AS pdCode,--产品编号
+        a.CPMC AS pdName,--产品名称
+        a.LBID AS typeErp,--产品类型
+        a.GXYCS AS planNum,--计划数量
+        a.GXJHS AS planNumber,--应交数量
+        a.YWCSL AS completeNum,--完成数量
+        (a.GXJHS-a.YWCSL)  AS incompleteNum,--未完成数量
+        (GXYCS - GXJHS) AS extraNum,--冗余数
+        a.GG AS pdSize,--产品尺寸
+        Datename(year,a.JCKSRQ)+'-'+Datename (month,a.JCKSRQ)+'-'+
+        (CASE
+        WHEN Datename(day,a.JCKSRQ) &lt; 10 THEN '0'+Datename(day,a.JCKSRQ)
+        ELSE Datename(day,a.JCKSRQ) END)
+        AS sdDate,--截至日期
+        a.JHRQ AS closeTime,--截至日期
+        -1 AS status,--工单状态
+        0 AS runStatus,--生产状态
+        (CASE WHEN (ISNULL(a.GYYQ, '') &lt;&gt;  '' AND ISNULL(a.ZLYQ, '') &lt;&gt;  '')THEN a.GYYQ + ',' + a.ZLYQ + ',' + a.Remark
+        WHEN ISNULL(a.GYYQ, '') &lt;&gt;  '' THEN a.GYYQ + ',' + a.Remark
+        WHEN ISNULL(a.ZLYQ, '') &lt;&gt;  '' THEN a.ZLYQ + ',' + a.Remark ELSE a.Remark END)
+        AS remarks,--备注
+        a.GYLC AS prRoute,--工艺流程
+        a.GDLX AS odType,--工单类型
+        a.ZDRID AS usErp,--操作人UUID
+        a.SGXMC AS upPorcess,--上工序
+        a.XGXMC AS downPorcess,--下工序
+        (CAST(a.SJK as varchar(20))+'*'+CAST(a.SJC as varchar(20))) AS operateSize,--上机尺寸
+        a.BJCD as ptCD,--部件长度
+        a.BJKD as ptKD,--部件宽度
+        CASE
+        WHEN a.WLID = A.WLID_FL THEN null
+        ELSE b.WLMC
+        END AS materialName,--主料
+        a.WLMC_FL AS ingredientName,--辅料
+        CASE
+        WHEN a.GXMC LIKE '印刷%' AND a.TYSCGXLC != '' THEN a.GXMC +'+'+ a.TYSCGXLC
+        WHEN a.GXMC LIKE '印刷%' AND a.TYSCGXLC = '' THEN a.GXMC
+        ELSE null END
+        AS versionClass,--版类
+        a.YSSS AS colorNum,--总印色数
+        a.YSYS AS paintColour,--印色
+        a.XZLDSJ AS ctpTime,--下资料袋时间
+        a.MJBH AS ctpNo,--ctp号
+        a.MJBH AS cutNo,--刀模号
+        a.GZSJ * 60 AS planTime,--计划时间（小时转分钟）（工作时间）
+        a.XSCN AS erpSpeed, --erp速度 单位（/小时）
+        reverse(substring(reverse(a.SGXZT),1,LEN(reverse(a.SGXZT)) - 1)) AS upprocessStatus, --	上工序状态
+        a.SGXSCRQ AS upprocessTime,--上工序生产时间
+        a.BJB AS isCompare,--校板
+        ISNULL(a.BSF, 0) AS patchNum,--补数，0-FALSE，1-TRUE
+        a.TYSCGXLC AS craftSame, --同印工艺
+        a.JHRQ AS deliveryDate, -- 大货交期
+        --a.KZ,--克重
+        a.KSMS AS colorDesc,--看色描述
+        ISNULL(a.BZSYDZ, 0) AS basePaper,--不装水油底纸1是0否
+        ISNULL(a.GDSC, 0) AS mutual,--共单生产（一样订单）1是0否
+        ISNULL(a.TXLSC, 0) AS sameSeries,--同系列生产1是0否
+        ISNULL(a.HTYSCF, 0) AS includePrint,--含同印生产否1是0否
+        --a.KCSL,--主料库存数量
+        a.KCSL AS reelStock,----卷筒库存
+        --a.KCSL_FL,--辅料库存数量
+        a.ZDRQ AS pushDate,--推送日期
+        a.XDZT AS revisionStatus,--修订状态
+        a.Remark1 AS followUp,--跟进信息1
+        a.Remark2 AS followUpto,--跟进信息2
+        a.JTMC_YS AS printStation, --印刷机台
+        c.ID AS erpWbid --施工单UUID
+        FROM SC_WWKHDDList_SCJH a
+        LEFT JOIN SC_SCSGD_D1_D1 b ON a.SCDHBJID = b.ID
+        LEFT JOIN SC_SCSGD_M c ON A.SCDH = c.BDBH
+        WHERE a.SCZT NOT IN ( '3已完工', '强制完工') and (len(a.JTID)>30 or a.JTID ='SGBZ013')  --设定手工和标准设备
+        AND a.ID IN
+        <foreach item="item" collection="list" separator="," open="(" close=")" index="">
+            #{item}
+        </foreach>
+    </select>
+    <select id="selectOneByErpId" resultType="com.anaysis.entity.WorkbatchOrdlinkVO">
+        select
+        a.ID AS erpId,
+        a.DDBH AS odNo,--订单编号
+        a.SCDHID AS wbErp,--工单UUID/批次ID
+        a.SCDH AS  wbNo,--工单编号
+        a.KHDDH AS crmOdNo,--客户订单编号
+        a.JTID AS maErp,--设备UUID
+        b.ID AS partErp,--部件UUid
+        a.BJMC AS partName,--部件名称
+        a.GXID AS prErp,--工序ID
+        a.DDSL AS odCount,--订单数量
+        a.GXMC AS prName,--工序名称
+        a.CPID AS pdErp,--产品UUID
+        b.CPID AS pdErp1,--产品UUID(查部件)
+        a.KHID AS cmErp,--订货厂家UUID
+        a.CPBH AS pdCode,--产品编号
+        a.CPMC AS pdName,--产品名称
+        a.LBID AS typeErp,--产品类型
+        a.GXYCS AS planNum,--计划数量
+        a.GXJHS AS planNumber,--应交数量
+        a.YWCSL AS completeNum,--完成数量
+        (a.GXJHS-a.YWCSL)  AS incompleteNum,--未完成数量
+        (GXYCS - GXJHS) AS extraNum,--冗余数
+        a.GG AS pdSize,--产品尺寸
+        Datename(year,a.JCKSRQ)+'-'+Datename (month,a.JCKSRQ)+'-'+
+        (CASE
+        WHEN Datename(day,a.JCKSRQ) &lt; 10 THEN '0'+Datename(day,a.JCKSRQ)
+        ELSE Datename(day,a.JCKSRQ) END)
+        AS sdDate,--截至日期
+        a.JHRQ AS closeTime,--截至日期
+        -1 AS status,--工单状态
+        0 AS runStatus,--生产状态
+        (CASE WHEN (ISNULL(a.GYYQ, '') &lt;&gt;  '' AND ISNULL(a.ZLYQ, '') &lt;&gt;  '')THEN a.GYYQ + ',' + a.ZLYQ + ',' + a.Remark
+        WHEN ISNULL(a.GYYQ, '') &lt;&gt;  '' THEN a.GYYQ + ',' + a.Remark
+        WHEN ISNULL(a.ZLYQ, '') &lt;&gt;  '' THEN a.ZLYQ + ',' + a.Remark ELSE a.Remark END)
+        AS remarks,--备注
+        a.GYLC AS prRoute,--工艺流程
+        a.GDLX AS odType,--工单类型
+        a.ZDRID AS usErp,--操作人UUID
+        a.SGXMC AS upPorcess,--上工序
+        a.XGXMC AS downPorcess,--下工序
+        (CAST(a.SJK as varchar(20))+'*'+CAST(a.SJC as varchar(20))) AS operateSize,--上机尺寸
+        a.BJCD as ptCD,--部件长度
+        a.BJKD as ptKD,--部件宽度
+        CASE
+        WHEN a.WLID = A.WLID_FL THEN null
+        ELSE b.WLMC
+        END AS materialName,--主料
+        a.WLMC_FL AS ingredientName,--辅料
+        CASE
+        WHEN a.GXMC LIKE '印刷%' AND a.TYSCGXLC != '' THEN a.GXMC +'+'+ a.TYSCGXLC
+        WHEN a.GXMC LIKE '印刷%' AND a.TYSCGXLC = '' THEN a.GXMC
+        ELSE null END
+        AS versionClass,--版类
+        a.YSSS AS colorNum,--总印色数
+        a.YSYS AS paintColour,--印色
+        a.XZLDSJ AS ctpTime,--下资料袋时间
+        a.MJBH AS ctpNo,--ctp号
+        a.MJBH AS cutNo,--刀模号
+        a.GZSJ * 60 AS planTime,--计划时间（小时转分钟）（工作时间）
+        a.XSCN AS erpSpeed, --erp速度 单位（/小时）
+        reverse(substring(reverse(a.SGXZT),1,LEN(reverse(a.SGXZT)) - 1)) AS upprocessStatus, --	上工序状态
+        a.SGXSCRQ AS upprocessTime,--上工序生产时间
+        a.BJB AS isCompare,--校板
+        ISNULL(a.BSF, 0) AS patchNum,--补数，0-FALSE，1-TRUE
+        a.TYSCGXLC AS craftSame, --同印工艺
+        a.JHRQ AS deliveryDate, -- 大货交期
+        --a.KZ,--克重
+        a.KSMS AS colorDesc,--看色描述
+        ISNULL(a.BZSYDZ, 0) AS basePaper,--不装水油底纸1是0否
+        ISNULL(a.GDSC, 0) AS mutual,--共单生产（一样订单）1是0否
+        ISNULL(a.TXLSC, 0) AS sameSeries,--同系列生产1是0否
+        ISNULL(a.HTYSCF, 0) AS includePrint,--含同印生产否1是0否
+        --a.KCSL,--主料库存数量
+        a.KCSL AS reelStock,----卷筒库存
+        --a.KCSL_FL,--辅料库存数量
+        a.ZDRQ AS pushDate,--推送日期
+        a.XDZT AS revisionStatus,--修订状态
+        a.Remark1 AS followUp,--跟进信息1
+        a.Remark2 AS followUpto,--跟进信息2
+        a.JTMC_YS AS printStation, --印刷机台
+        c.ID AS erpWbid --施工单UUID
+        FROM SC_WWKHDDList_SCJH a
+        LEFT JOIN SC_SCSGD_D1_D1 b ON a.SCDHBJID = b.ID
+        LEFT JOIN SC_SCSGD_M c ON A.SCDH = c.BDBH
+        WHERE a.SCZT NOT IN ( '3已完工', '强制完工') and (len(a.JTID)>30 or a.JTID ='SGBZ013')  --设定手工和标准设备
+        AND a.ID = #{erpId}
+    </select>
+    <select id="getAllIdsByMaIds" resultType="java.lang.String">
+        SELECT a.ID FROM SC_WWKHDDList_SCJH a
+        WHERE len(a.JTID)>30 or a.JTID ='SGBZ013'
+        and a.JTID IN
+        <foreach item="item" collection="list" separator="," open="(" close=")" index="">
+            #{item}
+        </foreach>
+    </select>
+
+</mapper>

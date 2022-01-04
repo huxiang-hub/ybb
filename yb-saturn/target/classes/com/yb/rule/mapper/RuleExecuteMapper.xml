@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.rule.mapper.RuleExecuteMapper">
+
+
+<select id="list" resultType="com.yb.rule.response.RuleExecuteListVO">
+select * from yb_rule_execute
+where status = 1
+and ma_id = #{maId}
+</select>
+<insert id="save" useGeneratedKeys="true" keyProperty="id" parameterType="com.yb.rule.entity.RuleExecute" >
+insert into yb_rule_execute
+		(
+		ma_id,rp_type,capacity,mould_time,generate_sql,status,create_at,`condition`
+		)
+		values
+		(
+		#{maId,jdbcType=INTEGER},
+		#{rpType,jdbcType=INTEGER},
+		#{capacity,jdbcType=INTEGER},
+		#{mouldTime,jdbcType=INTEGER},
+		#{generateSql,jdbcType=VARCHAR},
+		#{status,jdbcType=INTEGER},
+		#{createAt,jdbcType=TIMESTAMP} ,
+		#{condition,jdbcType=VARCHAR}
+		)
+
+</insert>
+<select id="sqlQuery" resultType="com.yb.workbatch.entity.WorkbatchOrdlink">
+select *  from yb_workbatch_ordlink
+<where>
+${whereSql}
+<if test="maId != null">
+ and ma_id = #{maId}
+</if>
+<if test="sdId != null">
+and id = #{sdId}
+</if>
+</where>
+
+
+
+</select>
+
+<update id="delete">
+UPDATE yb_rule_execute SET status = 0
+where
+id IN
+<foreach collection="ids" item="id" index="index" open="(" close=")" separator=",">
+    #{id}
+</foreach>
+</update>
+
+<update id="update">
+update yb_rule_execute set `condition` = #{conditions} ,
+generate_sql = #{whereSql},rp_type = #{request.rpType}
+<if test="request.capacity !=null">
+,capacity = #{request.capacity}
+</if>
+<if test="request.mouldTime !=null">
+,mould_time = #{request.mouldTime}
+</if>
+where id = #{id}
+</update>
+
+
+</mapper>

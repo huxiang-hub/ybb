@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sso.mapper.SuperviseExecuteMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="superviseExecuteResultMap" type="com.sso.supervise.vo.SuperviseExecuteVO">
+        <id column="id" property="id"/>
+        <result column="uuid" property="uuid"/>
+        <result column="ma_id" property="maId"/>
+        <result column="wb_id" property="wbId"/>
+        <result column="sd_id" property="sdId"/>
+        <result column="start_num" property="startNum"/>
+        <result column="end_num" property="endNum"/>
+        <result column="ready_num" property="readyNum"/>
+        <result column="curr_num" property="currNum"/>
+        <result column="start_time" property="startTime"/>
+        <result column="exe_status" property="exeStatus"/>
+        <result column="event" property="event"/>
+        <result column="us_ids" property="usIds"/>
+        <result column="update_at" property="updateAt"/>
+        <result column="user_name" property="userName"/>
+        <result column="equipment_name" property="equipmentName"/>
+        <result column="complete_num" property="completeNum"/>
+        <result column="od_name" property="odName"/>
+        <result column="od_no" property="odNo"/>
+        <result column="od_count" property="odCount"/>
+        <result column="limit_date" property="limitDate"/>
+        <result column="exceed_date" property="exceedDate"/>
+        <result column="od_status" property="odStatus"/>
+    </resultMap>
+
+    <update id="updateStatusById">
+        update yb_supervise_execute set exeStatus=#{exeStatus} where id = #{osId}
+    </update>
+
+    <select id="selectSuperviseExecutePage" resultMap="superviseExecuteResultMap">
+        select * from yb_supervise_execute
+    </select>
+    <select id="getCurrNum" resultType="java.lang.Integer">
+        select curr_num from yb_supervise_execute where ma_id = #{maId};
+    </select>
+
+    <select id="getCurrNumByOderId" resultType="java.lang.Integer">
+        SELECT curr_num FROM yb_supervise_execute WHERE ma_id = #{maId}
+        <if test="sdId!=null">
+            AND sd_id = #{sdId}
+        </if>
+    </select>
+    <update id="updateStateToSuperviseExecute" parameterType="com.sso.supervise.entity.SuperviseExecute">
+        UPDATE  yb_supervise_execute
+        SET es_id =#{esId},
+        update_at = #{updateAt},
+        start_time = #{startTime},
+        exe_status =#{exeStatus},
+        event =#{event}
+        WHERE ma_id = #{maId}
+    </update>
+    <update id="updateStateToSupervise">
+         UPDATE  yb_supervise_execute  SET es_id =#{esId} WHERE ma_id = #{maId}
+    </update>
+    <select id="getExecuteStateByOdId" resultType="com.sso.supervise.entity.SuperviseExecute">
+        SELECT * FROM yb_supervise_execute WHERE  sd_id = #{sdId}
+    </select>
+
+    <select id="getExecuteOrder" resultType="com.sso.supervise.entity.SuperviseExecute">
+        select * from yb_supervise_execute
+        <where>
+            <if test="maId!=null">
+                ma_id = #{maId}
+            </if>
+        </where>
+
+    </select>
+    <update id="updateSuperviseExecuteBymMaId">
+        UPDATE  yb_supervise_execute  SET us_ids = #{usIds}
+         where  ma_id = #{maId}
+    </update>
+
+    <select id="findExecuteOrderStatus" resultType="com.sso.supervise.vo.SuperviseExecuteVO">
+        SELECT a.operator,b.`name` userName,c.`name`
+        equipmentName,d.complete_num,g.od_name,g.od_no,g.od_count,g.limit_date,(g.limit_date-d.end_time) exceedDate
+        FROM yb_supervise_execute a
+        JOIN yb_base_staffinfo b ON b.user_id=a.operator
+        JOIN yb_machine_mainfo c ON c.id=a.ma_id
+        JOIN yb_workbatch_ordlink d ON d.id=a.sd_id
+        JOIN yb_order_workbatch f ON d.wb_id=f.id
+        JOIN yb_order_ordinfo g ON g.id=f.od_id
+        <where>
+            <if test="odName != null">
+                AND g.od_name = #{odName}
+            </if>
+            <if test="userName != null">
+                AND b.name = #{userName}
+            </if>
+            <if test="equipmentName != null">
+                AND c.name = #{equipmentName}
+            </if>
+        </where>
+        limit #{current},#{size}
+    </select>
+    <select id="executeOrderCount" resultType="int">
+        SELECT COUNT(*)
+        FROM yb_supervise_execute a
+        JOIN yb_base_staffinfo b ON b.user_id=a.operator
+        JOIN yb_machine_mainfo c ON c.id=a.ma_id
+        JOIN yb_workbatch_ordlink d ON d.id=a.sd_id
+        JOIN yb_order_workbatch f ON d.wb_id=f.id
+        JOIN yb_order_ordinfo g ON g.id=f.od_id
+        <where>
+            <if test="odName != null">
+                AND g.od_name = #{odName}
+            </if>
+            <if test="userName != null">
+                AND b.name = #{userName}
+            </if>
+            <if test="equipmentName != null">
+                AND c.name = #{equipmentName}
+            </if>
+        </where>
+    </select>
+    <select id="getBeanByUUID" resultType="com.sso.supervise.vo.SuperviseExecuteVO">
+       SELECT * FROM yb_supervise_execute WHERE uuid = #{uuid}
+    </select>
+</mapper>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.supervise.mapper.SuperviseRunregularMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="superviseRunregularResultMap" type="com.yb.supervise.entity.SuperviseRunregular">
+        <id column="id" property="id"/>
+        <result column="uuid" property="uuid"/>
+        <result column="ma_id" property="maId"/>
+        <result column="sd_id" property="sdId"/>
+        <result column="number" property="number"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="stay_time" property="stayTime"/>
+        <result column="regular" property="regular"/>
+        <result column="over_time" property="overTime"/>
+        <result column="us_ids" property="usIds"/>
+        <result column="status" property="status"/>
+        <result column="is_waring" property="isWaring"/>
+        <result column="create_at" property="targetDay"/>
+        <result column="update_at" property="targetHour"/>
+        <result column="target_day" property="targetMin"/>
+        <result column="target_hour" property="createAt"/>
+        <result column="target_min" property="updateAt"/>
+
+    </resultMap>
+    <select id="getByuuid" resultType="com.yb.supervise.entity.SuperviseRunregular">
+        select * from yb_supervise_runregular a
+        where a.uuid = #{uuid}
+        and a.target_day !=''
+        and a.update_at is null
+        order by a.create_at desc
+        limit 0,1
+    </select>
+
+    <insert id="saveRunregular" parameterType="com.yb.supervise.entity.SuperviseRunregular" useGeneratedKeys="true" keyProperty="id">
+        insert into yb_supervise_runregular
+        (
+            `uuid`,`ma_id`,`sd_id`,`number`,`start_time`,`regular`,`us_ids`,`status`,`target_day`,`target_hour`,`target_min`,`create_at`
+        )
+        values
+        (
+            #{uuid},
+            #{maId},
+            #{sdId},
+            #{number},
+            #{startTime},
+            #{regular},
+            #{usIds},
+            #{status},
+            #{targetDay},
+            #{targetHour},
+            #{targetMin},
+            #{createAt}
+        )
+    </insert>
+    <update id="updateRunregular" parameterType="com.yb.supervise.entity.SuperviseRunregular">
+        UPDATE yb_supervise_runregular SET end_time=#{endTime},stay_time=#{stayTime},over_time=#{overTime},status=#{status},update_at= #{updateAt}
+        WHERE id =#{id}
+    </update>
+</mapper>

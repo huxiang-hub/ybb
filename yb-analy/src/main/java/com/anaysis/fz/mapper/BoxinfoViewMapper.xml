@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anaysis.fz.mapper.BoxinfoViewMapper">
+    <select id="getlist" resultType="com.anaysis.entity.BoxinfoViewEntity">
+        select mac as `uuid`, id as `mac_id` from
+        boxinfo
+    </select>
+</mapper>

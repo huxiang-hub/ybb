@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.supervise.mapper.SuperviseIntervalalgMapper">
+
+    <insert id="createEvent">
+         DROP EVENT IF EXISTS event_supervise_intervalalg;<!--如果事件已存在则删除-->
+         CREATE EVENT event_supervise_intervalalg ON SCHEDULE EVERY 1 DAY<!--每天执行一次-->
+         STARTS date_add(date( ADDDATE(curdate(),1)),interval 0 hour)<!--0点触发事件-->
+         DO<!--事件执行内容-->
+        	DELETE
+         FROM
+        	yb_supervise_intervalalg
+         WHERE
+        	create_at &lt; DATE_SUB(CURDATE(),
+        	 INTERVAL ${superviseIntervalalgEventVO.num} ${superviseIntervalalgEventVO.unit});
+    </insert>
+
+    <insert id="copyData">
+         INSERT INTO yb_supervise_intervalalg_copy
+         SELECT
+        	*
+        FROM
+        	yb_supervise_intervalalg
+        WHERE
+        	create_at > curdate() - INTERVAL 2 DAY;
+
+
+    </insert>
+
+    <update id="renameTable">
+        ALTER TABLE yb_supervise_intervalalg RENAME TO yb_supervise_intervalalg_old;
+
+        ALTER TABLE yb_supervise_intervalalg_copy RENAME TO yb_supervise_intervalalg;
+
+        ALTER TABLE yb_supervise_intervalalg_old RENAME TO yb_supervise_intervalalg_copy;
+    </update>
+
+    <delete id="truncateTable">
+        TRUNCATE TABLE yb_supervise_intervalalg_copy;
+    </delete>
+
+</mapper>

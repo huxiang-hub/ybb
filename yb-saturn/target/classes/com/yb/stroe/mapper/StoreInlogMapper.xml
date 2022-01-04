@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.stroe.mapper.StoreInlogMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.yb.stroe.entity.StoreInlog">
+        <id column="id" property="id" />
+        <result column="st_type" property="stType" />
+        <result column="st_id" property="stId" />
+        <result column="st_no" property="stNo" />
+        <result column="st_size" property="stSize" />
+        <result column="ml_id" property="mlId" />
+        <result column="et_id" property="etId" />
+        <result column="lay_num" property="layNum" />
+        <result column="create_at" property="createAt" />
+    </resultMap>
+    <delete id="deleteNoEtIdList">
+        DELETE
+        FROM
+        	yb_store_inlog
+        WHERE
+        <if test="noEtIdList != null and noEtIdList.size() != 0">
+             et_id IN
+            <foreach collection="noEtIdList" item="etId" open="(" close=")" separator=",">
+               #{etId}
+            </foreach>
+        </if>
+        <if test="noEtIdList == null or noEtIdList.size() == 0">
+           1=2
+        </if>
+
+    </delete>
+
+</mapper>
+

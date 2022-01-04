@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.system.user.mapper.SaTenantMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="tenantResultMap" type="com.yb.system.user.entity.Tenant">
+        <result column="id" property="id"/>
+        <result column="create_user" property="createUser"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_user" property="updateUser"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="status" property="status"/>
+        <result column="is_deleted" property="isDeleted"/>
+        <result column="tenant_name" property="tenantName"/>
+        <result column="linkman" property="linkman"/>
+        <result column="contact_number" property="contactNumber"/>
+        <result column="address" property="address"/>
+    </resultMap>
+
+
+    <select id="selectTenantPage" resultMap="tenantResultMap">
+        select * from bladex.blade_tenant where is_deleted = 0
+    </select>
+    <select id="getTenant" resultMap="tenantResultMap">
+      select * from  bladex.blade_tenant where tenant_name= #{factoryName}
+    </select>
+    <select id="getTenantList" resultMap="tenantResultMap">
+        select * from  bladex.blade_tenant where tenant_name like CONCAT('%',#{factoryName},'%')
+    </select>
+    <select id="getList" resultMap="tenantResultMap">
+        SELECT id, tenant_id, tenant_name, linkman, contact_number, address, create_user, create_time, update_user, update_time, status, is_deleted FROM bladex.blade_tenant WHERE is_deleted = 0
+    </select>
+
+    <select id="getAnalyTenantId" resultMap="tenantResultMap">
+        select * from  bladex.blade_tenant where encrypt_id= #{str}
+    </select>
+
+    <select id="findAnalyTenantIdBoxUuid" resultType="java.lang.String">
+        select uuid
+        from  bladex.yb_machine_mixbox
+        where tenant_id = #{tenantId}
+    </select>
+
+    <select id="findBoxInfo" resultType="com.yb.system.user.vo.TenantAnalyBoxStatusVO">
+    select ymm.name as name , ysb.status as status , ymo.plan_num as planNum, yse.curr_num as currNum
+    ,ysb.number_of_day as numberOfDay, ysb.dspeed as dspeed, ymo.pd_name as pdName, ymo.wb_no as wbNo,
+    ysb.start_time as startTime , ysb.update_at as updateAt
+    from yb_supervise_boxinfo ysb
+    join yb_machine_mainfo ymm on ysb.ma_id = ymm.id
+    join yb_supervise_execute yse ON yse.ma_id = ysb.ma_id
+    join yb_workbatch_ordlink ymo ON yse.sd_id = ymo.id
+    where ysb.uuid in
+       <foreach collection="uuids" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+       </foreach>
+    </select>
+
+    <select id="TenantIdLogin" resultType="com.yb.system.user.entity.Tenant">
+        select * from bladex.blade_tenant
+        where tenant_id = #{tenant}
+    </select>
+
+</mapper>

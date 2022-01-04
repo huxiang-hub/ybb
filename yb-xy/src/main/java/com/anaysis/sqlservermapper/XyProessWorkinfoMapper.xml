@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anaysis.sqlservermapper.XyProessWorkinfoDao">
+    <select id="list" resultType="com.anaysis.entity.ProcessWorkinfoVO">
+		SELECT
+            ID AS erpId,--ID
+            GXMC as prName,--工序名称
+            GXBM AS prNo,--工序编号
+            CASE
+            WHEN SFZX = 0 THEN 1
+            ELSE 0 END AS status,
+            SFZX AS isdel,--是否删除
+            ZLBM AS pyNum,--工序分类编号
+            GXZL AS pyName--工序分类名称
+        FROM Base_GXZL
+	</select>
+
+	<select id="getClassifyList" resultType="com.anaysis.entity.ProcessClassify">
+		SELECT
+            ID AS erpId,
+            ZLBM AS pyNum,
+            GXLB AS pyName,
+            CASE
+            WHEN SFZX = 0 THEN 1
+            ELSE 0 END AS status
+        FROM
+            Base_GXLB
+	</select>
+
+    <select id="getClasslink" resultType="com.anaysis.entity.ProcessClasslink">
+        SELECT
+            sh.ID AS Id,
+            sh.ID AS prId,
+            sh.iType as pyId
+        FROM
+            sysTech sh
+        LEFT JOIN sysTech_MaterialClass ss1 ON sh.ID = ss1.ID_Tech
+        LEFT JOIN scvZMaterialClass ss2 ON ss2.cCode = ss1.cCode_Mat
+        WHERE
+            sh.iState > -1
+            AND sh.ID = #{Id}
+        ORDER BY
+            iType,
+            sh.iIndex
+    </select>
+</mapper>

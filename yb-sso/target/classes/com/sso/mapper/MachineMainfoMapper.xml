@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sso.mapper.MachineMainfoMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="machineMainfoResultMap" type="com.sso.panelapi.entity.MachineMainfo">
+        <id column="id" property="id"/>
+        <result column="mt_id" property="mtId"/>
+        <result column="mno" property="mno"/>
+        <result column="name" property="name"/>
+        <result column="dp_id" property="dpId"/>
+        <result column="pro_id" property="proId"/>
+    </resultMap>
+
+
+    <select id="selectMachineMainfoPage" resultMap="machineMainfoResultMap">
+        select * from yb_machine_mainfo where is_deleted = 0
+    </select>
+
+    <select id="getMachineMainfo" resultType="com.sso.panelapi.vo.MachineMainfoVO">
+        SELECT ymm.*,
+        ypw.pr_name AS prName,
+        ybd.dp_name AS dpName
+        FROM  yb_machine_mainfo ymm
+        LEFT JOIN  yb_process_workinfo ypw
+        ON ymm.pro_id = ypw.id
+        LEFT JOIN yb_base_deptinfo ybd
+        ON ymm.dp_id = ybd.id
+        <where>
+            <if test="maId!=null">
+                ymm.id = #{maId}
+            </if>
+        </where>
+    </select>
+    <select id="getMachineMainfoById" resultType="com.sso.panelapi.vo.MachineMainfoVO">
+        SELECT t1.id,
+        t1.name,
+        t1.mno,
+        t1.mt_id AS mtId,
+        t1.pro_id AS proId,
+        t3.dp_name AS dpName,
+        t3.id AS dpId,
+        t2.brand,
+        t2.model,
+        t2.specs,
+        t2.image,
+        t2.speed
+        FROM yb_machine_mainfo t1
+        LEFT JOIN yb_machine_classify t2 ON t1.mt_id = t2.id
+        LEFT JOIN yb_base_deptinfo t3 ON t3.id = t1.dp_id
+        WHERE 1=1
+        <if test="id!=null"> AND t1.id = #{id}</if>
+    </select>
+    <update id="updateMachineMaInfo" >
+        UPDATE yb_machine_mainfo SET
+        brand = #{brand},
+        model = #{model},
+        specs = #{specs},
+        image = #{image}
+        <where>
+            <if test="maId!=null">
+                id = #{maId}
+            </if>
+        </where>
+    </update>
+
+    <select id="getMachins" resultType="com.sso.panelapi.entity.MachineMainfo">
+        SELECT * FROM yb_machine_mainfo WHERE 1=1
+        <if test="name!=null and name!='null' and name!=''">
+           and `name` LIKE CONCAT('%',#{name},'%')
+        </if>
+    </select>
+
+    <select id="getMachinsByDpIdPrId" resultType="com.sso.panelapi.vo.MachineMainfoVO">
+        SELECT t1.id AS maId,t1.mno,t1.name AS maName,t4.status AS maStatus
+        FROM  yb_machine_mainfo t1
+        LEFT JOIN yb_process_machlink t2
+        ON t1.id = t2.ma_id
+        LEFT JOIN yb_process_classify t3
+        ON t2.pr_id = t3.id
+        LEFT JOIN yb_supervise_boxinfo t4
+        ON t4.ma_id = t1.id
+        <where>
+            1=1
+            <if test="dpId!=null"> AND t1.dp_id=#{dpId}</if>
+            <if test="maId!=null"> AND t1.id=#{maId}</if>
+            <if test="prId!=null"> AND t2.pr_id =#{prId}</if>
+            <if test="status!=null"> AND t4.status =#{status}</if>
+        </where>
+    </select>
+
+    <select id="getAllMachinePages"  resultType="com.sso.panelapi.vo.MachineMainfoVO">
+        SELECT t1.id,
+        t1.name,
+        t1.mno,
+        t1.mt_id AS mtId,
+        t1.pro_id AS proId,
+        t3.dp_name AS dpName,
+        t3.id AS dpId,
+        t2.brand,
+        t2.model,
+        t2.specs,
+        t2.image,
+        t2.speed
+        FROM yb_machine_mainfo t1
+        LEFT JOIN yb_machine_classify t2 ON t1.mt_id = t2.id
+        LEFT JOIN yb_base_deptinfo t3 ON t3.id = t1.dp_id
+        WHERE 1=1
+        <if test="mainfoVO.id!=null"> AND t1.id = #{mainfoVO.id}</if>
+        <if test="mainfoVO.dpId!=null"> AND t3.id = #{mainfoVO.dpId}</if>
+        <if test="mainfoVO.name!=null"> AND t1.name LIKE CONCAT('%',#{mainfoVO.name},'%')</if>
+        <if test="mainfoVO.mtId!=null"> AND t1.mt_id = #{mainfoVO.mtId}</if>
+    </select>
+
+
+    <select id="getMachineInfoByCondition" resultType="com.sso.panelapi.vo.MachineMainfoVO">
+        SELECT * FROM yb_machine_mainfo ymm WHERE ymm.`name`=#{machineName} AND ymm.mno=#{machineNo}
+    </select>
+    <select id="getAllBrand" resultType="java.lang.String">
+        SELECT  brand FROM  yb_machine_classify
+    </select>
+
+    <select id="getRateByMachineId" resultType="com.sso.panelapi.vo.MachineMainfoVO">
+      SELECT * from yb_process_workinfo  ypw JOIN yb_process_machlink ypm on ypm.pr_id = ypw.id WHERE pr_name=#{prName} AND ma_id =#{maId}
+    </select>
+    <select id="getMachineByDpId" resultType="com.sso.panelapi.vo.MachineMainfoVO">
+        SELECT
+        t1.id AS maId,
+        t1.name AS maName,
+        t2.pr_name AS prName
+        FROM yb_machine_mainfo t1
+        LEFT JOIN yb_process_workinfo t2
+        ON t1.pro_id = t2.id
+        WHERE t1.dp_id = #{dpId}
+    </select>
+    <select id="getCompanyInfoByMaId" resultType="com.sso.panelapi.vo.CompanyVO">
+        SELECT
+        ybf.fname AS fName,
+        ybd.dp_name AS dpName,
+        ypw.pr_name AS PrName,
+        ymc.brand,
+        ymc.model,
+        ymm.name AS maName
+        FROM
+        (SELECT * FROM yb_machine_mainfo WHERE id =#{maId}) ymm
+        LEFT JOIN yb_base_deptinfo ybd
+        ON ymm.dp_id = ybd.id
+        LEFT JOIN yb_machine_classify ymc
+        ON ymm.mt_id = ymc.id
+        LEFT JOIN yb_process_workinfo ypw
+        ON ymm.pro_id = ypw.id
+        LEFT JOIN yb_base_factory ybf
+	    ON ybf.tenant_id = ybd.tenant_id
+    </select>
+
+    <select id="machineListByDeptId" resultType="com.sso.panelapi.entity.MachineMainfo">
+        SELECT *
+        FROM yb_machine_mainfo a
+        JOIN yb_process_machlink b ON b.ma_id=a.id
+        WHERE b.pr_id=#{prId} AND a.dp_id=#{dpId}
+    </select>
+</mapper>

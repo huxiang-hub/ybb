@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.message.mapper.ImMessageMapper">
+
+    <select id="selectImMessagePage"  parameterType="com.yb.message.vo.ImMessageVO"  resultType="com.yb.message.vo.ImMessageVO">
+        SELECT t1.*,t2.name FROM im_message t1
+        LEFT JOIN yb_base_staffinfo t2
+        ON t1.to_id = t2.user_id
+        WHERE from_id =#{messageVO.fromId}
+        <if test="messageVO.type!=null">AND t1.type LIKE  CONCAT ('%',#{messageVO.type},'%')</if>
+        <if test="messageVO.name!=null">AND t2.name LIKE  CONCAT ('%',#{messageVO.name},'%')</if>
+        <if test="messageVO.toId!=null">AND t1.to_id LIKE  CONCAT ('%',#{messageVO.toId},'%')</if>
+    </select>
+
+    <select id="selectImMessageMachinePage" parameterType="com.yb.message.vo.ImMessageVO"  resultType="com.yb.message.vo.ImMessageVO">
+        SELECT  *,to_id AS name FROM im_message
+        WHERE  from_id = #{messageVO.fromId}
+        <if test="messageVO.type!=null">AND type LIKE  CONCAT ('%',#{messageVO.type},'%')</if>
+        <if test="messageVO.name!=null">AND to_id LIKE  CONCAT ('%',#{messageVO.name},'%')</if>
+    </select>
+    <select id="selectImMessageChatPage" parameterType="com.yb.message.vo.ImMessageVO"  resultType="com.yb.message.vo.ImMessageVO">
+        SELECT t3.*,t4.name AS name FROM
+        (SELECT t1.*,t2.name AS fromId FROM im_message t1 LEFT JOIN
+        (SELECT user_id,name  FROM yb_base_staffinfo ) t2
+        ON t2.user_id = t1.from_id) t3
+        LEFT JOIN yb_base_staffinfo t4
+        ON t4.user_id = t3.to_id
+        WHERE 1=1
+        <if test="messageVO.fromId!=null">
+            AND t3.from_id  <![CDATA[ <> ]]> #{messageVO.fromId}
+        </if>
+        <if test="messageVO.type!=null">AND t3.type LIKE  CONCAT ('%',#{messageVO.type},'%')</if>
+        <if test="messageVO.name!=null">AND t4.name LIKE  CONCAT ('%',#{messageVO.name},'%')</if>
+        <if test="messageVO.toId!=null">AND t3.to_id LIKE  CONCAT ('%',#{messageVO.toId},'%')</if>
+
+    </select>
+
+
+</mapper>

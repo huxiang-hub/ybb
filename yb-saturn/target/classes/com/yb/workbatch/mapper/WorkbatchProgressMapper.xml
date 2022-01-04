@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.workbatch.mapper.WorkbatchProgressMapper">
+
+    <select id="selectWorkbatchProgressPage" resultType="com.yb.workbatch.entity.WorkbatchProgress">
+        SELECT *
+        FROM yb_workbatch_progress
+        <where>
+            <if test="workbatchProgress.wbNo != null and workbatchProgress.wbNo != ''">
+                AND wb_no like CONCAt('%',#{workbatchProgress.wbNo},'%')
+            </if>
+            <if test="workbatchProgress.prName != null and workbatchProgress.prName != ''">
+                AND pr_name like CONCAt('%',#{workbatchProgress.prName},'%')
+            </if>
+            <if test="workbatchProgress.prId != null and workbatchProgress.prId != ''">
+                AND pr_id = #{workbatchProgress.prId}
+            </if>
+            <if test="workbatchProgress.limitTime != null and workbatchProgress.limitTime != ''">
+                AND limit_time = #{workbatchProgress.limitTime}
+            </if>
+        </where>
+    </select>
+    <select id="selectGroupWbNo" resultType="java.lang.String">
+        SELECT wb_no
+        FROM yb_workbatch_progress
+        <where>
+            <if test="workbatchProgressVO.wbNo != null and workbatchProgressVO.wbNo != ''">
+               AND wb_no like CONCAt('%',#{workbatchProgressVO.wbNo},'%')
+            </if>
+            <if test="workbatchProgressVO.cmName != null and workbatchProgressVO.cmName != ''">
+               AND cm_name like CONCAt('%',#{workbatchProgressVO.cmName},'%')
+            </if>
+            <if test="workbatchProgressVO.maId != null and workbatchProgressVO.maId != ''">
+               AND ma_id = #{workbatchProgressVO.maId}
+            </if>
+            <if test="workbatchProgressVO.startTime != null and workbatchProgressVO.startTime != '' and workbatchProgressVO.endTime != null and workbatchProgressVO.endTime != ''">
+               AND limit_time &gt;= #{workbatchProgressVO.startTime}
+               AND limit_time &lt;= #{workbatchProgressVO.endTime}
+            </if>
+            <if test="workbatchProgressVO.differenceTimeStart != null and workbatchProgressVO.differenceTimeEnd != null">
+               AND TIMESTAMPDIFF(MINUTE,NOW(),limit_time) &gt;= #{workbatchProgressVO.differenceTimeStart}
+               AND TIMESTAMPDIFF(HOUR,NOW(),limit_time) &lt;= #{workbatchProgressVO.differenceTimeEnd}
+            </if>
+        </where>
+        GROUP BY wb_no
+        ORDER BY limit_time DESC
+    </select>
+
+    <select id="workbatchProgressPage" resultType="com.yb.workbatch.vo.WorkbatchProgressVO">
+        SELECT *
+        FROM yb_workbatch_progress
+        <where>
+            wb_no IN
+            <foreach collection="wbNoList" item="wbNo" open="(" close=")" separator=",">
+                #{wbNo}
+            </foreach>
+        </where>
+        GROUP BY wb_no,pt_name,pr_name
+        ORDER BY wb_no,pt_name,wp_type
+    </select>
+
+</mapper>

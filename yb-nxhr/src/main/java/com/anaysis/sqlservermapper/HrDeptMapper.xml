@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anaysis.sqlservermapper.HrDeptMapper">
+
+
+    <select id="list" resultType="com.anaysis.entity.BaseDeptinfo">
+        SELECT * FROM HRPersonProf;
+    </select>
+    <select id="getByErpId" resultType="com.anaysis.entity.BaseDeptinfo">
+        SELECT
+        DepartmentID as dpNum,
+        DepartmentName as dpName,
+        RootID as erpPid,
+        ObjId as erpId
+        FROM HRDepartment where DepartmentID = #{dpErp}
+    </select>
+    <select id="getAll" resultType="com.anaysis.entity.BaseDeptinfo">
+        SELECT
+        DepartmentID as dpNum,
+        DepartmentName as dpName,
+        RootID as erpPid,
+        DepartmentID as erpId
+        FROM HRDepartment
+    </select>
+    <select id="getByErpIds" resultType="com.anaysis.entity.BaseDeptinfo">
+        SELECT
+        DepartmentID as dpNum,
+        DepartmentName as dpName,
+        RootID as erpPid,
+        DepartmentID as erpId
+        FROM HRDepartment
+        WHERE DepartmentID IN
+        <foreach item="item" collection="list" separator="," open="(" close=")" index="">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

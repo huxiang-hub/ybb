@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.statis.mapper.StatisReachremarkMapper">
+
+
+<update id="updateRemark">
+    UPDATE  yb_statis_reachremark
+    set pro_ready_time = #{reachremark.proReadyTime}, device_fault_time = #{reachremark.deviceFaultTime}
+    ,quality_test_time = #{reachremark.qualityTestTime}, type_switch_time = #{reachremark.typeSwitchTime}
+    ,manage_stop_time = #{reachremark.manageStopTime},other_loss_time = #{reachremark.otherLossTime},
+    other_loss_cause = #{reachremark.otherLossCause}
+    where id = #{reachremark.id}
+</update>
+
+<select id="hourRateLossStatistics" resultType="com.yb.panelapi.vo.HourRateLossStatisticsVO">
+    select ymm.name, bd.dict_value as maType , yso.target_day, ifnull(sum(ysr.pro_ready_time),0)as proReadyTime,
+    ifnull(sum(device_fault_time),0) as deviceFaultTime, ifnull(sum(quality_test_time) ,0)as qualityTestTime, ifnull(sum(type_switch_time),0) as typeSwitchTime,
+    ifnull(sum(manage_stop_time) ,0)as manageStopTime, ifnull(sum(other_loss_time) ,0)as otherLossTime
+    from yb_statis_ordreach yso
+    join yb_statis_reachremark ysr on yso.id = ysr.sr_id
+    join yb_machine_mainfo ymm on yso.ma_id = ymm.id
+    join blade_dict bd on bd.dict_key = ymm.ma_type
+    where bd.code='maType'
+    <if test="startTime != null ">
+     and yso.target_day >= #{startTime}
+    </if>
+    <if test="endTime != null ">
+    and yso.target_day &lt;= #{endTime}
+    </if>
+    <if test="maType != null and maType != ''">
+    and ymm.ma_type = #{maType}
+    </if>
+    <if test="maId != null">
+    and yso.ma_id = #{maId}
+    </if>
+    <if test="dpId != null">
+    and ymm.dp_id = #{dpId}
+    </if>
+    group by yso.ma_id
+</select>
+
+</mapper>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.prod.mapper.ProdProcelinkMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="prodProcelinkResultMap" type="com.yb.prod.vo.ProdProcelinkVO">
+        <id column="id" property="id"/>
+        <result column="pt_id" property="ptId"/>
+        <result column="pr_id" property="prId"/>
+        <result column="remarks" property="remarks"/>
+        <result column="pr_param" property="prParam"/>
+        <result column="image_url" property="imageUrl"/>
+        <result column="diff_level" property="diffLevel"/>
+        <result column="sort_num" property="sortNum"/>
+        <result column="point" property="point"/>
+        <result column="is_used" property="isUsed"/>
+        <result column="py_name" property="pyName"/>
+        <result column="pt_name" property="ptName"/>
+    </resultMap>
+
+
+    <select id="selectProdProcelinkPage" resultMap="prodProcelinkResultMap">
+        select * from yb_prod_procelink where is_used = 1
+    </select>
+    <select id="selectOrderProcelink" resultType="com.yb.prod.vo.ProdProcelinkVO">
+        SELECT DISTINCT c.pt_name,c.pid,a.pr_name,a.sort,b.waste_rate
+        FROM yb_process_workinfo a
+        JOIN yb_prod_procelink b ON b.pr_id=a.id
+        JOIN yb_prod_partsinfo c ON c.id=b.pt_id
+        WHERE c.pd_id=#{pdId}
+        ORDER BY a.sort
+
+    </select>
+    <select id="select" resultType="com.yb.prod.vo.ProdProcelinkVO">
+        SELECT procelink.*,workinfo.*
+        FROM yb_prod_procelink procelink
+        join yb_process_workinfo workinfo on procelink.pr_id = workinfo.id
+        WHERE procelink.pt_id=#{ptId}
+        order by workinfo.sort
+    </select>
+
+    <select id="rowSelectPd" resultType="com.yb.prod.vo.ProdProcelinkVO">
+        SELECT e.py_name,a.pr_name,a.sort,b.waste_rate,b.diff_level
+        FROM yb_process_workinfo a
+        LEFT JOIN yb_prod_procelink b ON b.pr_id=a.id
+        LEFT JOIN yb_prod_partsinfo c ON c.id=b.pt_id
+		LEFT JOIN yb_process_classlink d ON d.pr_id=a.id
+		LEFT JOIN yb_process_classify e ON e.id=d.py_id
+        WHERE c.pd_id=#{pdId} AND c.pd_type = #{pdType}
+        ORDER BY a.sort
+    </select>
+
+    <delete id="removeByPdIdAndPdType" parameterType="java.lang.Integer">
+        DELETE FROM yb_prod_procelink WHERE pt_id IN (SELECT id FROM yb_prod_partsinfo where pd_id = #{pdId} AND pd_type = #{pdType});
+    </delete>
+
+    <select id="getByPtIdAndPrId" resultType="com.yb.prod.entity.ProdProcelink">
+        select * from yb_prod_procelink
+        where pt_id = #{ptId}
+        and pr_id = #{prId}
+        and is_used = 1
+        order by sort_num desc
+        limit 0,1
+    </select>
+    <select id="getUpProcess" resultType="com.yb.prod.entity.ProdProcelink">
+        select * from yb_prod_procelink
+        where pt_id = #{ptId}
+        and pr_id != #{prId}
+        and is_used = 1
+        and sort_num &lt; #{sortNum}
+        order by sort_num desc
+        limit 0,1
+    </select>
+</mapper>
+

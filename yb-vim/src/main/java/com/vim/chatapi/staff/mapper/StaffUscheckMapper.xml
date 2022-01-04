@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.vim.chatapi.staff.mapper.StaffUscheckMapper">
+    <select id="getStaffUschecks" resultType="com.vim.chatapi.staff.entity.StaffUscheck">
+        SELECT t1.*,t2.is_work,t2.ck_status FROM yb_staff_uscheck t1
+        LEFT JOIN yb_workbatch_shiftinfo t2
+        ON t1.us_id = #{usId}
+        WHERE t1.ck_date LIKE CONCAT('%',#{date},'%')
+        <if test="model!=null">
+        AND t1.model = #{model}
+        </if>
+    </select>
+
+    <insert id="saveStaffUscheck" parameterType="com.vim.chatapi.staff.entity.StaffUscheck">
+        INSERT INTO yb_staff_uscheck
+        (us_id,class_num,ck_date,in_time,in_add,in_lnglat,out_time,out_add,out_lnglat,create_at,ck_status)
+        VALUES
+        (#{usId},#{classNum},#{ckDate},#{inTime},#{inAdd},#{inLnglat},#{outTime},#{outAdd},#{outLnglat},#{createAt},#{ckSatus})
+    </insert>
+    <update id="updateStaffUscheck" parameterType="com.vim.chatapi.staff.vo.StaffUscheckVO">
+        UPDATE yb_staff_uscheck
+        <set>
+            <if test="usId!=null">us_id = #{usId},</if>
+            <if test="classNum!=null">class_num = #{classNum},</if>
+            <if test="ckDate!=null">ck_date = #{ckDate},</if>
+            <if test="inTime!=null"> in_time=#{inTime},</if>
+            <if test="inAdd!=null">in_add = #{inAdd},</if>
+            <if test="inLnglat!=null">in_lnglat = #{inLnglat},</if>
+            <if test="outTime!=null">out_time = #{outTime},</if>
+            <if test="outAdd!=null">out_add = #{outAdd},</if>
+            <if test="outLnglat!=null">out_lnglat = #{outLnglat},</if>
+            <if test="createAt!=null">create_at = #{createAt},</if>
+            <if test="ckStatus!=null">ck_status = #{ckStatus}</if>
+        </set>
+        <where>
+            <if test="id!=null">us_id= #{usId}</if>
+            AND ck_date LIKE CONCAT('%',#{ckDate},'%')
+        </where>
+    </update>
+    <update id="updateSUscheck" parameterType="com.vim.chatapi.staff.entity.StaffUscheck">
+        UPDATE yb_staff_uscheck
+        <set>
+            <if test="usId!=null">us_id = #{usId},</if>
+            <if test="classNum!=null">class_num = #{classNum},</if>
+            <if test="ckDate!=null">ck_date = #{ckDate},</if>
+            <if test="inTime!=null"> in_time=#{inTime},</if>
+            <if test="inAdd!=null">in_add = #{inAdd},</if>
+            <if test="inLnglat!=null">in_lnglat = #{inLnglat},</if>
+            <if test="outTime!=null">out_time = #{outTime},</if>
+            <if test="outAdd!=null">out_add = #{outAdd},</if>
+            <if test="outLnglat!=null">out_lnglat = #{outLnglat},</if>
+            <if test="createAt!=null">create_at = #{createAt}</if>
+        </set>
+        <where>
+            <if test="id!=null">id= #{id}</if>
+        </where>
+    </update>
+    <select id="getStaffUscheck"  resultType="com.vim.chatapi.staff.entity.StaffUscheck">
+        SELECT * FROM yb_staff_uscheck
+        WHERE us_id = #{userId}
+    </select>
+
+    <select id="getStaffUscheckByDate" parameterType="com.vim.chatapi.staff.vo.DateModelVO"
+            resultType="com.vim.chatapi.staff.entity.StaffUscheck">
+        SELECT * FROM yb_staff_uscheck WHERE
+        1=1 AND us_id=#{usId}
+        <if test="endDate==null">
+            AND ck_date LIKE CONCAT('%',#{startDate},'%')
+        </if>
+        <if test="endDate!=null">
+            AND ck_date BETWEEN #{startDate} AND #{endDate}
+        </if>
+    </select>
+    <select id="getStaffUscheckInfo" resultType="com.vim.chatapi.staff.entity.StaffUscheck">
+        SELECT  * FROM  yb_staff_uscheck
+        WHERE us_id =#{userId}
+        AND ck_date LIKE CONCAT('%',#{date},'%')
+        <if test="model!=null"> AND model = #{model}</if>
+        ORDER BY create_at DESC
+    </select>
+</mapper>

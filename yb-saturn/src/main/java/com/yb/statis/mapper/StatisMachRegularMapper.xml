@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.statis.mapper.StatisMachRegularMapper">
+
+
+    <select id="selectStatisMachRegularPage" resultType="com.yb.statis.vo.StatisMachrRegularVO">
+        SELECT
+        *,
+        yso.quality_num AS standQualityNum,
+        yso.prepare_stay AS standPrepareStay,
+        yso.maintain_num As standMaintainNum ,
+        yso.maintain_time As standMaintainTime,
+        yso.mould_num As standMouldNum,
+        yso.mould_time As standMouldTime
+        FROM
+        yb_statis_machoee AS ysm
+        left JOIN yb_statis_machregular AS ymm ON ysm.id = ymm.sm_id
+        left JOIN yb_statis_oeeset yso ON ysm.id = yso.db_id
+        left JOIN yb_machine_mainfo yif ON ysm.ma_id = yif.id
+        WHERE yso.st_type='1'  and ysm.oe_type='2'
+        <if test="statisMachrRegularVO.oeDate!=null and statisMachrRegularVO.oeDate!=''">
+            and oe_date = #{statisMachrRegularVO.oeDate}
+        </if>
+        <if test="statisMachrRegularVO.maId!=null and statisMachrRegularVO.maId!=''">
+            and  ysm.ma_id = #{statisMachrRegularVO.maId}
+        </if>
+        <if test="statisMachrRegularVO.prId!=null and statisMachrRegularVO.prId!=''">
+            and ysm.ma_id in (select ma_id from yb_process_machlink where pr_id=#{statisMachrRegularVO.prId})
+        </if>
+        <if test="statisMachrRegularVO.dpId!=null and statisMachrRegularVO.dpId!=''">
+            and yif.dp_id =#{statisMachrRegularVO.dpId}
+        </if>
+    </select>
+
+</mapper>

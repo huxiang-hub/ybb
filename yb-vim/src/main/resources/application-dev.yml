@@ -1,0 +1,96 @@
+#39服务器端口
+#server:
+#port: 7100
+
+#本地服务器端口
+server:
+  port: 2022
+
+#数据源配置
+#spring:
+#  datasource:
+#    url: ${blade.datasource.dev.url}
+#    username: ${blade.datasource.dev.username}
+#    password: ${blade.datasource.dev.password}
+
+spring:
+  #排除DruidDataSourceAutoConfigure
+  autoconfigure:
+    exclude: com.alibaba.druid.spring.boot.autoconfigure.DruidDataSourceAutoConfigure
+  datasource:
+    dynamic:
+      #设置默认的数据源或者数据源组,默认值即为master
+      primary: master
+      datasource:
+        master:
+          url: jdbc:mysql://39.98.57.236:3378/yb_work_pro?useSSL=false&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&tinyInt1isBit=false&allowMultiQueries=true&serverTimezone=GMT%2B8
+          #url: jdbc:mysql://39.98.206.228:3377/yb_work?useSSL=false&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&tinyInt1isBit=false&allowMultiQueries=true&serverTimezone=GMT%2B8
+          username: root
+          password: ybbqwert
+          #url: jdbc:mysql://127.0.0.1:3306/yb_work?useSSL=false&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&tinyInt1isBit=false&allowMultiQueries=true&serverTimezone=GMT%2B8
+          #username: root
+          #password: root
+
+
+
+#mybatis-plus配置
+mybatis-plus:
+  mapper-locations: classpath:com/vim/**/mapper/*Mapper.xml
+  #实体扫描，多个package用逗号或者分号分隔
+  typeAliasesPackage: com.vim.**.entity
+
+#feign配置
+feign:
+  hystrix:
+    enabled: true
+    #sentinel:
+    #enabled: true
+  okhttp:
+    enabled: true
+  httpclient:
+    enabled: false
+
+#hystrix配置
+hystrix:
+  threadpool:
+    default:
+      coreSize: 300
+      maxQueueSize: 1000
+      queueSizeRejectionThreshold: 800
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 5000
+
+#ribbon配置
+ribbon:
+  #对当前实例的重试次数
+  MaxAutoRetries: 1
+  #切换实例的重试次数
+  MaxAutoRetriesNextServer: 2
+  #请求处理的超时时间
+  ReadTimeout: 60000
+  #请求连接的超时时间
+  ConnectTimeout: 60000
+  #对所有操作请求都进行重试
+  OkToRetryOnAllOperations: true
+
+#swagger扫描路径配置
+swagger:
+  base-packages:
+    - com.vim
+#微信开发的appId钥匙配置
+constants:
+  #WECHAT
+  weChatAppId: wx4ca477e77ef1391a
+  weChatAppSecret: 42857600ffbffa9fad000720907b8f1c
+  weChatTokenUrl: https://open.weixin.qq.com/connect/oauth2/authorize?
+  # 用户同意授权,回调url----你的域名后面再加上/getcode
+  weChatRedirectUrl: api/weChatcallback.do
+  scope: snsapi_userinfo
+  state: session
+#定义队列名称
+myqueue: test-que
+topicqueue: topicqueue

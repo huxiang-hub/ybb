@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.machine.mapper.ProcessFlowMapper">
+
+    <select id="page" resultType="com.yb.machine.response.ProcessFlowVO">
+        select * from v_ordexecute
+        <where>
+
+            <if test="request.cmName != null and request.cmName != ''">
+                and pd_name LIKE concat('%', #{request.cmName},'%')
+            </if>
+            <if test="request.wbNo != null and request.wbNo != ''">
+                and wb_No LIKE concat('%', #{request.wbNo},'%')
+            </if>
+            <if test="request.pdType != null and request.pdType != ''">
+                and pd_type in
+                <foreach item="item" index="index" collection="request.pdType.split(',')"  open="(" separator="," close=")">
+                    '${item}'
+                </foreach>
+            </if>
+            <if test="request.status != null and request.status != ''">
+                and `status` in
+                <foreach item="item" index="index" collection="request.status.split(',')"  open="(" separator="," close=")">
+                    '${item}'
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+
+</mapper>

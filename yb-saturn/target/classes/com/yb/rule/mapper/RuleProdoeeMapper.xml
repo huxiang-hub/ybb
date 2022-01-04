@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.rule.mapper.RuleProdoeeMapper">
+
+    <select id="selectRuleProdoee" resultType="com.yb.rule.entity.RuleProdoee">
+        SELECT *
+        FROM yb_rule_prodoee
+        WHERE ma_id = #{maId}
+        <if test="size != null and size >0">AND size_min &lt; #{size}
+            AND (size_max &gt;= #{size} OR size_max IS NULL)
+        </if>
+        <if test="material != null and material>0 ">AND (mate_max &gt;= #{material} OR mate_max IS NULL)
+            AND (mate_min &lt; #{material} OR mate_min IS NULL)
+        </if>
+        <if test="planNum != null and planNum>0">AND (plannum_max &gt;= #{planNum} OR plannum_max IS NULL)
+            AND plannum_min &lt; #{planNum}
+        </if>
+        <if test="model != null">AND model = #{model}</if>
+        order by speed desc limit 1
+    </select>
+
+    <select id="selectRuleProdoeeByMaId" resultType="com.yb.rule.entity.RuleProdoee">
+        SELECT  *
+        FROM yb_rule_prodoee WHERE (ma_id = #{maId})
+    </select>
+</mapper>

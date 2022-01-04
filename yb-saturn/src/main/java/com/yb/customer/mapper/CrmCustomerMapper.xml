@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.customer.mapper.CrmCustomerMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="staCrmCustomerResultMap" type="com.yb.customer.entity.CrmCustomer">
+        <id column="id" property="id"/>
+        <result column="cm_no" property="cmNo"/>
+        <result column="cm_name" property="cmName"/>
+        <result column="cm_shortname" property="cmShortname"/>
+        <result column="company" property="company"/>
+        <result column="unique_no" property="uniqueNo"/>
+        <result column="addr" property="addr"/>
+        <result column="create_at" property="createAt"/>
+    </resultMap>
+
+
+    <select id="selectCrmCustomerPage" resultMap="staCrmCustomerResultMap">
+        select * from yb_crm_customer where 1=1
+        <if test="staffDayoff.cmNo != null">
+            AND cm_no CONCAt('%',#{staffDayoff.cmNo},'%')
+        </if>
+        <if test="staffDayoff.cmName != null">
+            AND cm_name CONCAt('%',#{staffDayoff.cmName},'%')
+        </if>
+        <if test="staffDayoff.company != null">
+            AND company CONCAt('%',#{staffDayoff.company},'%')
+        </if>
+    </select>
+
+    <select id="getOneByCmName" resultType="com.yb.customer.vo.CrmCustomerVO">
+        select * from yb_crm_customer where cm_name = #{cmName}
+    </select>
+</mapper>

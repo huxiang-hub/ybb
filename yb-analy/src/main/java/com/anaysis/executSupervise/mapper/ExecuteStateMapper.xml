@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anaysis.executSupervise.mapper.ExecuteStateMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="superviseBoxinfoResultMap" type="com.anaysis.executSupervise.entity.ExecuteState">
+        <id column="id" property="id"/>
+        <result column="od_id" property="odId"/>
+        <result column="wb_id" property="wbId"/>
+        <result column="of_id" property="ofId"/>
+        <result column="us_id" property="usId"/>
+        <result column="ma_id" property="maId"/>
+        <result column="status" property="status"/>
+        <result column="event" property="event"/>
+        <result column="start_at" property="startAt"/>
+        <result column="end_at" property="endAt"/>
+        <result column="duration" property="duration"/>
+        <result column="remarks" property="remarks"/>
+        <result column="leader_id" property="leaderId"/>
+        <result column="team_id" property="teamId"/>
+        <result column="create_at" property="createAt"/>
+        <result column="event" property="event"/>
+    </resultMap>
+
+    <select id="getStateByMaId" resultType="com.anaysis.executSupervise.entity.ExecuteState">
+        SELECT a.*
+        FROM yb_execute_state a
+        WHERE a.id = (
+            SELECT b.es_id
+            FROM yb_supervise_execute b
+            WHERE b.ma_id = #{maId}
+        )
+    </select>
+    <update id="updateState" parameterType="com.anaysis.executSupervise.entity.ExecuteState">
+        update yb_execute_state SET end_at = #{endAt},duration = #{duration}  where id = #{id}
+    </update>
+
+
+    <select id="getExecutC1" resultType="com.anaysis.executSupervise.entity.ExecuteState">
+        SELECT *  FROM yb_execute_state WHERE `event` in ("B1","C1")
+                                          and ma_id = #{maId}  AND sd_id=#{sdId} and
+            start_at BETWEEN (select start_time FROM yb_execute_info where ma_id=#{maId} and sd_id=#{sdId} ORDER BY START_time desc LIMIT 1)
+        and (select CASE WHEN left(date_format(end_time, '%Y-%m-%d %H:%i:%s'),4)='0000' THEN now()
+                    WHEN end_time is null THEN now() ELSE end_time END  FROM yb_execute_info where ma_id=#{maId} and sd_id=#{sdId} ORDER BY START_time desc LIMIT 1)
+        ORDER BY start_at ASC
+    </select><select id="getB1Execute" resultMap="superviseBoxinfoResultMap">
+       SELECT *  FROM yb_execute_state WHERE `event` = "B1"
+                                          and ma_id = #{maId}  AND sd_id=#{sdId} and
+            start_at BETWEEN (select start_time FROM yb_execute_info where ma_id=#{maId} and sd_id=#{sdId} ORDER BY START_time desc LIMIT 1)
+        and (select CASE WHEN left(date_format(end_time, '%Y-%m-%d %H:%i:%s'),4)='0000' THEN now()
+                    WHEN end_time is null THEN now() ELSE end_time END  FROM yb_execute_info where ma_id=#{maId} and sd_id=#{sdId} ORDER BY START_time desc LIMIT 1)
+        ORDER BY start_at ASC
+
+</select>
+</mapper>

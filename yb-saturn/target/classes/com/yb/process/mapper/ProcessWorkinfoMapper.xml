@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.process.mapper.ProcessWorkinfoMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="processWorkinfoResultMap" type="com.yb.process.entity.ProcessWorkinfo">
+        <id column="id" property="id"/>
+        <result column="pr_name" property="prName"/>
+        <result column="pr_no" property="prNo"/>
+        <result column="sort" property="sort"/>
+        <result column="status" property="status"/>
+        <result column="islocal" property="islocal"/>
+        <result column="isdel" property="isdel"/>
+        <result column="create_at" property="createAt"/>
+        <result column="update_at" property="updateAt"/>
+    </resultMap>
+
+
+    <select id="selectProcessWorkinfoPage" resultMap="processWorkinfoResultMap">
+        select * from yb_process_workinfo where is_deleted = 0
+    </select>
+    <select id="getProcessIdByOrderId" resultType="java.lang.String">
+                SELECT
+                    b.pr_id
+                FROM
+                    yb_prod_procelink b
+                WHERE
+                    b.pd_id = ANY (
+                        SELECT
+                            a.pd_id
+                        FROM
+                            yb_order_ordinfo a
+                        LEFT JOIN yb_order_workbatch b ON a.id = b.od_id
+                        WHERE
+                            a.id = #{id}
+                    )
+                ORDER BY b.sort_num
+    </select>
+    <select id="getProcessListByOrderId" resultType="com.yb.process.entity.ProcessWorkinfo">
+        SELECT
+            *
+        FROM
+            yb_process_workinfo
+        WHERE
+            id IN
+        <foreach item="item" collection="list" separator="," open="(" close=")" index="">
+            #{item, jdbcType=INTEGER}
+        </foreach>
+        order by field(id,
+        <foreach item="item" collection="list" separator="," index="">
+            #{item, jdbcType=INTEGER}
+        </foreach>
+        )
+    </select>
+
+    <select id="selectByPtId" resultType="com.yb.process.vo.ProcessWorkinfoVO">
+        SELECT DISTINCT b.id,b.pr_name,b.sort,a.diff_level,a.waste_rate
+        FROM yb_prod_procelink a,yb_process_workinfo b
+        WHERE a.pr_id=b.id AND a.pt_id=#{ptId}
+        ORDER BY b.sort
+    </select>
+
+    <select id="unfinishNum" resultType="int">
+        SELECT b.plan_num - SUM(a.plan_num)
+    FROM yb_workbatch_ordlink a, yb_order_workbatch b
+    WHERE a.wb_id = b.id AND a.pr_id=#{prId} AND a.pt_id=#{ptId} AND a.wb_id=#{wbId}
+    </select>
+    <select id="selectSortProcessWorkinfoPage" resultType="com.yb.process.vo.ProcessWorkinfoVO">
+        SELECT t1.*,t3.id AS pyId FROM yb_process_workinfo t1
+        LEFT JOIN yb_process_classlink t2
+        ON t1.id = t2.pr_id
+        LEFT JOIN yb_process_classify t3
+        ON t3.id = t2.py_id
+        WHERE  1=1
+        AND t3.status = 1
+        <if test="processWorkinfo.prName!=null"> AND pr_name LIKE CONCAT('%',#{processWorkinfo.prName},'%')</if>
+        <if test="processWorkinfo.prNo!=null"> AND pr_no LIKE CONCAT('%',#{processWorkinfo.prNo},'%')</if>
+        ORDER BY sort ASC
+    </select>
+    <select id="selectSortProcessWorkinfo" resultType="com.yb.process.vo.ProcessWorkinfoVO">
+        SELECT t1.*,t3.id AS pyId FROM yb_process_workinfo t1
+        LEFT JOIN yb_process_classlink t2
+        ON t1.id = t2.pr_id
+        LEFT JOIN yb_process_classify t3
+        ON t3.id = t2.py_id
+        WHERE t1.id = #{id}
+    </select>
+    <select id="workInfoBy" resultType="com.yb.process.vo.ProcessWorkinfoVO">
+        SELECT b.*
+        FROM yb_process_classlink a,yb_process_workinfo b
+        WHERE a.pr_id=b.id AND a.py_id=#{pyId}
+        ORDER BY b.sort
+    </select>
+
+    <select id="getProcessWorkInByName" resultType="com.yb.process.vo.ProcessWorkinfoVO">
+       SELECT * FROM yb_process_workinfo WHERE pr_name =#{processName}
+    </select>
+
+    <select id="listByMachine" resultType="com.yb.process.entity.ProcessWorkinfo">
+        SELECT DISTINCT a.* FROM yb_process_workinfo a JOIN yb_machine_mainfo b ON a.id = b.pro_id
+    </select>
+</mapper>

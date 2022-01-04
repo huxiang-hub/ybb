@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.workbatch.mapper.WorkbatchOrdoeeMapper">
+
+
+    <select id="getOrdeeBySdId" resultType="com.yb.workbatch.vo.WorkbatchOrdoeeVo">
+	SELECT * FROM yb_workbatch_ordoee yee  JOIN yb_workbatch_ordlink ywo
+	     on yee.wk_id = ywo.id  WHERE ywo.id =#{sdId}
+    </select>
+    <select id="getOeeBySdId" resultType="com.yb.workbatch.entity.WorkbatchOrdoee">
+    SELECT * FROM yb_workbatch_ordoee ywo
+     WHERE ywo.wk_id =#{sdId}
+    </select>
+</mapper>

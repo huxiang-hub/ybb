@@ -1,0 +1,443 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.execute.mapper.ExecuteStateMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="executeStateResultMap" type="com.yb.execute.entity.ExecuteState">
+        <id column="id" property="id"/>
+        <result column="od_id" property="odId"/>
+        <result column="wb_id" property="wbId"/>
+        <result column="sd_id" property="sdId"/>
+        <result column="of_id" property="ofId"/>
+        <result column="us_id" property="usId"/>
+        <result column="ma_id" property="maId"/>
+        <result column="status" property="status"/>
+        <result column="event" property="event"/>
+        <result column="start_at" property="startAt"/>
+        <result column="end_at" property="endAt"/>
+        <result column="duration" property="duration"/>
+        <result column="remarks" property="remarks"/>
+        <result column="leader_id" property="leaderId"/>
+        <result column="team_id" property="teamId"/>
+        <result column="create_at" property="createAt"/>
+    </resultMap>
+
+
+    <select id="selectExecuteStatePage" resultType="com.yb.execute.vo.ExecuteStateVO">
+        SELECT DISTINCT
+        ( sd_id ),
+        yoo.od_name AS orderName,
+        yoo.od_no AS orderNo,
+        ymm.`name` AS machineName,
+        ymm.mno AS machineNo,
+        yow.batch_no AS batchNo,
+        ylk.id AS workBatchId,
+        yoo.remark AS ordRemark,
+        ylk.create_at AS batchCreateAt,
+        restltList.startAt as batchStartTime,
+        restltList.endAt as batchEndTime,
+        restltList.batchDuraction as batchDuration,
+        ymm.id as maId
+        FROM
+        yb_execute_state yss
+        JOIN yb_order_workbatch yow ON yss.wb_id = yow.id
+        JOIN yb_order_ordinfo yoo ON yow.od_id = yoo.id
+        JOIN yb_workbatch_ordlink ylk ON yss.sd_id = ylk.id
+        JOIN yb_machine_mainfo ymm ON yss.ma_id = ymm.id
+        JOIN (
+        SELECT
+        yss.sd_id AS sdId,
+        MAX( yss.end_at ) AS endAt,
+        MIN( yss.start_at ) AS startAt,
+        IFNULL( SUM( duration ), 0 ) AS batchDuraction
+        FROM
+        yb_execute_state yss
+        WHERE
+        sd_id IS NOT NULL
+        and `event` in ('B1','B2','B3','C1','C2',"C3","D1","D2")
+        GROUP BY
+        yss.sd_id
+        ) As restltList on restltList.sdId = yss.sd_id where 1=1
+        <if test="executeState.batchNoInput!=null and executeState.batchNoInput!=''">
+            and yow.batch_no=#{executeState.batchNoInput}
+        </if>
+        <if test="executeState.maIdInput!=null and executeState.maIdInput!=''">
+            and yss.ma_id = #{executeState.maIdInput}
+        </if>
+        <if test="executeState.startDateInput!=null and executeState.startDateInput!='' and executeState.endDateInput!=null and executeState.endDateInput!=''">
+            and #{executeState.startDateInput} &lt; restltList.startAt and #{executeState.endDateInput} &gt;
+            restltList.endAt
+        </if>
+    </select>
+
+
+    <select id="selectDayRecord" resultMap="executeStateResultMap">
+        select sum(TIMESTAMPDIFF(minute, start_at, end_at)), COUNT(*)
+        from yb_execute_state a
+        where a.event = 'b2'
+          and a.start_at = #{a.start_at}
+        GROUP BY start_at
+    </select>
+
+    <insert id="insertByTime" useGeneratedKeys="true">
+        insert into yb_execute_state(start_at, end_at)
+        values (#{startAt},
+                #{endAt})
+    </insert>
+
+
+    <select id="selectTask" resultType="java.util.HashMap" parameterType="int">
+        select *
+        from yb_execute_state e
+                 LEFT JOIN yb_order_ordinfo o on e.od_id = o.id
+                 LEFT JOIN yb_base_staffinfo s on e.us_id = s.id
+                 LEFT JOIN yb_order_workbatch w on e.wb_id = w.id
+                 LEFT JOIN yb_machine_mainfo m on e.ma_id = m.id
+        WHERE e.ma_id = 1
+    </select>
+
+
+    <select id="getLeaderAide" resultType="com.yb.execute.entity.ExecuteState">
+        SELECT *
+        FROM yb_execute_state
+        WHERE us_id = #{userId}
+        ORDER BY start_at DESC
+        LIMIT 1
+    </select>
+    <select id="getExecuteState" resultType="com.yb.execute.entity.ExecuteState">
+        SELECT *
+        FROM yb_execute_state
+        where ma_id = #{maId}
+          and sd_id = #{sdId}
+        ORDER BY start_at DESC
+        LIMIT 1
+    </select>
+    <update id="addAide">
+        update yb_execute_state set team_id = #{teamId}
+        <where>
+            <if test="userId!=null">
+                us_id=#{userId}
+            </if>
+        </where>
+    </update>
+
+    <select id="getExecuteStateByEsId" resultType="com.yb.execute.entity.ExecuteState">
+        SELECT *
+        FROM yb_execute_state
+        WHERE id = #{esId}
+    </select>
+    <update id="updataExecuteState">
+        UPDATE yb_execute_state
+        <set>
+            <if test="endAt!=null">
+                end_at = #{endAt},
+            </if>
+            <if test="duration!=null">
+                duration = #{duration},
+            </if>
+        </set>
+        <where>
+            <if test="id!=null">
+                id=#{id}
+            </if>
+        </where>
+    </update>
+    <select id="getExecuteStateById" resultType="com.yb.execute.entity.ExecuteState">
+        SELECT *
+        FROM yb_execute_state
+        WHERE id = #{id}
+    </select>
+    <select id="selectFaultTimeById" resultType="java.lang.Double">
+        select SUM(a.duration)
+        from yb_execute_state a
+        where a.ma_id = #{maId}
+          and upper(a.`event`) = 'C2'
+          and a.sd_id = #{sdId}
+          and a.start_at >= (select b.start_time
+                             from yb_execute_briefer b
+                             where b.es_id = (select id
+                                              from yb_execute_state c
+                                              where c.ma_id = #{maId}
+                                                and c.sd_id = #{sdId}
+                                                and c.`event` = 'D1'
+                                              ORDER BY c.start_at desc
+                                              LIMIT 1))
+    </select>
+    <select id="getStateByMaId" resultType="com.yb.execute.entity.ExecuteState">
+        SELECT a.*
+        FROM yb_execute_state a
+        WHERE a.id = (
+            SELECT b.es_id
+            FROM yb_supervise_execute b
+            WHERE b.ma_id = #{maId}
+        )
+    </select>
+    <select id="selectProTimeById" resultType="java.lang.Double">
+        select SUM(a.duration)
+        from yb_execute_state a
+        where a.ma_id = #{maId}
+          and upper(a.`event`) = 'C1'
+          and a.sd_id = #{sdId}
+          and a.start_at >= (select b.start_time
+                             from yb_execute_briefer b
+                             where b.es_id = (select id
+                                              from yb_execute_state c
+                                              where c.ma_id = #{maId}
+                                                and c.sd_id = #{sdId}
+                                                and c.`event` = 'D1'
+                                              ORDER BY c.start_at desc
+                                              LIMIT 1))
+    </select>
+
+
+    <select id="getExecuteVoListBy" resultType="com.yb.execute.vo.ExecuteStateVO">
+        SELECT IFNULL(SUM(duration), 0) AS sumDuraction,
+               IFNULL(COUNT(*), 0)      AS countExecuteNumber
+        FROM yb_execute_state ybs
+        WHERE ybs.ma_id = #{maid}
+          and ybs.`event` = #{type}
+          and start_at BETWEEN #{startTime} AND #{endTime}
+    </select>
+
+
+    <select id="getAcceptedGoodsByTimeAndMa" resultType="com.yb.execute.vo.ExecuteStateVO">
+SELECT
+	IFNULL(SUM(yeb.count_num), 0) AS countNum,
+  IFNULL(SUM(yeb.waste_num), 0) AS wasteNum,
+  IFNULL(sum(yeb.box_num), 0)   AS boxNum,
+  IFNULL(sum(yeb.time_set), 0)   AS timeSet
+FROM
+	yb_execute_briefer yeb
+	JOIN yb_execute_info ON yeb.ex_id = yb_execute_info.id
+WHERE
+	ma_id = #{maId}
+	AND yb_execute_info.sf_start_time = #{startTime}
+	AND yb_execute_info.sf_end_time =  #{endTime}
+    </select>
+
+
+    <select id="getAcceptedGoodsByTime" resultType="com.yb.execute.vo.ExecuteStateVO">
+SELECT
+	IFNULL( SUM( yeb.count_num ), 0 ) AS countNum,
+	IFNULL( SUM( yeb.waste_num ), 0 ) AS wasteNum,
+	IFNULL( sum( yeb.box_num ), 0 ) AS boxNum,
+	IFNULL( sum( yeb.time_set ), 0 ) AS timeSet
+FROM
+	yb_execute_info
+	JOIN yb_execute_briefer AS yeb
+WHERE
+	ma_id = #{mtId}
+	AND ex_id = #{exId}
+    </select>
+
+    <select id="getExecuteFailStatus" resultType="com.yb.execute.vo.ExecuteStateVO">
+        SELECT IFNULL(SUM(duration), 0) AS duration
+        FROM yb_execute_state ybs
+                 JOIN yb_execute_fault yef ON ybs.id = yef.es_id
+        WHERE start_at BETWEEN #{startTime} AND #{endTime}
+          AND yef.`status` = #{equipmentErr}
+          AND ybs.ma_id = #{maId}
+    </select>
+
+    <select id="getExecuteFailclassify" resultType="com.yb.execute.vo.ExecuteStateVO">
+        SELECT *
+        FROM yb_execute_state ybs
+                 JOIN yb_execute_fault yef ON ybs.id = yef.es_id
+        WHERE start_at BETWEEN #{startTime} AND #{endTime}
+          AND yef.classify = #{rest}
+          AND ybs.ma_id = #{maId}
+    </select>
+
+
+    <select id="getExecuteExamine" resultType="com.yb.execute.vo.ExecuteStateVO">
+        SELECT SUM(duration) AS machineRuntimeDuratction
+        FROM yb_execute_state ybs
+                 JOIN yb_execute_briefer yeb on ybs.id = yeb.es_id
+                 JOIN yb_execute_examine yee on yeb.id = yee.bf_id
+        WHERE start_at BETWEEN #{startTime} AND #{endTime}
+          and ybs.ma_id = #{maId}
+         <!-- AND yee.report_type = #{reprotType} -->
+    </select>
+
+
+    <select id="getDistinceIdBy" resultType="java.lang.String">
+        SELECT DISTINCT yes.sd_id
+        FROM (yb_execute_examine yee
+        LEFT JOIN yb_execute_briefer yeb ON yee.bf_id = yeb.id)
+        LEFT JOIN yb_execute_info yes on yeb.ex_id = yes.id
+        WHERE rpt_userId = #{userId}
+         <!--  AND report_type = 1 -->
+          and rpt_time BETWEEN  #{beforeDate} AND #{endDate}
+    </select>
+
+
+    <select id="getRealTimebyCondition" resultType="com.yb.execute.vo.ExecuteStateVO">
+        SELECT *
+        FROM yb_execute_examine yee
+                 JOIN yb_execute_briefer ybb on yee.bf_id = ybb.id
+                 JOIN yb_execute_info yes on ybb.ex_id = yes.id
+        WHERE
+        <!-- yee.report_type = 1  and -->
+        rpt_time BETWEEN
+            #{startTime} AND #{endTime}
+          and rpt_userId = #{userId}
+    </select>
+
+    <select id="getSdIdbyConditon" resultType="java.lang.String">
+        SELECT DISTINCT(b.sd_id)
+        from yb_execute_state as yes
+        LEFT JOIN yb_execute_briefer b on b.es_id = yes.id
+        WHERE us_id = #{userId}
+          AND ma_id = #{maId}
+          and yes.`event` = #{eventId}
+          and b.start_time BETWEEN #{startTime} AND #{endTime}
+    </select>
+
+    <select id="getAcceptedGoodsByTimeAndMaId" resultType="com.yb.execute.vo.ExecuteStateVO">
+        SELECT *
+        FROM yb_execute_state ybs
+                 JOIN yb_execute_briefer yeb ON ybs.id = yeb.es_id
+        WHERE ma_id = #{maId}
+          and ybs.event = 'D1'
+          AND ybs.start_at BETWEEN #{classStartTime} AND #{classEndTime}
+    </select>
+
+    <select id="getSdInfoByCondition" resultType="com.yb.execute.vo.ExecuteStateVO">
+        SELECT *
+        FROM yb_execute_state yes
+        where (`event` = #{eventAccpt} or `event` = #{enventStop})
+          And sd_id = #{sdId}
+          And yes.us_id = #{userId}
+        ORDER BY yes.start_at desc
+    </select>
+
+    <select id="findMostEalryRecord" resultType="com.yb.execute.vo.ExecuteStateVO">
+        SELECT start_at
+        FROM yb_execute_state
+        WHERE DATE_FORMAT(start_at, "%Y-%m-%d") = #{parse}
+          And `event` = 'A1'
+          AND us_id = #{userId}
+        ORDER BY start_at asc
+    </select>
+
+    <select id="findStartTimeByTime" resultType="com.yb.execute.vo.ExecuteStateVO">
+        SELECT *
+        FROM yb_execute_state
+        WHERE `event` = 'A1'
+          AND us_id = #{userId}
+          AND DATE_FORMAT(start_at, '%Y-%m-%d') = #{parse}
+          AND start_at > #{tempTime}
+        ORDER BY start_at ASC
+    </select>
+
+
+    <select id="getExecuteStateDetailBysdId" resultType="com.yb.execute.vo.ExecuteStateVO">
+        SELECT *
+        FROM yb_execute_state
+        WHERE sd_id = #{sdId}
+         and ma_id =#{maId}
+    </select>
+
+    <select id="getWorkbatchInfo" resultType="com.yb.execute.vo.ExecuteStateVO">
+        SELECT *
+        FROM yb_execute_briefer yeb
+                 JOIN yb_execute_state yss ON yeb.es_id = yss.id
+                 JOIN yb_workbatch_ordlink wor on wor.id = yss.sd_id
+                 JOIN yb_workbatch_ordoee woo on yss.sd_id = woo.wk_id
+        WHERE `event` = 'D1'
+          and yss.start_at BETWEEN #{startTime} AND #{endTime}
+    </select>
+    <select id="getByMaIdAndSdIdAndEvent" resultType="com.yb.execute.entity.ExecuteState">
+        select *
+        from yb_execute_state
+        where ma_id = #{maID}
+          and sd_id = #{sdId}
+          and status = #{status}
+        order by creat_at desc
+    </select>
+
+    <select id="getExecuteStateProdectList" resultType="com.yb.execute.entity.ExecuteState">
+        SELECT *
+        FROM yb_execute_state
+        WHERE sd_id = #{sdId}
+          AND event = #{event}
+          AND start_at BETWEEN #{startAtProdect} AND #{startAtStop}
+    </select>
+    <select id="getByStartTimeAndEndTimeAndMaIdAndEventAndSdId" resultType="com.yb.execute.entity.ExecuteState">
+        SELECT *
+        FROM yb_execute_state e
+        where e.create_at >= #{startTime}
+        and e.create_at &lt;= #{endTime}
+        and e.ma_id = #{maId}
+        and e.event = #{event}
+        and e.sd_id = #{sdId}
+        order by e.create_at desc
+        limit 0,1
+    </select>
+    <select id="getByMaIdAndEventAndSdId" resultType="com.yb.execute.entity.ExecuteState">
+        SELECT *
+        FROM yb_execute_state e
+          where e.ma_id = #{maId}
+          and e.event = #{event}
+          and e.sd_id = #{sdId}
+        order by e.create_at desc
+        limit 0,1
+    </select>
+
+    <select id="getParaTimeByCondition" resultType="com.yb.execute.entity.ExecuteState">
+         SELECT *  FROM yb_execute_state WHERE `event` in ("B1","C1")
+		 and us_id=#{userId} and  ma_id =#{mtId}  AND
+		 start_at BETWEEN #{startTime} and #{endTime}
+		  ORDER BY start_at ASC
+    </select>
+
+    <select id="stateList" resultType="com.yb.execute.vo.ExecuteStateVO">
+        SELECT yes.id,yes.ma_id,yes.`event`,yes.`status`,yes.start_at,yes.end_at,ymm.`name` AS machineName,ymm.pro_id AS
+        prId,ybd.dp_name AS dpName
+        FROM yb_execute_state yes
+        LEFT JOIN yb_machine_mainfo ymm ON ymm.id=yes.ma_id
+        LEFT JOIN yb_base_deptinfo ybd ON ybd.id=ymm.dp_id
+        WHERE yes.start_at BETWEEN #{executeStateVO.startTime} AND #{executeStateVO.endTime}
+        <if test="executeStateVO.prId != null and executeStateVO.prId != 0">
+            AND ymm.pro_id = #{executeStateVO.prId}
+        </if>
+        <if test="executeStateVO.maId != null and executeStateVO.maId != 0">
+            AND yes.ma_id = #{executeStateVO.maId}
+        </if>
+        <if test="executeStateVO.maType != null and executeStateVO.maType != 0">
+            AND ymm.ma_type = #{executeStateVO.maType}
+        </if>
+        <if test="executeStateVO.machineName != null and executeStateVO.machineName != ''">
+            AND ymm.`name` LIKE concat('%',#{executeStateVO.machineName},'%')
+        </if>
+        <if test="executeStateVO.dpName != null and executeStateVO.dpName != ''">
+            AND ybd.dp_name LIKE concat('%',#{executeStateVO.dpName},'%')
+        </if>
+        ORDER BY yes.id DESC
+    </select>
+
+
+    <select id="getDistinceSdId" resultType="java.lang.String">
+SELECT
+	*
+FROM
+	yb_execute_state yes
+WHERE
+	ma_id = #{mtId}
+	AND yes.`event` = 'D1'
+	AND yes.start_at BETWEEN #{classStartTime}
+	AND #{classEndTime}
+    </select>
+
+
+    <select id="getSumCountByMtId" resultType="com.yb.execute.vo.ExecuteStateVO">
+SELECT
+	SUM(pcout) as boxNum
+FROM
+	yb_supervise_regular ysr
+WHERE
+	ma_id = #{mtId}
+	AND ysr.start_time BETWEEN #{classStartTime}
+	AND #{classEndTime}
+    </select>
+</mapper>

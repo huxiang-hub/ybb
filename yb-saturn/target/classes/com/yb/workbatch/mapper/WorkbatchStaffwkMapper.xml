@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.workbatch.mapper.WorkbatchStaffwkMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="workbatchStaffwkResultMap" type="com.yb.workbatch.entity.WorkbatchStaffwk">
+        <id column="id" property="id"/>
+        <result column="us_id" property="usId"/>
+        <result column="dp_id" property="dpId"/>
+        <result column="wk_date" property="wkDate"/>
+        <result column="shift" property="shift"/>
+        <result column="start_at" property="startAt"/>
+        <result column="end_at" property="endAt"/>
+        <result column="status" property="status"/>
+        <result column="classify" property="classify"/>
+        <result column="create_at" property="createAt"/>
+    </resultMap>
+
+
+    <select id="selectWorkbatchStaffwkPage" resultMap="workbatchStaffwkResultMap">
+        select * from yb_workbatch_staffwk where is_deleted = 0
+    </select>
+
+</mapper>

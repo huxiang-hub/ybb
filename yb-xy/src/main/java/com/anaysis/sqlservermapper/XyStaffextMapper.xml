@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anaysis.sqlservermapper.XyStaffextMapper">
+
+    <select id="list" resultType="com.anaysis.entity.BaseStaffext">
+        SELECT
+            a.ID AS erpId,
+            (CASE a.XB WHEN '男' THEN 1 WHEN '女' THEN 0 END) as sex,
+            CASE LX
+            WHEN '初中' THEN 1
+            WHEN '高中' THEN 2
+            WHEN '大专' THEN 3
+            WHEN '本科' THEN 4
+            WHEN '硕士' THEN 5
+            WHEN '博士' THEN 6
+            ELSE 1 END AS education,
+            SFZHM AS idcard,
+            HKSZD AS idaddr,
+            JG AS hometown,
+            CASE
+            WHEN ISNULL(a.SFZX,0) = 0 THEN 1
+            ELSE 0 END AS isUsed
+        FROM
+            Base_YGDA a
+        LEFT JOIN RS_BZSD_D b ON a.ID = b.YGID
+        LEFT JOIN Accounts_Users c ON a.ID = c.YGID
+        WHERE a.SFZX = 0
+    </select>
+</mapper>

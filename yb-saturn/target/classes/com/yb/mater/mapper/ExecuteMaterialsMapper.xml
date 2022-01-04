@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.mater.mapper.ExecuteMaterialsMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.yb.mater.entity.ExecuteMaterials">
+        <id column="id" property="id"/>
+        <result column="mat_id" property="matId"/>
+        <result column="mat_name" property="matName"/>
+        <result column="mat_num" property="matNum"/>
+        <result column="ma_id" property="maId"/>
+        <result column="ws_id" property="wsId"/>
+        <result column="wf_id" property="wfId"/>
+        <result column="us_id" property="usId"/>
+        <result column="create_at" property="createAt"/>
+        <result column="update_at" property="updateAt"/>
+    </resultMap>
+    <select id="getListByWfId" resultType="com.yb.mater.vo.ExecuteMaterialsVO">
+        SELECT a.*,
+        b.tray_no,
+        b.store_place,
+        c.name as ma_name,
+        d.ck_name as ws_name,
+        (select if(count(*)>0,true,false) from yb_execute_offmater e where a.id = e.up_id) as is_offmat
+        FROM yb_execute_materials a
+        LEFT JOIN yb_execute_traycard b ON b.id = a.et_id
+        LEFT JOIN yb_machine_mainfo c on c.id = a.ma_id
+        LEFT JOIN yb_workbatch_mainshift d on d.id = a.ws_id
+        WHERE a.wf_id = #{wfId}
+        order by a.create_at desc
+    </select>
+
+    <select id="getBarCodeByExists" resultType="int">
+        select count(*) from yb_execute_materials a
+        where a.bar_code = #{barCode}
+    </select>
+</mapper>
+

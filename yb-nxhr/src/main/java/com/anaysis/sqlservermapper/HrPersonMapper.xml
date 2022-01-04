@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anaysis.sqlservermapper.HrPersonMapper">
+
+
+    <select id="list" resultType="com.anaysis.entity.BaseStaffinfo">
+        SELECT * FROM HRPersonProf;
+    </select>
+    <select id="getByIds" resultType="com.anaysis.entity.HrPerson">
+        select
+        IDCard as idcard,
+        ObjID as erpId,
+        PersonName as realName,
+        (case Gendar when '男' then 1 when '女' then 0 end) as sex,
+        CallPhone as phone,
+        DepartmentID as dpErp,
+        PersonBirthday as birthday,
+--         PersonAddress as curraddr,
+        WorkID as jobnum,
+        (case when PersonPostion LIKE '%机长%' then 1 when PersonPostion LIKE '%班长%' then 2 when PersonPostion LIKE '%车间主管%' then 3 end ) as jobs,
+        NativePlace as hometown,
+        HomeAddress as curraddr,
+        (case SchoolRecord when '小学' then 1 when '初中' then 1 when '高中' then 2 when '大专' then 3 when '本科' then 4 end) as education
+        from HRPersonProf where Status = '在职' and ObjID in
+        <foreach item="item" collection="list" separator="," open="(" close=")" index="">
+            #{item}
+        </foreach>
+    </select>
+    <select id="getDeptStaff" resultType="com.anaysis.entity.BladeUser">
+        SELECT StaffName as realName, ShiftID as shift FROM WorkStaff
+    </select>
+</mapper>

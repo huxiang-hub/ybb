@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.execute.mapper.SuperviseRegularMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="superviseRegularResultMap" type="com.yb.execute.entity.SuperviseRegular">
+        <id column="id" property="id"/>
+        <result column="ma_id" property="maId"/>
+        <result column="uuid" property="uuid"/>
+        <result column="status" property="status"/>
+        <result column="start_num" property="startNum"/>
+        <result column="end_num" property="endNum"/>
+        <result column="pcout" property="pcout"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="diff_time" property="diffNum"/>
+        <result column="curr_speed" property="currSpeed"/>
+        <result column="target_hour" property="targetHour"/>
+        <result column="target_min" property="targetMin"/>
+        <result column="target_day" property="targetDay"/>
+        <result column="create_at" property="createAt"/>
+        <result column="update_at" property="updateAt"/>
+    </resultMap>
+    <select id="findByTargetDayAndTargetHour" resultType="com.yb.execute.entity.SuperviseRegular">
+        select *
+        from yb_supervise_regular a
+        where a.target_day = #{targetDay}
+          and a.target_hour = #{targetHour}
+    </select>
+    <select id="findByPcountAndStartTimeAndEndTime" resultType="com.yb.execute.entity.SuperviseRegular">
+        select *
+        from yb_supervise_regular a
+        where a.pcout != 0
+          and a.create_at >= #{startTime}
+          and a.create_at &lt;= #{endTime}
+        group by a.ma_id
+    </select>
+
+
+    <select id="getPcountByStartTimeAndEndTimeAndMaid" resultType="java.lang.Integer">
+        select  IFNULL(SUM(pcout), 0)
+        from yb_supervise_regular a
+        where a.pcout != 0
+          and a.create_at >= #{startTime}
+          and a.create_at &lt;= #{endTime}
+          and a.ma_id = #{maId}
+    </select>
+    <select id="getByMaid" resultMap="superviseRegularResultMap">
+      select *
+        from yb_supervise_regular a
+        where a.ma_id = #{maId}
+        order by a.create_at desc
+        limit 0,1
+    </select>
+    <select id="findByMaidHour" resultType="com.yb.execute.entity.SuperviseRegular">
+        select ma_id,target_day,target_hour,sum(pcout) as pcout
+        from yb_supervise_regular a
+        where a.target_day = #{targetDay}
+        and a.target_hour = #{targetHour}
+        and a.ma_id = #{maId}
+    </select>
+    <select id="findByMaidDay"  resultType="java.util.Map">
+        select target_hour,sum(pcout) as pcout
+        from yb_supervise_regular a  where
+       a.create_at &gt;= #{startTime} AND
+       a.create_at &lt; date_format(#{endTime},'%Y-%m-%d %H:%i:%s')
+        and a.ma_id = #{maId}
+        GROUP BY target_hour ORDER BY target_day,target_hour
+    </select>
+    <select id="getPerformanceAnaly" resultType="com.yb.supervise.vo.PerformanceAnalyVOListVO">
+<!--    select ymm.ma_type as maType, ifnull(sum(ysr.pcout),0) as completNum ,-->
+<!--    ifnull(sum(yeb.pcout),0), ysr.target_hour as date-->
+<!--    from yb_supervise_regular ysr-->
+<!--    left join yb_machine_mainfo ymm on ysr.ma_id = ymm.id-->
+<!--    left join yb_execute_info yei on ysr.ma_id = yei.ma_id-->
+<!--	left join yb_execute_briefer yeb on yei.id = yeb.ex_id-->
+    select ymm.name as maName, ifnull(sum(yeb.product_num),0) as completNum ,
+    ifnull(sum(yeb.waste_num),0) as wasteNum , date(yeb.create_at) as date
+    from yb_execute_briefer yeb
+	left join yb_execute_info yei on yeb.ex_id = yei.id
+    left join yb_machine_mainfo ymm on yei.ma_id = ymm.id
+    where 1 =1
+    <if test="startTime != null">
+    and yeb.create_at >=#{startTime}
+    </if>
+    <if test="endTime != null != null">
+    and yeb.create_at &lt;= #{endTime}
+    </if>
+    <if test="request.maType != null and request.maType != ''">
+    and ymm.ma_type = #{request.maType}
+    </if>
+    <if test="request.maId != null">
+    and ymm.id = #{request.maId}
+    </if>
+    GROUP BY ymm.id,date(yeb.create_at)
+    order by yeb.create_at
+    </select>
+
+<!--<select id="" resultType="">
+     SELECT IFNULL(SUM(diff_time),0) FROM yb_supervise_regular WHERE (`status` = 2 OR `status` = 4)
+   and  start_time BETWEEN #{startTime} and #{endTime}
+   and ma_id =#{mtId}
+</select>-->
+
+    <select id="getLineDataMa" resultType="java.lang.Integer">
+        SELECT distinct a.ma_id FROM yb_supervise_interval a
+        LEFT JOIN yb_machine_mainfo b
+        ON a.ma_id = b.id
+        WHERE
+        <if test="data.diffTime != null">
+            a.diff_time &gt; ${data.diffTime*60}
+        </if>
+        <if test="data.dpId != null">
+            AND b.dp_id = ${data.dpId}
+        </if>
+        <if test="data.maId != null">
+            AND a.ma_id = ${data.maId}
+        </if>
+        <if test="data.startTime != null">
+            AND a.start_time &gt; '${data.startTime}'
+        </if>
+        <if test="data.endTime != null and data.wsId == null">
+            AND a.end_time &lt; '${data.endTime}'
+        </if>
+    </select>
+
+
+    <select id="getLineData" resultType="com.yb.supervise.vo.SuperviseIntervalVO">
+        SELECT a.*,b.name AS maName FROM yb_supervise_interval a
+        LEFT JOIN yb_machine_mainfo b
+        ON a.ma_id = b.id
+        WHERE
+        <if test="data.diffTime != null">
+            a.diff_time &gt; ${data.diffTime*60}
+        </if>
+        <if test="data.dpId != null">
+            AND b.dp_id = ${data.dpId}
+        </if>
+        <if test="data.maId != null">
+            AND a.ma_id = ${data.maId}
+        </if>
+        <if test="data.startTime != null">
+            AND a.start_time &gt; '${data.startTime}'
+        </if>
+        <if test="data.endTime != null and data.wsId == null">
+            AND a.end_time &lt; '${data.endTime}'
+        </if>
+    </select>
+    <select id="getWsYield" resultType="java.lang.Integer">
+    select ifnull( sum(pcout),0)
+    from yb_supervise_regular
+    where ma_id = #{maId}
+    and  DATE_FORMAT(create_at,'%Y-%m-%d %H:%i') >= DATE_FORMAT(#{startTime},'%Y-%m-%d %H:%i')
+    and  DATE_FORMAT(create_at,'%Y-%m-%d %H:%i') &lt;= DATE_FORMAT(#{endTime},'%Y-%m-%d %H:%i')
+    </select>
+
+<select id="getSpeedReport" resultType="com.yb.machine.response.MachineSpeedChangePortVO">
+    select start_time, curr_speed*3600
+    from yb_supervise_regular
+    where ma_id = #{request.maId}
+    and target_day >= #{request.startTime}
+    and target_day &lt;= #{request.endTime}
+    order by id asc
+</select>
+<select id="todayCapacity" resultType="com.yb.machine.vo.TodayCapacityVO">
+ select sum(pcout) as countNum, ymm.name as name
+from yb_supervise_intervalalg ysi
+join yb_machine_mainfo ymm on ysi.ma_id = ymm.id
+and ysi.target_time = DATE_FORMAT( NOW(), '%Y%m%d')
+group by ymm.id
+</select>
+
+</mapper>

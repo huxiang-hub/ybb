@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.system.user.mapper.SaUserMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="userResultMap" type="com.yb.system.user.entity.SaUser">
+        <result column="id" property="id"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="create_user" property="createUser"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_user" property="updateUser"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="status" property="status"/>
+        <result column="is_deleted" property="isDeleted"/>
+        <result column="account" property="account"/>
+        <result column="password" property="password"/>
+        <result column="name" property="name"/>
+        <result column="real_name" property="realName"/>
+        <result column="email" property="email"/>
+        <result column="phone" property="phone"/>
+        <result column="birthday" property="birthday"/>
+        <result column="sex" property="sex"/>
+        <result column="role_id" property="roleId"/>
+        <result column="dept_id" property="deptId"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="baseColumnList">
+        select id,
+        create_user AS createUser,
+        create_time AS createTime,
+        update_user AS updateUser,
+        update_time AS updateTime,
+        status,
+        is_deleted AS isDeleted,
+        account, password, name, real_name, email, phone, birthday, sex, role_id, dept_id
+    </sql>
+
+    <select id="selectUserPage" resultMap="userResultMap">
+        select * from blade_user where is_deleted = 0
+    </select>
+
+    <select id="getUser" resultMap="userResultMap">
+        SELECT
+            *
+        FROM
+            blade_user
+        WHERE
+            tenant_id = #{param1} and account = #{param2} and password = #{param3} and is_deleted = 0
+    </select>
+
+    <select id="getRoleName" resultType="java.lang.String">
+        SELECT
+        role_name
+        FROM
+        blade_role
+        WHERE
+        id IN
+        <foreach collection="array" item="ids" index="index" open="(" close=")" separator=",">
+            #{ids}
+        </foreach>
+        and is_deleted = 0
+    </select>
+
+    <select id="getRoleAlias" resultType="java.lang.String">
+        SELECT
+        role_alias
+        FROM
+        blade_role
+        WHERE
+        id IN
+        <foreach collection="array" item="ids" index="index" open="(" close=")" separator=",">
+            #{ids}
+        </foreach>
+        and is_deleted = 0
+    </select>
+
+    <select id="getDeptName" resultType="java.lang.String">
+        SELECT
+        dp_name
+        FROM
+        yb_base_deptinfo
+        WHERE
+        id IN
+        <foreach collection="array" item="ids" index="index" open="(" close=")" separator=",">
+            #{ids}
+        </foreach>
+        and is_deleted = 0
+    </select>
+    <select id="getClientDetails" resultType="org.springblade.core.secure.provider.ClientDetails">
+      select client_id, client_secret, access_token_validity, refresh_token_validity
+      from bladex.blade_client where client_id = #{clientId}
+    </select>
+<!--role_id != 1 将超级管理员排除，不让其对超管权限进行修改-->
+    <select id="getUserList" resultType="com.yb.system.user.entity.SaUser">
+        select id, tenant_id, create_user, create_time, update_user, update_time, status, is_deleted, account, password, name, real_name, email, phone, birthday, sex, role_id, dept_id
+         from blade_user where tenant_id = #{saUser.tenantId} and is_deleted = 0 and role_id != "" and role_id != 1
+        <if test="saUser.realName">
+            AND real_name LIKE CONCAT('%',#{saUser.realName},'%')
+        </if>
+    </select>
+    <select id="getOneUserCondition" resultType="com.yb.system.user.entity.SaUser">
+        select id, tenant_id, create_user, create_time, update_user, update_time, status, is_deleted, account, password, name, real_name, email, phone, birthday, sex, role_id, dept_id
+        from blade_user where is_deleted = 0
+        <if test="saUser.realName">
+            AND real_name = #{saUser.realName}
+        </if>
+        <if test="saUser.account">
+            AND account = #{saUser.account}
+        </if>
+    </select>
+
+    <select id="getOneUserById" resultType="com.yb.system.user.entity.SaUser">
+        select id, tenant_id, create_user, create_time, update_user, update_time, status, is_deleted, account, password, name, real_name, email, phone, birthday, sex, role_id, dept_id
+        from blade_user where id=#{Id}
+    </select>
+
+    <update id="updateOoleId" parameterType="com.yb.system.user.entity.SaUser">
+        update blade_user set role_id = #{saUser.roleId} where id = #{saUser.id}
+    </update>
+
+
+    <select id="page" resultType="com.yb.system.user.response.SysUserPageVO">
+    select bu.id, bu.account, bu.password, bu.phone, bu.dept_id ,ybd.dp_name as deptName, bu.real_name, bu.sex, bu.birthday, bu.name, bu.avatar, bu.email, bu.role_id as roleIds, bu.chat_no, bu.status, bu.unionid,bu.create_time,bu.update_time
+    from blade_user bu
+    join yb_base_deptinfo ybd on bu.dept_id = ybd.id
+    <where>
+    and bu.is_deleted = 0
+    <if test="request.account != null and request.account != ''">
+    and bu.account like #{request.account}
+    </if>
+    <if test="request.name != null and request.name != ''">
+    and bu.real_name like #{request.name}
+    </if>
+    <if test="request.phone != null and request.phone != ''">
+    and bu.phone like #{request.phone}
+    </if>
+    <if test="request.deptIds != null and request.deptIds.size() != 0">
+       and bu.dept_id in
+       <foreach collection="request.deptIds" index="index" item="deptId" open="(" separator="," close=")">
+            #{deptId}
+       </foreach>
+    </if>
+    </where>
+    </select>
+    <select id="findByAccount" resultMap="userResultMap">
+    select * from blade_user bu
+    where bu.account = #{account}
+    <if test="id != null">
+    and id != #{id}
+    </if>
+    </select>
+
+    <update id="updateStatus">
+
+    update  blade_user set is_deleted = 1
+        where id in
+        <foreach collection="ids" index="index" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+
+    </update>
+
+    <select id="getNameByIds" resultType="java.lang.String">
+        SELECT GROUP_CONCAT(real_name separator ',') names FROM blade_user
+         where id in
+        <foreach collection="ids" index="index" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <update id="updateAvatarByPhone">
+        UPDATE blade_user
+        SET avatar = #{userAvatar}
+        WHERE phone = #{mobile}
+    </update>
+    <select id="getAvatar" resultType="java.lang.String">
+        SELECT
+            avatar
+        FROM
+            blade_user
+        WHERE phone = #{mobile}
+    </select>
+</mapper>

@@ -1,0 +1,181 @@
+#39服务器端口
+#server:
+#port: 7100
+
+#本地服务器端口
+server:
+  port: 2020
+  servlet:
+    context-path: /satapi
+
+      #数据源配置
+      #spring:
+      #  datasource:
+      #    url: ${blade.datasource.dev.url}
+      #    username: ${blade.datasource.dev.username}
+      #    password: ${blade.datasource.dev.password}
+
+      #spring:
+      #  #排除DruidDataSourceAutoConfigure
+      #  autoconfigure:
+      #    exclude: com.alibaba.druid.spring.boot.autoconfigure.DruidDataSourceAutoConfigure
+      #  datasource:
+      #    dynamic:
+    #设置默认的数据源或者数据源组,默认值即为master
+    #      primary: master
+    #      datasource:
+    #        master:
+    #          url: jdbc:mysql://39.98.57.236:3378/yb_work_test?useSSL=false&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&tinyInt1isBit=false&allowMultiQueries=true&serverTimezone=GMT%2B8
+    #url: jdbc:mysql://39.98.206.228:3377/yb_work_test?useSSL=false&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&tinyInt1isBit=false&allowMultiQueries=true&serverTimezone=GMT%2B8
+#          username: root
+#          password: ybbqwert
+
+spring:
+  datasource:
+    url: jdbc:mysql://%s:%s?useSSL=false&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&tinyInt1isBit=false&allowMultiQueries=true&serverTimezone=Asia/Shanghai
+    username: saturn
+    password: hopeybb!@#
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      # 下面为连接池的补充设置，应用到上面所有数据源中
+      # 初始化大小，最小，最小
+      initial-size: 20
+      min-idle: 10
+      max-active: 1000
+      #配置获取连接等待超时的时间
+      max-wait: 60000
+      #配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
+      timeBetweenEvictionRunsMillis: 60000
+      #配置一个连接在池中最小生存的时间，单位是毫秒
+      min-evictable-idle-time-millis: 300000
+      #验证连接是否有效。此参数必须设置为非空字符串，下面三项设置成true才能生效
+      validation-query: SELECT 1
+      #指明连接是否被空闲连接回收器(如果有)进行检验.如果检测失败,则连接将被从池中去除.
+      test-while-idle: true
+      #指明是否在从池中取出连接前进行检验,如果检验失败,则从池中去除连接并尝试取出另一个
+      test-on-borrow: true
+      #指明是否在归还到池中前进行检验
+      test-on-return:  true
+      #打开PSCache，并且指定每个连接上PSCache的大小
+      pool-prepared-statements: true
+      max-pool-prepared-statement-per-connection-size: 20
+      #配置监控统计拦截的filters，去掉后监控界面sql无法统计，'wall'用于防火墙
+      filter: stat,wall,log4j
+      connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=1000;druid.stat.logSlowSql=true
+      #合并多个DruidDataSource的监控数据
+      use-global-data-source-stat: true
+      remove-abandoned: true
+      remove-abandoned-timeout-millis: 90
+
+  session:
+    store-type: redis
+
+    redis:
+      database: 1
+      host: 39.98.206.228
+      port: 6379
+      password:
+      redisson:
+        # 配置单点模式
+        config: classpath:redisson.yml
+  thymeleaf:
+    suffix: .html
+    mode: LEGACYHTML5
+    encoding: UTF-8
+    cache: false
+    servlet:
+      content-type: text/html
+  resources:
+    static-locations: classpath:/static/
+#feign配置
+feign:
+  hystrix:
+    enabled: true
+  okhttp:
+    enabled: true
+  httpclient:
+    enabled: false
+
+#hystrix配置
+hystrix:
+  threadpool:
+    default:
+      coreSize: 300
+      maxQueueSize: 1000
+      queueSizeRejectionThreshold: 800
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 5000
+
+#ribbon配置
+ribbon:
+  #对当前实例的重试次数
+  MaxAutoRetries: 1
+  #切换实例的重试次数
+  MaxAutoRetriesNextServer: 2
+  #请求处理的超时时间
+  ReadTimeout: 60000
+  #请求连接的超时时间
+  ConnectTimeout: 60000
+  #对所有操作请求都进行重试
+  OkToRetryOnAllOperations: true
+
+#mybatis-plus配置
+mybatis-plus:
+  mapper-locations: classpath:com/yb/**/mapper/*Mapper.xml
+  #实体扫描，多个package用逗号或者分号分隔
+  typeAliasesPackage: com.yb.**.entity
+  log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+#swagger扫描路径配置，正是环境enable设置为false
+swagger:
+  enable: true
+  base-packages:
+    - com.yb.workbatch.controller
+    - com.yb.system.user.controller
+    - com.yb.rule.controller
+    - com.yb.satapi.user
+    - com.yb.machine.controller
+    - com.yb.statis.controller
+    - com.yb.supervise.controller
+    - com.yb.yiLong.controller
+    - com.yb.quality.controller
+    - com.yb.fastdfs.controller
+sqlserver:
+  datasource:
+    driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    url: jdbc:sqlserver://f0under.jsj-office.net:1433;DatabaseName=nxjsj
+    username: sa
+    password: jsj123
+
+
+# netty-socketio 配置
+socketio:
+  host: 127.0.0.1
+  port: 8888
+  # 设置最大每帧处理数据的长度，防止他人利用大数据来攻击服务器
+  maxFramePayloadLength: 1048576
+  # 设置http交互最大内容长度
+  maxHttpContentLength: 1048576
+  # socket连接数大小（如只监听一个端口boss线程组为1即可）
+  bossCount: 1
+  workCount: 100
+  allowCustomRequests: true
+  # 协议升级超时时间（毫秒），默认10秒。HTTP握手升级为ws协议超时时间
+  upgradeTimeout: 1000000
+  # Ping消息超时时间（毫秒），默认60秒，这个时间间隔内没有接收到心跳消息就会发送超时事件
+  pingTimeout: 6000000
+  # Ping消息间隔（毫秒），默认25秒。客户端向服务器发送一条心跳消息间隔
+  pingInterval: 25000
+
+# fastDFS 文件上传管理
+file-service:
+  save:
+    path: /home/upload-file/
+#定义队列名称
+myqueue: test-que
+topicqueue: topicqueue

@@ -1,0 +1,7 @@
+ _    _  ____  _____  ________          ________ _      _
+| |  | |/ __ \|  __ \|  ____\ \        / /  ____| |    | |
+| |__| | |  | | |__) | |__   \ \  /\  / /| |__  | |    | |
+|  __  | |  | |  ___/|  __|   \ \/  \/ / |  __| | |    | |
+| |  | | |__| | |    | |____   \  /\  /  | |____| |____| |____
+|_|  |_|\____/|_|    |______|   \/  \/   |______|______|______|
+${AnsiColor.BLUE}:: SpringBlade :: ${spring.application.name}:${AnsiColor.RED}${blade.env}${AnsiColor.BLUE} :: Running SpringBoot ${spring-boot.version} :: ${AnsiColor.BRIGHT_BLACK}

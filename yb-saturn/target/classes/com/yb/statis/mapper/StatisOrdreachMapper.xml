@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.statis.mapper.StatisOrdreachMapper">
+
+    <select id="list" resultType="com.yb.statis.vo.StatisOrderreachListVO">
+        select distinct yso.*,
+        IFNULL(yso.real_count,0) as sumRelyCount,
+	    IFNULL((yso.plan_count),0) as sumPlanNUm,
+	    IFNULL(yso.real_count,0) /  IFNULL(yso.plan_count,0) as rate
+        from yb_statis_ordreach yso
+        LEFT join yb_process_machlink ypm on  yso.ma_id = ypm.ma_id
+        LEFT join yb_machine_mainfo ymm on yso.ma_id = ymm.id
+        <where>
+<!--            <choose>-->
+<!--                <when test="request.nextDay !=null and request.nextDay != ''">-->
+<!--                 and (yso.target_day=#{request.targetDay}  and yso.target_hour > 19-->
+<!--				or yso.target_day=#{request.nextDay} and yso.target_hour &lt; 9 )-->
+<!--                </when>-->
+<!--                <otherwise>-->
+<!--                </otherwise>-->
+<!--            </choose>-->
+                and yso.target_day = #{request.targetDay}
+            <if test="request.maId != null">
+                and yso.ma_id IN (${request.maId})
+            </if>
+            <if test="request.maIdList != null and request.maIdList.size() != 0">
+                and yso.ma_id IN
+                <foreach collection="request.maIdList" separator="," open="(" close=")" item="maId">
+                    #{maId}
+                </foreach>
+            </if>
+            <if test="request.wsId != null">
+                and yso.ws_id = #{request.wsId}
+            </if>
+            <if test="request.dpId != null and request.dpId != ''">
+                and ymm.dp_id = #{request.dpId}
+            </if>
+            <if test="request.maType != null and request.maType != ''">
+                and ymm.ma_type = #{request.maType}
+            </if>
+            <if test="request.deviceName != null and request.deviceName != ''">
+                and yso.ma_name = #{request.deviceName}
+            </if>
+        </where>
+        and yso.ma_name is not null;
+
+    </select>
+    <select id="getByMaIdAndSdIdAndTargetHour" resultType="com.yb.statis.entity.StatisOrdreach">
+    select distinct * from yb_statis_ordreach
+    where ma_id = #{maId}
+    and sd_id = #{sdId}
+    and target_hour = #{hours}
+    order by create_at DESC
+    limit 0,1
+    </select>
+    <select id="findByMaIdAndSdIdAndTargetHourAndTargetDay" resultType="com.yb.statis.entity.StatisOrdreach">
+    select distinct * from yb_statis_ordreach
+    where ma_id = #{maId}
+    and sd_id = #{sdId}
+    and target_hour = #{hours}
+    and target_day = #{targetDay}
+    </select>
+    <select id="startOrdreachList" resultType="com.yb.statis.entity.StatisOrdreach">
+    select * from yb_statis_ordreach
+    where  target_hour &gt; #{startTargetHour}
+    AND target_day = #{targetDay}
+    AND ma_id = #{maId}
+    </select>
+    <select id="endOrdreachList" resultType="com.yb.statis.entity.StatisOrdreach">
+    select * from yb_statis_ordreach
+    where  target_hour &lt; #{endTargetHour}
+    AND target_day = #{targetDay}
+    AND ma_id = #{maId}
+    </select>
+    <select id="statisOrdreachList" resultType="com.yb.statis.entity.StatisOrdreach">
+    select * from yb_statis_ordreach
+    where  target_hour &gt; #{startTargetHour}
+    AND target_hour &lt; #{endTargetHour}
+    AND target_day = #{targetDay}
+    AND ma_id = #{maId}
+    </select>
+    <select id="statisOrdInitList" resultType="com.yb.statis.entity.StatisOrdreach">
+        select * from yb_statis_ordreach where target_day = #{targetDay} AND ma_id = #{maId} and ws_id = #{wsId}
+        order by start_time
+    </select>
+    <select id="statisOrdInitListCount" resultType="java.lang.Integer">
+         select count(*) from yb_statis_ordreach where target_day = #{targetDay} AND ma_id = #{maId} and ws_id = #{wsId}
+        order by start_time
+    </select>
+    <update id="updateStatisOrdreach">
+        UPDATE yb_statis_ordreach SET plan_count =IFNULL(plan_count,0) + #{cont}
+        WHERE target_day = #{targetDay} AND ma_id = #{maId} and ws_id = #{wsId} AND target_hour=#{hour}
+        AND sd_id like LIKE CONCAT('%',#{sdId},'%')
+    </update>
+    <delete id="clearOrdreach">
+        DELETE FROM yb_statis_ordreach
+        WHERE target_day = #{targetDay} AND ma_id = #{maId} and ws_id = #{wsId}
+    </delete>
+    <select id="findByTargetDateAndMaTypeAndWsId" resultType="com.yb.supervise.vo.YieldStatisticsListVO">
+     SELECT ifnull(sum(a.real_count),0)as completNum,ifnull(sum(a.real_count)/sum(a.plan_count),0) as rate,
+     c.dict_value as maType, a.target_hour as hour, ifnull(sum(a.plan_num),0)as planNum, b.name as maName
+     from yb_statis_ordreach a
+     LEFT JOIN yb_machine_mainfo b on a.ma_id = b.id
+     LEFT JOIN blade_dict c on b.ma_type = c.dict_key
+     where c.`code`='maType'
+     and target_day = #{request.targetDate}
+     <if test="request.maType != null and request.maType != ''">
+     and b.ma_type = #{request.maType}
+     </if>
+     <if test="request.wsId != null">
+     and a.ws_id = #{request.wsId}
+     </if>
+     <if test="request.maId != null">
+     and b.id = #{request.maId}
+     </if>
+      <choose>
+        <when test="request.maType !=null and request.maType != ''">
+        group by a.target_hour,b.id
+        </when>
+        <otherwise>
+        group by a.target_hour,ma_type
+        </otherwise>
+    </choose>
+     order by a.target_hour asc
+    </select>
+    <update id="lockOrdreach">
+        UPDATE yb_statis_ordreach SET reach_islock = #{islock}
+        where  id IN
+        <foreach collection="ordrIds" item="id" index="index" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </update>
+    <select id="getIslockReach" resultType="java.lang.Integer">
+        select reach_islock from yb_statis_ordreach where target_day = #{targetDay} AND ma_id = #{maId} and ws_id = #{wsId} limit 1
+    </select>
+
+    <update id="refreshRealcount">
+        UPDATE yb_statis_ordreach SET real_count = #{cont},update_at=now()
+        WHERE target_day = #{sdDate} AND ma_id = #{maId} and ws_id = #{wsId} AND target_hour=#{hour}
+    </update>
+
+    <select id="getMaidsByTargetDay" resultType="java.lang.Integer">
+       SELECT ma_id
+        FROM yb_statis_ordreach
+        where target_day=#{targetDay}
+        GROUP BY ma_id
+    </select>
+    <select id="getOrdreachBySingle" resultType="com.yb.statis.entity.StatisOrdreach">
+        select * from yb_statis_ordreach where target_day = #{sdDate} AND ma_id = #{maId} and ws_id = #{wsId} AND target_hour=#{hour} limit 1
+    </select>
+    <update id="updateByStatisOrdreach" parameterType="com.yb.statis.entity.StatisOrdreach">
+        UPDATE yb_statis_ordreach SET plan_count =#{ordreach.planCount},real_count = #{ordreach.realCount},
+        reach_rate=#{ordreach.reachRate},plan_time=#{ordreach.planTime},update_at=#{ordreach.updateAt},
+        pd_name = #{ordreach.pdName},sd_id=#{ordreach.sdId},plan_num=#{ordreach.planNum},wb_no=#{ordreach.wbNo}
+        WHERE target_day = #{ordreach.targetDay} AND ma_id = #{ordreach.maId} and ws_id = #{ordreach.wsId} AND target_hour=#{ordreach.targetHour}
+    </update>
+    <update id="updateRemark">
+    UPDATE yb_statis_ordreach SET remark = #{remark}
+    where id =#{id}
+    </update>
+
+    <select id="selectStatisDayreach" resultType="com.yb.statis.entity.StatisDayreach">
+        SELECT SUM(a.plan_count) AS planCount,SUM(a.real_count) AS realcount
+        FROM yb_statis_ordreach a
+        LEFT JOIN yb_machine_mainfo b ON b.id=a.ma_id
+        WHERE a.target_day=#{targetDay} AND b.ma_type=#{maType}
+    </select>
+    <select id="todyOrdreach" resultType="com.yb.statis.vo.TodayOrdreachVO">
+        SELECT
+            d.dict_value AS MaType,
+            SUM( o.real_count ) AS realNum,
+            SUM( o.plan_num ) AS planNum
+        FROM
+            ( SELECT * FROM blade_dict WHERE CODE = 'maType' ) d
+            JOIN yb_machine_mainfo m ON d.dict_key = m.ma_type
+            LEFT JOIN yb_statis_ordreach o ON m.id = o.ma_id
+            AND o.target_day = CURDATE()
+        GROUP BY
+            d.dict_value
+    </select>
+
+<select id="ordreachPort" resultType="com.yb.machine.response.MachineOrdreachPortVO">
+    select target_day, target_hour, plan_count, real_count
+    from yb_statis_ordreach yso
+    where ma_id = #{request.maId}
+    and target_day >= #{request.startTime}
+    and target_day &lt;= #{request.endTime}
+    order by target_day asc
+</select>
+
+    <select id="gethourRateList" resultType="com.yb.statis.vo.StatisOrdreachVO">
+        SELECT
+            id,
+            ma_id,
+            ma_name,
+            speed,
+            plan_count,
+            real_count,
+            reach_rate,
+            target_hour,
+            target_min,
+            target_day,
+            create_at,
+            remark,
+            pd_name,
+            ex_id,
+            sd_id,
+            plan_num,
+            plan_time,
+            wb_no,
+            ws_id,
+            ws_name,
+            start_time,
+            end_time,
+            reach_islock,
+            update_at
+        FROM
+        	`yb_statis_ordreach`
+        WHERE 1=1
+        <if test="hourRateVO.maIdList != null and hourRateVO.maIdList.size() != 0">
+            AND  ma_id IN
+            <foreach collection="hourRateVO.maIdList" open="(" separator="," close=")" item="maId">
+                #{maId}
+            </foreach>
+        </if>
+        <if test="hourRateVO.wsId != null">
+            AND ws_id = #{hourRateVO.wsId}
+        </if>
+        <if test="hourRateVO.startTime != null and hourRateVO.startTime != ''">
+            AND  target_day &gt;= #{hourRateVO.startTime}
+        </if>
+        <if test="hourRateVO.endTime != null and hourRateVO.endTime != ''">
+            AND  target_day &lt;= #{hourRateVO.endTime}
+        </if>
+    </select>
+</mapper>

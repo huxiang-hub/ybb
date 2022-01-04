@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yb.rule.mapper.RuleMachineMapper">
+
+    <select id="machineRuleList" resultType="com.yb.rule.response.RuleMachineVo">
+        select yrm.id,ybm.name as maName,yrm.rm_type as rmType,yrm.ma_id as maId,yrm.us_id as usId,yrm.is_used,bu.name as usName,yrm.create_at,yrm.update_at
+        from yb_rule_machine yrm
+        join yb_machine_mainfo ybm on ybm.id=yrm.ma_id
+        join blade_user bu on bu.id =yrm.us_id
+        <where>
+            <if test="request.maIdList != null and request.maIdList.size !=0">
+                and yrm.ma_id in
+                <foreach collection="request.maIdList" index="index" item="maId" open="(" separator="," close=")">
+                    #{maId}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+    <delete id="deleteRuleMachine">
+        delete from yb_rule_machine
+        <where>
+            <if test="request.rmTypes !=null and request.rmTypes.size !=0 ">
+                and rm_type in
+                <foreach collection="request.rmTypes" index="index" item="rmtype" open="(" separator="," close=")">
+                    #{rmtype}
+                </foreach>
+            </if>
+            <if test="request.selectMaIds !=null and request.selectMaIds.size !=0">
+                and ma_id in
+                <foreach collection="request.selectMaIds" index="index" item="maId" open="(" separator="," close=")">
+                    #{maId}
+                </foreach>
+            </if>
+        </where>
+    </delete>
+
+    <update id="updateStatus" parameterType="com.yb.rule.entity.RuleMachine">
+        update yb_rule_machine set
+        <if test="ruleMachine.isUsed!=null">
+            is_used = #{ruleMachine.isUsed},
+        </if>
+        update_at=DATE_FORMAT(NOW(),'%Y-%m-%d %H:%i:%s')
+        where ma_id = #{ruleMachine.maId} and rm_type=#{ruleMachine.rmType}
+    </update>
+
+    <insert id="ruleMachineAdd" parameterType="java.util.ArrayList">
+        insert into yb_rule_machine(ma_id,rm_type,us_id,is_used)
+        values
+        <foreach collection="ruleMachines"  item="rule" index="index" separator=",">
+            (#{rule.maId},#{rule.rmType},#{rule.usId},#{rule.isUsed})
+        </foreach>
+    </insert>
+
+    <select id="tableCount" resultType="int">
+        select count(1)
+        from yb_rule_machine
+        <where>
+            <if test="maId !=null">
+                and ma_id = #{maId}
+            </if>
+            <if test="rmType !=null and rmType!=''">
+                and rm_type = #{rmType}
+            </if>
+        </where>
+    </select>
+</mapper>

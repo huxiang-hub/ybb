@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.panel.mapper.PanelCustomizeMapper">
+    <select id="getMuId" resultType="java.lang.Integer">
+        select mu_id
+        from yb_panel_customize
+        <where>
+            <if test="maId!=null">
+                ma_id = #{maId}
+            </if>
+            and status= 1
+        </where>
+    </select>
+
+    <insert id="panelMenuAdd" parameterType="com.yb.panel.entity.PanelCustomize">
+        insert into yb_panel_customize(ma_id,mu_id,status)
+        values
+        <foreach collection="panelCustomizes" item="panel" index="index" separator=",">
+            (#{panel.maId},#{panel.muId},#{panel.status})
+        </foreach>
+    </insert>
+
+    <delete id="deleteMenu">
+        delete from yb_panel_customize
+        <where>
+            <foreach collection="panelCustomizes" item="panel" index="index" separator="or">
+                (ma_id=#{panel.maId} and mu_id=#{panel.muId})
+            </foreach>
+        </where>
+    </delete>
+
+    <delete id="batchDeletion">
+        delete from yb_panel_customize
+        <where>
+                ma_id=#{maId}
+        </where>
+    </delete>
+</mapper>

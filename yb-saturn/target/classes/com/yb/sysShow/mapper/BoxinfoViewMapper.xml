@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.sysShow.mapper.BoxinfoViewMapper">
+    <update id="cleanByuuid">
+        update yb_supervise_boxinfo
+        set number_of_day = 0,update_at=now()
+        where uuid = #{uuid}
+    </update>
+    <insert id="cleanLog" parameterType="com.yb.sysShow.entity.BoxCleanLogEntity">
+        insert into yb_supervise_boxclean
+		(
+			`uuid`,
+			`status`,
+			`number`,
+			`number_of_day`,
+			`dspeed`,
+			`update_at`,
+			`op_date`,
+			`clean_time`
+		)
+		values
+		(
+			#{uuid},
+			#{status},
+			#{number},
+			#{number_of_day},
+			#{dspeed},
+			#{update_at},
+			#{op_date},
+			#{clean_time}
+		)
+	</insert>
+    <select id="getlist" resultType="com.yb.sysShow.entity.BoxinfoViewEntity">
+        select `uuid`,`mac`,`macId`,`status`, `number_of_day` as numberOfday ,
+        `number`,`update_at` as updateAt, `machine_name` as machineName ,
+        brand,model,speed as dspeed
+        from  v_boxinfo
+    </select>
+    <select id="getUuid" resultType="com.yb.sysShow.entity.BoxinfoViewEntity">
+        select `uuid`,`mac`,`macId`,`status`, `number_of_day` as numberOfday ,
+        `number`,`update_at` as updateAt, `machine_name` as machineName ,
+        brand,model,speed as dspeed
+        from  v_boxinfo where uuid =  #{uuid}
+    </select>
+</mapper>

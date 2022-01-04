@@ -1,0 +1,14 @@
+<component name="libraryTable">
+  <library name="Maven: org.springblade:blade-core-mybatis:2.6.2">
+    <CLASSES>
+      <root url="jar://D:/Software/repository/org/springblade/blade-core-mybatis/2.6.2/blade-core-mybatis-2.6.2.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://D:/Software/repository/org/springblade/blade-core-mybatis/2.6.2/blade-core-mybatis-2.6.2-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://D:/Software/repository/org/springblade/blade-core-mybatis/2.6.2/blade-core-mybatis-2.6.2-sources.jar!/" />
+      <root url="jar://$USER_HOME$/.ideaLibSources/blade-core-mybatis-2.6.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

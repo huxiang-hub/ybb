@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anaysis.sqlservermapper.FzMachineDao">
+    <select id="list" resultType="com.anaysis.sqlservermapper.domain.FzMachineDO">
+	select a.id as id,a.cJzbh as cJzbh,a.cJzmc as cJzmc,a.iGzzxId as iGzzxId,a.cbmbh as cbmbh,b.cbmmc as cbmmc, a.cjzlxmc as cjzlxmc FROM dbo.MKerJzmb a
+	LEFT JOIN dbo.scvDevice b on b.id=a.id
+	where a.iGzzxId in(${iGzzxId}) and a.iStopUse=0
+	<choose>
+		<when test="sort != null and sort.trim() != ''">
+			order by ${sort} ${order}
+		</when>
+	</choose>
+</select>
+	<select id="getMachineList" resultType="com.anaysis.entity.MachineMainfo">
+      SELECT
+	A.ID AS Id,
+	cJzbh AS mno,
+	A.cJzmc AS name,
+	A.cjzlxmc AS MachStyle,
+	A.cRemark AS Remark,
+	b.id as dpid,
+CASE
+		A.iStopUse
+		WHEN 1 THEN
+		'TRUE' ELSE 'FALSE'
+	END AS StopUse,
+	b.cbmmc AS Dept,
+	c.cgzzxmc AS Center,
+	c.cgzzxlx AS cType
+FROM
+	MKerJzmb A
+	LEFT JOIN dzbm B ON A.cbmbh= B.cbmbh
+	LEFT JOIN MKernel C ON A.cBh= C.cBh
+    </select>
+
+
+
+	<select id="getProcessMachlink" resultType="com.anaysis.entity.ProcessMachlink">
+   SELECT
+	A.ID AS Id,
+	A.*,
+	B.*,
+	C.cCode AS cCode_T,
+	C.cName AS cName_T,
+	iPrepareTime * 60 AS PrepareTime,
+	igyid_dzTech AS prid,
+	B.ID_Parent AS maid,
+	cValue AS speed
+FROM
+	scRationDetail A
+	LEFT JOIN scRation B ON A.id_scRation = B.ID
+	LEFT JOIN sysTech C ON A.igyid_dzTech = C.ID
+	WHERE B.ID_Parent =#{maId}
+    </select>
+</mapper>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.execute.mapper.ExecutePreparationMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="executePreparationResultMap" type="com.yb.execute.entity.ExecutePreparation">
+        <id column="id" property="id"/>
+        <result column="ex_id" property="exId"/>
+        <result column="ready_type" property="readyType"/>
+        <result column="status" property="status"/>
+        <result column="remark" property="remark"/>
+        <result column="test_paper" property="testPaper"/>
+        <result column="use_paper" property="usePaper"/>
+        <result column="start_at" property="startAt"/>
+        <result column="finish_at" property="finishAt"/>
+        <result column="create_at" property="createAt"/>
+        <result column="update_at" property="updateAt"/>
+        <result column="start_num" property="startNum"/>
+        <result column="end_num" property="endNum"/>
+    </resultMap>
+
+
+    <select id="selectExecutePreparationPage" resultType="com.yb.execute.dto.ExecutePreparationDTO">
+        SELECT
+        c.id as ma_id,
+        c. NAME as ma_name,
+        d.id AS dp_id,
+        d.dp_name,
+        b.`event`,
+        SUM(duration) as duration,
+        COUNT(1) AS count,
+        DATE(b.start_at) as create_at
+        FROM
+        yb_execute_preparation a
+        LEFT JOIN yb_execute_info b  ON a.ex_id = b.id
+        LEFT JOIN yb_machine_mainfo c ON b.ma_id = c.id
+        LEFT JOIN yb_base_deptinfo d ON c.dp_id = d.id
+        <where>
+            <if test="executePreparation.event!=null">
+                AND b.event LIKE CONCAT('%',#{executePreparation.event},'%')
+            </if>
+            <if test="executePreparation.maName!=null">
+                AND c.name LIKE CONCAT('%',#{executePreparation.maName},'%')
+            </if>
+            <if test="executePreparation.dpName!=null">
+                AND d.dp_name LIKE CONCAT('%',#{executePreparation.dpName},'%')
+            </if>
+            <if test="executePreparation.createAt!=null">
+                AND DATE(b.start_at) =#{executePreparation.createAt}
+            </if>
+        </where>
+        GROUP BY b.ma_id,b.`event`,DATE(b.start_at)
+        ORDER BY DATE(b.start_at) ASC,c.id
+    </select>
+    <insert id="savePreparationo" parameterType="com.yb.execute.entity.ExecutePreparation">
+        INSERT  INTO  yb_execute_preparation(es_id,test_paper,start_at,finish_at,ready_type)
+        VALUES (#{esId},#{testPaper},#{startAt},#{finishAt},#{readyType})
+    </insert>
+    <insert id="saveState" parameterType="com.yb.execute.entity.ExecutePreparation">
+        INSERT  INTO  yb_execute_state
+        VALUES (#{odId},#{sdId},#{wbId},#{ofId},#{usId},#{maId},
+        #{status},#{startAt},#{endAt},#{durtion},#{createAt})
+    </insert>
+    <select id="getState" resultType="com.yb.execute.entity.ExecuteState">
+            SELECT * FROM yb_execute_state WHERE us_id=#{usId} AND ma_id = #{maId}
+    </select>
+    <update id="updataExecutePreparation" parameterType="com.yb.execute.entity.ExecutePreparation">
+        UPDATE yb_execute_preparation
+        SET finish_at = #{finishAt},
+        update_at = #{updateAt}
+        WHERE es_id = #{esId}
+    </update>
+    <select id="getExecutePreparationById" resultMap="executePreparationResultMap">
+        SELECT  * FROM yb_execute_preparation WHERE es_id =#{id}
+    </select>
+</mapper>

@@ -1,0 +1,4 @@
+net.dreamlu.mica.feign.MicaFeignAutoConfiguration=\
+  org.springblade.saturn.feign.IBaseStaffInfoClient
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  org.springblade.saturn.feign.BaseStaffInfoClientFallback

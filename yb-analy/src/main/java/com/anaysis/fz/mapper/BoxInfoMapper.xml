@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anaysis.fz.mapper.BoxInfoMapper">
+    <select id="getbymac" resultType="com.anaysis.entity.BoxInfoEntity">
+        select `id`,`mac`,`sip`,`address`,`status`,`number`,`xlh`,`number_of_day` as numberOfDay,`create_at` as createAt,`update_at` as updateAt from
+        boxinfo
+        <where>
+            <if test="mac != null and mac != ''">mac = #{mac} </if>
+        </where>
+    </select>
+
+    <select id="getlist" resultType="com.anaysis.entity.BoxInfoEntity">
+        select `id`,`mac`,`sip`,`address`,`status`,`number`,`xlh`,`number_of_day` as numberOfDay,`create_at` as createAt,`update_at` as updateAt from  boxinfo
+    </select>
+
+    <update id="update" parameterType="com.anaysis.entity.BoxInfoEntity">
+        update boxinfo
+        <set>
+            <if test="id != null">`id` = #{id}, </if>
+            <if test="mac != null">`mac` = #{mac}, </if>
+            <if test="sip != null">`sip` = #{sip}, </if>
+            <if test="address != null">`address` = #{address}, </if>
+            <if test="status != null">`status` = #{status}, </if>
+            <if test="number != null">`number` = #{number}, </if>
+            <if test="dspeed != null">`dspeed` = #{dspeed},</if>
+            <if test="xlh != null">`xlh` = #{xlh},</if>
+            <if test="numberOfDay != null">`number_of_day` = #{numberOfDay},</if>
+            <if test="updateAt != null">`update_at` = #{updateAt}</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <insert id="save" parameterType="com.anaysis.entity.BoxInfoEntity" useGeneratedKeys="true" keyProperty="id">
+        insert into boxinfo
+        (
+        `mac`,`sip`,`batch`,`address`,`status`,`number`,`xlh`,`number_of_day`,`create_at`,`update_at`
+        )
+        values
+        (
+        #{mac},
+        #{sip},
+        #{batch},
+        #{address},
+        #{status},
+        #{number},
+        #{xlh},
+        #{numberOfDay},
+        #{createAt},
+        #{updateAt}
+        )
+    </insert>
+
+    <select id="getByBno" resultType="com.anaysis.entity.ErpMachineEntity">
+        select `bno`,`machine_id`,`erp_ma_id` from erp_machine
+        where bno=#{value}
+    </select>
+</mapper>

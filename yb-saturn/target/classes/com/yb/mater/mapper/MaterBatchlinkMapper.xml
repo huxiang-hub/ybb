@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.mater.mapper.MaterBatchlinkMapper">
+
+
+    <select id="findBySdId" resultType="com.yb.mater.entity.MaterBatchlink">
+    select * from yb_mater_batchlink
+    where sd_id = #{sdId}
+    </select>
+    <select id="findBySdIds" resultType="com.yb.mater.entity.MaterBatchlink">
+        select * from yb_mater_batchlink
+        where sd_id IN
+        <foreach collection="sdIds" item="sdId" index="index" open="(" close=")" separator=",">
+            #{sdId}
+        </foreach>
+        order by sd_id,mc_id
+    </select>
+    <select id="findBySdIdAndMaterialNameAndIngredientNameAndMaterialDifference" resultType="com.yb.mater.entity.MaterBatchlink">
+        select
+        d.ml_name AS materialName,#主料名称
+        e.instorage_time AS mainIngredientTime,
+        e.in_time AS mainInTime,
+        e.id as materBatchlinkId,
+        c.mt_num as mtNum
+        from yb_workbatch_ordlink a
+        left join yb_prod_partsinfo b on a.pt_id = b.id
+        left join yb_mater_prodlink c on c.pd_id = b.id
+        left join yb_mater_mtinfo d on  d.id = c.ml_id
+        left join yb_mater_batchlink e on d.id = e.ml_id
+        where a.id = #{sdId}
+        <if test="ingredientName != null and ingredientName != ''">
+            and material_name like concat('%',#{ingredientName},'%')
+        </if>
+        <if test="materialName != null and materialName != ''">
+            and material_name like concat('%',#{materialName},'%')
+        </if>
+        <if test="materialDifference != null ">
+            and (process_num -realaccept_num) = #{materialDifference}
+        </if>
+    </select>
+    <select id="getpage" resultType="com.yb.mater.vo.MaterBatchlinkVO">
+        SELECT
+        b.cm_name,
+        b.material_name,
+        c.size,
+        a.id,
+        a.sd_id,
+        a.wk_no,
+        a.material_name AS mbMaterialName,
+        a.size AS mbSize,
+        a.supply_name,
+        a.location,
+        a.process_num,
+        a.realaccept_num,
+        a.plate_num,
+        a.us_id,
+        a.receive_usid,
+        a.contacter_name,
+        a.instorage_time,
+        a.in_time,
+        a.`status`,
+        a.remarks,
+        a.create_at,
+        a.mc_id,
+        a.ml_id,
+        b.pd_name
+        from yb_mater_batchlink a
+        JOIN yb_workbatch_ordlink b ON b.id=a.sd_id
+        JOIN yb_mater_mtinfo c ON c.id=a.ml_id
+        where a.status != 0
+        <if test="materBatchlinkVO.wkNo != null and materBatchlinkVO.wkNo != ''">
+            AND a.wk_no like CONCAt('%',#{materBatchlinkVO.wkNo},'%')
+        </if>
+        <if test="materBatchlinkVO.materialName != null and materBatchlinkVO.materialName != ''">
+            AND b.material_name like CONCAt('%',#{materBatchlinkVO.materialName},'%')
+        </if>
+        <if test="materBatchlinkVO.cmName != null and materBatchlinkVO.cmName != ''">
+            AND b.cm_name like CONCAt('%',#{materBatchlinkVO.cmName},'%')
+        </if>
+        <if test="materBatchlinkVO.startTime != null and materBatchlinkVO.endTime != null">
+            AND a.in_time &gt;= #{materBatchlinkVO.startTime} AND a.in_time &lt;= #{materBatchlinkVO.endTime}
+        </if>
+        <if test= "materBatchlinkVO.status != null">
+            AND a.status = #{materBatchlinkVO.status}
+        </if>
+        GROUP BY a.id
+        ORDER BY  a.in_time DESC
+    </select>
+
+    <select id="getStatus" resultType="java.lang.Integer">
+        select a.status
+        from yb_mater_batchlink a
+        GROUP BY `status`
+    </select>
+
+    <select id="waitPage" resultType="com.yb.mater.vo.MaterBatchlinkVO">
+        SELECT
+        b.cm_name,
+        b.material_name,
+        c.size,
+        a.id,
+        a.sd_id,
+        a.wk_no,
+        a.material_name AS mbMaterialName,
+        a.size AS mbSize,
+        a.supply_name,
+        a.location,
+        a.process_num,
+        a.realaccept_num,
+        a.plate_num,
+        a.us_id,
+        a.receive_usid,
+        a.contacter_name,
+        a.instorage_time,
+        a.in_time,
+        a.`status`,
+        a.remarks,
+        a.create_at,
+        a.mc_id,
+        a.ml_id,
+        b.pd_name
+        from yb_mater_batchlink a
+        JOIN yb_workbatch_ordlink b ON b.id=a.sd_id
+        JOIN yb_mater_mtinfo c ON c.id=a.ml_id
+        WHERE a.status = 0
+        <if test="materBatchlinkVO.wkNo != null and materBatchlinkVO.wkNo != ''">
+            AND a.wk_no like CONCAt('%',#{materBatchlinkVO.wkNo},'%')
+        </if>
+        <if test="materBatchlinkVO.materialName != null and materBatchlinkVO.materialName != ''">
+            AND b.material_name like CONCAt('%',#{materBatchlinkVO.materialName},'%')
+        </if>
+        <if test="materBatchlinkVO.cmName != null and materBatchlinkVO.cmName != ''">
+            AND b.cm_name like CONCAt('%',#{materBatchlinkVO.cmName},'%')
+        </if>
+        <if test="materBatchlinkVO.startTime != null and materBatchlinkVO.endTime != null">
+            AND a.instorage_time &gt;= #{materBatchlinkVO.startTime} AND a.instorage_time &lt;= #{materBatchlinkVO.endTime}
+        </if>
+        GROUP BY a.id
+        ORDER BY  a.in_time DESC
+    </select>
+</mapper>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anaysis.executSupervise.mapper.WorkbatchShiftMapper">
+
+    <select id="findByMaId" resultType="com.anaysis.executSupervise.vo.WorkbatchMachShiftVO">
+    select id,ck_name,end_time,start_time,stay_time
+    from v_machshift
+    where ma_id =#{maId}
+    </select>
+
+    <select id="getByWsId" resultType="java.lang.Integer">
+    select ws_id from yb_workbatch_shift
+    where id = #{wfId}
+    </select>
+    <select id="getWsIdByMaId" resultType="java.lang.Integer">
+   select ws_id from (
+    select ma_id,ws_id,CONCAT(date_sub(date_format(NOW() ,'%Y-%m-%d' ),interval 0 day),' ',start_time) as start_time ,
+    CASE
+    WHEN end_time  &lt; start_time
+    then  CONCAT(date_sub(date_format(NOW() ,'%Y-%m-%d' ),interval -1 day),' ',end_time)
+    ELSE CONCAT(date_sub(date_format(NOW() ,'%Y-%m-%d' ),interval 0 day),' ',end_time)
+    end
+    as end_time
+    from v_machshift
+    HAVING NOW()>= start_time
+    and NOW() &lt;= end_time
+	and ma_id = #{maId}) a
+
+</select>
+    <select id="getPrIdBySdId" resultType="java.lang.Integer">
+        SELECT
+        	pr_id
+        FROM
+        	yb_workbatch_ordlink
+        WHERE
+        	id=#{sdId}
+    </select>
+</mapper>

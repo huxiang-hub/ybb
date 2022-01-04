@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.process.mapper.ProcessMachlinkMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="processMachlinkResultMap" type="com.yb.process.entity.ProcessMachlink">
+        <id column="id" property="id"/>
+        <result column="ma_id" property="maId"/>
+        <result column="py_id" property="pyId"/>
+        <result column="pr_id" property="prId"/>
+        <result column="speed" property="speed"/>
+        <result column="prepare_time" property="prepareTime"/>
+        <result column="keep_run" property="keepRun"/>
+    </resultMap>
+
+    <select id="selectProcessMachlinkPage" resultMap="processMachlinkResultMap">
+        select * from yb_process_machlink where is_deleted = 0
+    </select>
+    <select id="getAllPyName" resultType="com.yb.process.vo.ProModelVO">
+        SELECT t1.id,t1.pr_name AS prName,t1.pr_no AS prNo FROM yb_process_workinfo t1
+        LEFT JOIN yb_process_machlink t2
+        ON t1.id = t2.pr_id
+        WHERE  1=1
+        <if test="proModelVO.id!=null"> AND t1.id = #{proModelVO.id}</if>
+        <if test="proModelVO.prNo!=null"> AND t1.pr_no LIKE CONCAT('%',#{proModelVO.prNo},'%')</if>
+        GROUP BY t1.pr_name,t1.id
+    </select>
+
+    <select id="getPridsBymaId" resultType="java.lang.String">
+        SELECT group_concat(t3.pr_id) as pr_ids FROM yb_process_machlink t2
+        LEFT JOIN yb_machine_mainfo t1 ON t1.id = t2.ma_id
+        LEFT JOIN yb_process_classlink t3 ON t3.py_id = t2.py_id
+        WHERE t1.id = #{maId}
+    </select>
+
+    <select id="getMaNamesByPyId" resultType="java.lang.String">
+        SELECT t1.name FROM yb_machine_mainfo t1
+        LEFT JOIN yb_process_machlink t2
+        ON t1.id = t2.ma_id
+        WHERE t2.pr_id = #{prId}
+    </select>
+    <select id="getPrModels" resultType="com.yb.process.vo.PrModelVO">
+        SELECT
+        t1.pr_name AS prName,
+        t1.id AS prId
+        FROM yb_process_workinfo t1
+        LEFT JOIN yb_process_classlink t2
+        ON t1.id = t2.pr_id
+        LEFT JOIN yb_process_classify t3
+        ON t2.pr_id = t3.id
+        WHERE t2.py_id = #{prId}
+    </select>
+    <select id="getPyModels" resultType="com.yb.process.vo.PyModelVO">
+        SELECT
+        py_name AS pyName,
+        id AS pyId
+        FROM yb_process_classify
+    </select>
+    <select id="getPyNameById" resultType="java.lang.String">
+        SELECT py_name AS pyName,id AS prId FROM yb_process_classify
+        WHERE id = (SELECT py_id  FROM yb_process_classlink
+        WHERE pr_id = #{id})
+    </select>
+    <select id="getPrName" resultType="com.yb.process.entity.ProcessWorkinfo">
+      SELECT * FROM yb_process_workinfo WHERE id IN
+      (SELECT pr_id FROM yb_process_classlink WHERE py_id = #{pyId})
+    </select>
+    <select id="getEntityByPrMt" resultType="com.yb.process.entity.ProcessMachlink">
+     	SELECT * from yb_process_machlink WHERE ma_id =#{maId}  and pr_id =#{prId}
+    </select>
+
+    <select id="machineListByPrIdDeptId" resultType="com.yb.machine.vo.MachineMainfoVO">
+    SELECT a.*,b.`name` AS maName
+    FROM yb_process_machlink a
+    JOIN yb_machine_mainfo b ON b.id=a.ma_id
+    WHERE b.dp_id=#{dpId} AND a.pr_id=#{prId}
+    </select>
+</mapper>

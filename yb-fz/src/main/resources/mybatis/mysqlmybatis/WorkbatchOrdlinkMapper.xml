@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anaysis.mysqlmapper.WorkbatchOrdlinkMapper">
+
+    <select id="getSdSort" resultType="java.lang.Integer">
+       SELECT
+IFNULL(sd_sort,0)	  as sdSort
+FROM
+	yb_workbatch_ordlink
+WHERE
+	1 = 1
+ORDER BY
+	sd_sort DESC
+	LIMIT 1
+    </select>
+</mapper>

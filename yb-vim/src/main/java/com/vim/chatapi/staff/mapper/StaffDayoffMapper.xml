@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.vim.chatapi.staff.mapper.StaffDayoffMapper">
+    <insert id="saveStaffDayoff" parameterType="com.vim.chatapi.staff.vo.StaffLeaveVO" useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT INTO yb_staff_dayoff
+        (us_id,model,start_date,end_date,duration,status,reasons,create_at)
+        VALUES
+        (#{usId},#{model},#{startDate},#{endDate},#{duration},#{status},#{reasons},#{createAt})
+    </insert>
+    <select id="checkApplyDayoff"  resultType="com.vim.chatapi.staff.vo.StaffDayoffVO">
+        SELECT t1.*,t2.real_name FROM yb_staff_dayoff t1
+        LEFT JOIN blade_user t2
+        ON t1.us_id = t2.id
+        WHERE 1=1
+        <if test="status==1">AND t1.status = 1</if>
+        <if test="status==2">AND t1.status &lt;&gt; 1</if>
+        AND t1.id IN
+        (SELECT db_id FROM yb_staff_flow WHERE us_id = #{userId})
+        ORDER BY create_at DESC
+    </select>
+    <select id="getStaffDayoff" resultType="com.vim.chatapi.staff.entity.StaffDayoff">
+        SELECT * FROM yb_staff_dayoff
+        WHERE
+        us_id = #{userId}
+        <if test="status==1"> AND status = 1</if>
+        <if test="status==2"> AND status &lt;&gt; 1</if>
+        ORDER BY create_at DESC
+    </select>
+    <update id="updateStaffDayoff" parameterType="com.vim.chatapi.staff.entity.StaffDayoff">
+        UPDATE yb_staff_dayoff  SET
+        status = #{status},
+        us_id = #{usId}
+        WHERE id = #{id}
+
+    </update>
+    <select id="getStaffDayoffById" resultType="com.vim.chatapi.staff.vo.StaffDayoffVO">
+        SELECT t1.*,t2.*,t3.dp_name,t4.result,t4.check_time FROM yb_staff_dayoff t1
+        LEFT JOIN yb_workbatch_shiftinfo t2
+        ON t1.us_id = t2.us_id
+        LEFT JOIN yb_base_deptinfo t3
+        ON t2.db_id = t3.p_id
+        LEFT JOIN yb_staff_flow t4
+		ON t1.id = t4.db_id
+        WHERE t1.id=#{id}
+    </select>
+</mapper>

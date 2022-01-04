@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/blade-ops/blade-admin/blade-admin.iml" filepath="$PROJECT_DIR$/blade-ops/blade-admin/blade-admin.iml" />
+      <module fileurl="file://$PROJECT_DIR$/blade-auth/blade-auth.iml" filepath="$PROJECT_DIR$/blade-auth/blade-auth.iml" />
+      <module fileurl="file://$PROJECT_DIR$/blade-common/blade-common.iml" filepath="$PROJECT_DIR$/blade-common/blade-common.iml" />
+      <module fileurl="file://$PROJECT_DIR$/blade-service/blade-demo/blade-demo.iml" filepath="$PROJECT_DIR$/blade-service/blade-demo/blade-demo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/blade-service-api/blade-demo-api/blade-demo-api.iml" filepath="$PROJECT_DIR$/blade-service-api/blade-demo-api/blade-demo-api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/blade-service/blade-desk/blade-desk.iml" filepath="$PROJECT_DIR$/blade-service/blade-desk/blade-desk.iml" />
+      <module fileurl="file://$PROJECT_DIR$/blade-service-api/blade-desk-api/blade-desk-api.iml" filepath="$PROJECT_DIR$/blade-service-api/blade-desk-api/blade-desk-api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/blade-ops/blade-develop/blade-develop.iml" filepath="$PROJECT_DIR$/blade-ops/blade-develop/blade-develop.iml" />
+      <module fileurl="file://$PROJECT_DIR$/blade-service-api/blade-dict-api/blade-dict-api.iml" filepath="$PROJECT_DIR$/blade-service-api/blade-dict-api/blade-dict-api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/blade-gateway/blade-gateway.iml" filepath="$PROJECT_DIR$/blade-gateway/blade-gateway.iml" />
+      <module fileurl="file://$PROJECT_DIR$/blade-service/blade-log/blade-log.iml" filepath="$PROJECT_DIR$/blade-service/blade-log/blade-log.iml" />
+      <module fileurl="file://$PROJECT_DIR$/blade-service-api/blade-message-api/blade-message-api.iml" filepath="$PROJECT_DIR$/blade-service-api/blade-message-api/blade-message-api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/blade-ops/blade-ops.iml" filepath="$PROJECT_DIR$/blade-ops/blade-ops.iml" />
+      <module fileurl="file://$PROJECT_DIR$/blade-ops/blade-resource/blade-resource.iml" filepath="$PROJECT_DIR$/blade-ops/blade-resource/blade-resource.iml" />
+      <module fileurl="file://$PROJECT_DIR$/blade-service-api/blade-saturn-api/blade-saturn-api.iml" filepath="$PROJECT_DIR$/blade-service-api/blade-saturn-api/blade-saturn-api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/blade-ops/blade-seata-order/blade-seata-order.iml" filepath="$PROJECT_DIR$/blade-ops/blade-seata-order/blade-seata-order.iml" />
+      <module fileurl="file://$PROJECT_DIR$/blade-ops/blade-seata-storage/blade-seata-storage.iml" filepath="$PROJECT_DIR$/blade-ops/blade-seata-storage/blade-seata-storage.iml" />
+      <module fileurl="file://$PROJECT_DIR$/blade-service/blade-service.iml" filepath="$PROJECT_DIR$/blade-service/blade-service.iml" />
+      <module fileurl="file://$PROJECT_DIR$/blade-service-api/blade-service-api.iml" filepath="$PROJECT_DIR$/blade-service-api/blade-service-api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/blade-service/blade-system/blade-system.iml" filepath="$PROJECT_DIR$/blade-service/blade-system/blade-system.iml" />
+      <module fileurl="file://$PROJECT_DIR$/blade-service-api/blade-system-api/blade-system-api.iml" filepath="$PROJECT_DIR$/blade-service-api/blade-system-api/blade-system-api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/blade-service/blade-user/blade-user.iml" filepath="$PROJECT_DIR$/blade-service/blade-user/blade-user.iml" />
+      <module fileurl="file://$PROJECT_DIR$/blade-service-api/blade-user-api/blade-user-api.iml" filepath="$PROJECT_DIR$/blade-service-api/blade-user-api/blade-user-api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/blade-service/blade-ybsaturn/blade-ybsaturn.iml" filepath="$PROJECT_DIR$/blade-service/blade-ybsaturn/blade-ybsaturn.iml" />
+      <module fileurl="file://$PROJECT_DIR$/yb-activemq/yb-activemq.iml" filepath="$PROJECT_DIR$/yb-activemq/yb-activemq.iml" />
+      <module fileurl="file://$PROJECT_DIR$/yb-analy/yb-analy.iml" filepath="$PROJECT_DIR$/yb-analy/yb-analy.iml" />
+      <module fileurl="file://$PROJECT_DIR$/yb-erpap/yb-erpap.iml" filepath="$PROJECT_DIR$/yb-erpap/yb-erpap.iml" />
+      <module fileurl="file://$PROJECT_DIR$/yb-erpapi/yb-erpapi.iml" filepath="$PROJECT_DIR$/yb-erpapi/yb-erpapi.iml" />
+      <module fileurl="file://$PROJECT_DIR$/yb-fz/yb-fz.iml" filepath="$PROJECT_DIR$/yb-fz/yb-fz.iml" />
+      <module fileurl="file://$PROJECT_DIR$/yb-nxhr/yb-nxhr.iml" filepath="$PROJECT_DIR$/yb-nxhr/yb-nxhr.iml" />
+      <module fileurl="file://$PROJECT_DIR$/yb-saturn/yb-saturn.iml" filepath="$PROJECT_DIR$/yb-saturn/yb-saturn.iml" />
+      <module fileurl="file://$PROJECT_DIR$/yb-screen/yb-screen.iml" filepath="$PROJECT_DIR$/yb-screen/yb-screen.iml" />
+      <module fileurl="file://$PROJECT_DIR$/yb-sso/yb-sso.iml" filepath="$PROJECT_DIR$/yb-sso/yb-sso.iml" />
+      <module fileurl="file://$PROJECT_DIR$/yb-vim/yb-vim.iml" filepath="$PROJECT_DIR$/yb-vim/yb-vim.iml" />
+      <module fileurl="file://$PROJECT_DIR$/yb-xy/yb-xy.iml" filepath="$PROJECT_DIR$/yb-xy/yb-xy.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/ybcould.iml" filepath="$PROJECT_DIR$/.idea/ybcould.iml" />
+    </modules>
+  </component>
+</project>

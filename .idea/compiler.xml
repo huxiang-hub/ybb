@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="blade-ybsaturn" />
+        <module name="blade-gateway" />
+        <module name="blade-seata-storage" />
+        <module name="blade-desk-api" />
+        <module name="blade-user-api" />
+        <module name="yb-xy" />
+        <module name="yb-analy" />
+        <module name="yb-fz" />
+        <module name="blade-message-api" />
+        <module name="blade-desk" />
+        <module name="blade-dict-api" />
+        <module name="yb-sso" />
+        <module name="yb-saturn" />
+        <module name="blade-demo-api" />
+        <module name="blade-saturn-api" />
+        <module name="blade-system" />
+        <module name="yb-erpap" />
+        <module name="blade-demo" />
+        <module name="blade-auth" />
+        <module name="blade-user" />
+        <module name="blade-seata-order" />
+        <module name="yb-erpapi" />
+        <module name="yb-screen" />
+        <module name="yb-activemq" />
+        <module name="yb-vim" />
+        <module name="blade-log" />
+        <module name="yb-nxhr" />
+        <module name="blade-system-api" />
+        <module name="blade-develop" />
+        <module name="blade-admin" />
+        <module name="blade-common" />
+        <module name="blade-resource" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="blade-admin" target="1.8" />
+      <module name="blade-auth" target="1.8" />
+      <module name="blade-common" target="1.8" />
+      <module name="blade-demo" target="1.8" />
+      <module name="blade-demo-api" target="1.8" />
+      <module name="blade-desk" target="1.8" />
+      <module name="blade-desk-api" target="1.8" />
+      <module name="blade-develop" target="1.8" />
+      <module name="blade-dict-api" target="1.8" />
+      <module name="blade-gateway" target="1.8" />
+      <module name="blade-log" target="1.8" />
+      <module name="blade-message-api" target="1.8" />
+      <module name="blade-ops" target="1.8" />
+      <module name="blade-resource" target="1.8" />
+      <module name="blade-saturn-api" target="1.8" />
+      <module name="blade-seata-order" target="1.8" />
+      <module name="blade-seata-storage" target="1.8" />
+      <module name="blade-service" target="1.8" />
+      <module name="blade-service-api" target="1.8" />
+      <module name="blade-system" target="1.8" />
+      <module name="blade-system-api" target="1.8" />
+      <module name="blade-user" target="1.8" />
+      <module name="blade-user-api" target="1.8" />
+      <module name="blade-ybsaturn" target="1.8" />
+      <module name="yb-activemq" target="1.8" />
+      <module name="yb-analy" target="1.8" />
+      <module name="yb-erpap" target="1.8" />
+      <module name="yb-erpapi" target="1.8" />
+      <module name="yb-fz" target="1.8" />
+      <module name="yb-nxhr" target="1.8" />
+      <module name="yb-saturn" target="1.8" />
+      <module name="yb-screen" target="1.8" />
+      <module name="yb-sso" target="1.8" />
+      <module name="yb-vim" target="1.8" />
+      <module name="yb-xy" target="1.8" />
+      <module name="ybcould" target="1.8" />
+    </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="blade-admin" options="-parameters" />
+      <module name="blade-auth" options="-parameters" />
+      <module name="blade-common" options="-parameters" />
+      <module name="blade-demo" options="-parameters" />
+      <module name="blade-demo-api" options="-parameters" />
+      <module name="blade-desk" options="-parameters" />
+      <module name="blade-desk-api" options="-parameters" />
+      <module name="blade-develop" options="-parameters" />
+      <module name="blade-dict-api" options="-parameters" />
+      <module name="blade-gateway" options="-parameters" />
+      <module name="blade-log" options="-parameters" />
+      <module name="blade-message-api" options="-parameters" />
+      <module name="blade-resource" options="-parameters" />
+      <module name="blade-saturn-api" options="-parameters" />
+      <module name="blade-seata-order" options="-parameters" />
+      <module name="blade-seata-storage" options="-parameters" />
+      <module name="blade-system" options="-parameters" />
+      <module name="blade-system-api" options="-parameters" />
+      <module name="blade-user" options="-parameters" />
+      <module name="blade-user-api" options="-parameters" />
+      <module name="blade-ybsaturn" options="-parameters" />
+      <module name="yb-activemq" options="-parameters" />
+      <module name="yb-analy" options="-parameters" />
+      <module name="yb-erpap" options="-parameters" />
+      <module name="yb-erpapi" options="-parameters" />
+      <module name="yb-fz" options="-parameters" />
+      <module name="yb-nxhr" options="-parameters" />
+      <module name="yb-saturn" options="-parameters" />
+      <module name="yb-screen" options="-parameters" />
+      <module name="yb-sso" options="-parameters" />
+      <module name="yb-vim" options="-parameters" />
+      <module name="yb-xy" options="-parameters" />
+    </option>
+  </component>
+</project>

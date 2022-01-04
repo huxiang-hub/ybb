@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sso.mapper.SaDeptMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="deptResultMap" type="com.sso.base.entity.BaseDeptinfo">
+        <id column="id" property="id"/>
+        <result column="p_id" property="pId"/>
+        <result column="dp_name" property="dpName"/>
+        <result column="dp_num" property="dpNum"/>
+        <result column="full_name" property="fullName"/>
+        <result column="classify" property="classify"/>
+        <result column="sort" property="sort"/>
+        <result column="remark" property="remark"/>
+        <result column="is_deleted" property="isDeleted"/>
+    </resultMap>
+
+    <resultMap id="treeNodeResultMap" type="org.springblade.core.tool.node.TreeNode">
+        <id column="id" property="id"/>
+        <result column="p_id" property="parentId"/>
+        <result column="title" property="title"/>
+        <result column="value" property="value"/>
+        <result column="key" property="key"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="baseColumnList">
+        select
+        id, p_id, dp_name, full_name, sort, remark, is_deleted
+    </sql>
+
+    <select id="selectDeptPage" resultMap="deptResultMap">
+        select * from yb_base_deptinfo where is_deleted = 0
+    </select>
+
+    <select id="tree" resultMap="treeNodeResultMap">
+        select id, p_id, dp_name as title, id as 'value', id as 'key' from yb_base_deptinfo where is_deleted = 0
+        <if test="_parameter!=null">
+            and tenant_id = #{_parameter}
+        </if>
+    </select>
+
+    <select id="selectDeptPages" resultMap="deptResultMap">
+        select * from yb_base_deptinfo where is_deleted = 0
+        <if test="baseDeptinfo.id != null">
+            and id LIKE CONCAT('%',#{baseDeptinfo.id},'%')
+        </if>
+        <if test="baseDeptinfo.dpName != null">
+            and dp_name LIKE CONCAT('%',#{baseDeptinfo.dpName},'%')
+        </if>
+        order BY sort
+    </select>
+</mapper>

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.mater.mapper.ExecuteOffmaterMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="executeOffmaterResultMap" type="com.yb.mater.entity.ExecuteOffmater">
+        <id column="id" property="id"/>
+        <result column="mat_id" property="matId"/>
+        <result column="mat_name" property="matName"/>
+        <result column="mat_num" property="matNum"/>
+        <result column="total_num" property="totalNum"/>
+        <result column="unit" property="unit"/>
+        <result column="ma_id" property="maId"/>
+        <result column="ws_id" property="wsId"/>
+        <result column="wf_id" property="wfId"/>
+        <result column="us_id" property="usId"/>
+        <result column="create_at" property="createAt"/>
+        <result column="update_at" property="updateAt"/>
+    </resultMap>
+
+
+    <select id="selectExecuteOffmaterPage" resultMap="executeOffmaterResultMap">
+        select * from yb_execute_offmater where is_deleted = 0
+    </select>
+    <select id="getListByWfId" resultType="com.yb.mater.entity.ExecuteOffmater">
+        SELECT
+            a.*,
+            b.st_no AS storeSeatNo,
+            c.name as usName
+        FROM
+            yb_execute_offmater a
+            LEFT JOIN yb_store_seat b ON a.seat_id = b.id
+            LEFT JOIN blade_user c ON a.us_id = c.id
+        WHERE
+            a.wf_id = #{wfId}
+        ORDER BY
+            create_at DESC
+    </select>
+    <select id="getListcsByWfId" resultType="com.yb.mater.vo.ExecuteOffmaterVO">
+        SELECT
+            a.*,
+            b.st_no AS storeSeatNo,
+            c.name as usName,
+            d.ck_name as ws_name,
+            e.name as ma_name
+        FROM
+            yb_execute_offmater a
+            LEFT JOIN yb_store_seat b ON a.seat_id = b.id
+            LEFT JOIN blade_user c ON a.us_id = c.id
+            LEFT JOIN yb_workbatch_mainshift d ON d.id = a.ws_id
+            left join yb_machine_mainfo e on e.id = a.ma_id
+        WHERE
+            a.wf_id = #{wfId}
+        ORDER BY
+            create_at DESC
+    </select>
+
+    <select id="getExecuteMaterialsPrint" resultType="com.yb.execute.vo.TraycardDataVO">
+      SELECT
+        	a.id,
+        	a.seat_id AS mpId,
+        	a.print_num,
+        	a.bar_code AS tdNo,
+        	a.total_num AS num,
+        	g.st_no AS stNo,
+        	b.ck_name,
+        	a.mat_name AS pdName,
+        	c.pr_name,
+        	c.wb_no,
+        	d.`name` AS usName,
+        	e.`name` AS maName,
+        	a.ma_id
+        FROM
+        	yb_execute_offmater a
+        LEFT JOIN yb_workbatch_shift b ON a.wf_id = b.id
+        LEFT JOIN yb_workbatch_ordlink c ON b.sd_id = c.id
+        LEFT JOIN blade_user d ON d.id = a.us_id
+        LEFT JOIN yb_machine_mainfo e ON e.id = a.ma_id
+        LEFT JOIN yb_store_seat g ON g.id = a.seat_id
+        WHERE
+        	1 = 1
+        <if test="idList != null and idList.size() != 0">
+            AND a.id IN
+            <foreach collection="idList" open="(" close=")" separator="," item="id">
+                #{id}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="executeOffmaterMapper" resultType="java.lang.Integer">
+        SELECT
+        	et_id
+        FROM
+        	yb_execute_offmater
+        WHERE et_id IS NOT NULL
+        AND
+        	id IN
+        	<foreach collection="idList" item="id" separator="," open="(" close=")">
+        	    #{id}
+            </foreach>
+     </select>
+
+     <select id="getMaterialsPrint" resultType="com.yb.execute.vo.TraycardDataVO">
+
+        SELECT
+        	a.id,
+        	f.mp_id,
+        	f.print_num,
+        	f.td_no AS tdNo,
+        	f.tray_num AS num,
+        	f.store_place AS stNo,
+        	f.tray_no,
+        	f.start_time,
+        	b.ck_name,
+        	c.pd_name AS pdName,
+        	c.pr_name,
+        	c.wb_no,
+        	d.`name` AS usName,
+        	e.`name` AS maName,
+        	a.ma_id
+        FROM
+        	yb_execute_offmater a
+        LEFT JOIN yb_execute_traycard f ON f.id = a.et_id
+        LEFT JOIN yb_workbatch_shift b ON f.wf_id = b.id
+        LEFT JOIN yb_workbatch_ordlink c ON b.sd_id = c.id
+        LEFT JOIN blade_user d ON d.id = f.us_id
+        LEFT JOIN yb_machine_mainfo e ON e.id = f.ma_id
+        WHERE
+        	1 = 1
+        <if test="idList != null and idList.size() != 0">
+            AND a.id IN
+            <foreach collection="idList" open="(" close=")" separator="," item="id">
+                #{id}
+            </foreach>
+        </if>
+    </select>
+
+</mapper>

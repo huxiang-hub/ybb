@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.vim.chatapi.staff.mapper.WorkbatchShiftinfoMapper">
+
+    <select id="getWorkbatchShiftinfoVO" resultType="com.vim.chatapi.staff.vo.WorkbatchShiftinfoVO">
+        SELECT t2.dp_name,t1.* FROM yb_workbatch_shiftinfo t1
+        LEFT JOIN yb_base_deptinfo t2
+        ON t1.db_id = t2.p_id
+        WHERE t1.us_id = #{userId}
+        AND t1.check_date LIKE CONCAT('%',#{date},'%')
+    </select>
+
+    <update id="updateWorkbatchShiftinfo" parameterType="com.vim.chatapi.staff.entity.WorkbatchShiftinfo">
+        UPDATE yb_workbatch_shiftinfo
+        <set>
+            <if test="dbId!=null">db_id =#{dbId},</if>
+            <if test="model!=null">model =#{model},</if>
+            <if test="ckName!=null">ck_name =#{ckName},</if>
+            <if test="isWork!=null">is_work =#{isWork},</if>
+            <if test="checkDate!=null">check_date =#{checkDate},</if>
+            <if test="startTime!=null">start_time =#{startTime},</if>
+            <if test="endTime!=null">end_time =#{endTime},</if>
+            <if test="stayTime!=null">stay_time =#{stayTime},</if>
+            <if test="ckStatus!=null">ck_status=#{ckStatus},</if>
+            <if test="createAt!=null">create_at =#{createAt}</if>
+        </set>
+        WHERE us_id = #{usId}
+    </update>
+    <insert id="saveWorkbatchShiftinfo" parameterType="com.vim.chatapi.staff.entity.WorkbatchShiftinfo">
+        INSERT INTO yb_workbatch_shiftinfo
+        (db_id,model,ck_name,is_work,check_date,start_time,end_time,stay_time,us_id,ck_status,create_at)
+        VALUES
+        (#{dbId},#{model},#{ckName},#{isWork},#{checkDate},#{startTime},#{endTime},#{stayTime},#{usId}
+        ,#{ckStatus},#{createAt})
+    </insert>
+
+</mapper>

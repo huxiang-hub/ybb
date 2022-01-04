@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.prod.mapper.ProdPdmodelMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="prodPdmodelResultMap" type="com.yb.prod.entity.ProdPdmodel">
+        <id column="id" property="id"/>
+        <result column="pd_name" property="pdName"/>
+        <result column="pd_no" property="pdNo"/>
+        <result column="create_at" property="createAt"/>
+        <result column="image_url" property="imageUrl"/>
+        <result column="is_used" property="isUsed"/>
+        <result column="proce_pic" property="procePic"/>
+        <result column="model_json" property="modelJson"/>
+        <result column="pc_id" property="pcId"/>
+        <result column="cl_name" property="clName"/>
+    </resultMap>
+
+
+    <select id="selectProdPdmodelPage" resultMap="prodPdmodelResultMap">
+        select * from yb_prod_pdmodel where is_used = 1
+    </select>
+
+    <select id="tree" resultType="com.yb.prod.vo.ProdPdmodelVO">
+        select * from yb_prod_pdmodel where is_used = 1
+    </select>
+
+    <select id="getOneProdPdmodelById" resultType="com.yb.prod.vo.ProdPdmodelVO">
+        select * from yb_prod_pdmodel where id=#{id}
+    </select>
+
+    <select id="getOneProdPdmodelByPdNo" resultType="com.yb.prod.vo.ProdPdmodelVO">
+        select * from yb_prod_pdmodel where pd_no=#{pdNo}
+    </select>
+
+    <select id="selectePdinfoModelList" resultType="com.yb.prod.vo.ProdPdmodelVO">
+        SELECT *
+        FROM yb_prod_pdmodel
+
+/*      SELECT a.*,b.id AS pdId,b.pc_id,c.cl_name
+        FROM yb_prod_pdmodel a
+        LEFT JOIN yb_prod_pdinfo b ON a.pd_no=b.pd_no
+        LEFT JOIN yb_prod_classify c ON c.id=b.pc_id*/
+        <where>
+            <if test="prodPdmodel.pdModelName != null">
+                pd_name LIKE concat('%',#{prodPdmodel.pdModelName},'%')
+            </if>
+            <if test="prodPdmodel.pdNo != null">
+                AND pd_no = #{prodPdmodel.pdNo}
+            </if>
+
+        </where>
+    </select>
+    <select id="selectePdinfoModel" resultType="com.yb.prod.vo.ProdPdmodelVO">
+         SELECT a.*,c.cl_name
+        FROM yb_prod_pdmodel a
+        LEFT JOIN yb_prod_classify c ON c.id=a.pc_id
+        WHERE a.id=#{id}
+    </select>
+</mapper>

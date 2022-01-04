@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.vim.user.mapper.ImUserMapper">
+    <resultMap id="groupUserMap" type="com.vim.user.entity.ImGroup">
+        <result column="id" property="id"/>
+        <result column="name" property="name"/>
+        <collection property="userList" ofType="com.vim.user.entity.ImUser">
+            <result column="u_id" property="id"/>
+            <result column="u_name" property="name"/>
+            <result column="u_avatar" property="avatar"/>
+            <result column="u_sign" property="sign"/>
+            <result column="u_mobile" property="mobile"/>
+            <result column="u_email" property="email"/>
+        </collection>
+    </resultMap>
+    <select id="getGroupUsers" resultMap="groupUserMap">
+        SELECT
+            g.id     AS id,
+            g.name   AS name,
+            u.id     AS u_id,
+            u.name   AS u_name,
+            u.sign   AS u_sign,
+            u.avatar AS u_avatar,
+            u.mobile AS u_mobile,
+            u.email  AS u_email
+        FROM
+            im_group g
+            LEFT JOIN im_group_user gu ON g.id = gu.group_id
+            LEFT JOIN im_user u ON u.id = gu.user_id
+        WHERE
+            g.user_id = #{userId}
+    </select>
+    <select id="getUserGroups" parameterType="string" resultType="com.vim.user.entity.ImChatGroup">
+        SELECT
+            a.id,
+            a.NAME,
+            a.avatar,
+            b.top_flag
+        FROM
+            im_chat_group a
+        LEFT JOIN
+        im_chat_group_user b
+        ON a.id = b.chat_group_id
+        WHERE b.user_id = #{userId}
+    </select>
+    <select id="getChatUserList" parameterType="string" resultType="com.vim.user.entity.ImUser">
+       SELECT
+            id,
+            name,
+            avatar
+        FROM blade_user
+        WHERE id IN (SELECT cg.user_id
+                     FROM im_chat_group_user cg
+                     WHERE cg.chat_group_id = #{chatId})
+    </select>
+    <select id="getUserInfo" resultType="org.springblade.system.user.entity.User">
+
+    </select>
+
+    <select id="getStatist" resultType="com.vim.chatapi.statistics.StatisEntity">
+        SELECT
+        SUM(count_num) as count_num,
+        SUM(waste_num + stop_waste) as waste_num
+        FROM
+        yb_execute_briefer a
+        LEFT JOIN yb_execute_examine b ON a.id = b.bf_id
+        WHERE
+        b.ex_status = 1 and a.us_ids LIKE '%${userId}%'
+        AND  DATE(a.end_time) &gt;= '${startDate}'
+        AND  DATE(a.end_time) &lt;= '${endDate}'
+    </select>
+    <select id="getByFromId" resultType="com.vim.user.entity.ImUser">
+        SELECT
+            id,
+            name,
+            avatar,
+            sex,
+            curraddr
+        FROM blade_user
+        WHERE id = #{fromId}
+    </select>
+    <select id="getFriendInfo" resultType="com.vim.chatapi.user.entity.SaUser">
+        SELECT
+            *
+        FROM blade_user
+        WHERE chat_no = #{chatNo}
+    </select>
+</mapper>

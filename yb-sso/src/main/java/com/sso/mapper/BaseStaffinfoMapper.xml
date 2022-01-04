@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sso.mapper.BaseStaffinfoMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="baseStaffinfoResultMap" type="com.sso.base.entity.BaseStaffinfo">
+        <id column="ID" property="id"/>
+        <result column="name" property="name"/>
+        <result column="jobnum" property="jobnum"/>
+        <result column="phone" property="phone"/>
+        <result column="dp_id" property="dpId"/>
+        <result column="mold" property="mold"/>
+        <result column="jobs" property="jobs"/>
+        <result column="laborer" property="laborer"/>
+        <result column="hire_time" property="hireTime"/>
+        <result column="processes" property="processes"/>
+        <result column="bc_id" property="bcId"/>
+        <result column="is_used" property="isUsed"/>
+        <result column="create_at" property="createAt"/>
+        <result column="is_manage" property="isManage"/>
+    </resultMap>
+
+
+    <select id="selectBaseStaffinfoPage" resultMap="baseStaffinfoResultMap">
+        select * from yb_base_staffinfo where is_deleted = 0
+    </select>
+    <select id="getLeaderByLeaderId" resultType="com.sso.base.vo.BaseStaffinfoVO">
+        SELECT b.avatar,y.* FROM blade_user b INNER JOIN yb_base_staffinfo y ON b.id = y.user_id
+        WHERE y.jobnum = #{jobNum}
+    </select>
+    <select id="getBaseStaffinfoByUsId" resultType="com.sso.base.vo.BaseStaffinfoVO">
+        SELECT b.avatar,y.* FROM blade_user b INNER JOIN yb_base_staffinfo y ON b.id = y.user_id
+        WHERE y.user_id = #{usId}
+    </select>
+    <select id="selectBaseStaffInfoAndBaseUser" resultType="com.sso.base.vo.BaseStaffinfoVO">
+        SELECT staff.*,staffext.ID as extId,staffext.sex,staffext.education,staffext.birthday,staffext.idcard,staffext.idaddr,staffext.hometown,staffext.curraddr FROM yb_base_staffext staffext RIGHT JOIN yb_base_staffinfo staff ON staff.id = staffext.sf_id
+        where 1=1
+        <if test="baseStaffinfoVO.jobnum != null">
+            and staff.jobnum LIKE CONCAT('%',#{baseStaffinfoVO.jobnum},'%')
+        </if>
+        <if test="baseStaffinfoVO.name != null">
+            and staff.name LIKE CONCAT('%',#{baseStaffinfoVO.name},'%')
+        </if>
+        <if test="baseStaffinfoVO.idcard != null">
+            and staffext.idcard LIKE CONCAT('%',#{baseStaffinfoVO.idcard},'%')
+        </if>
+    </select>
+    <select id="getOneStaffInfo" resultType="com.sso.base.vo.BaseStaffinfoVO">
+        SELECT staff.*,staffext.ID as extId,staffext.sex,staffext.education,staffext.birthday,staffext.idcard,staffext.idaddr,staffext.hometown,staffext.curraddr FROM yb_base_staffext staffext RIGHT JOIN yb_base_staffinfo staff ON staff.id = staffext.sf_id where staff.ID = #{id}
+    </select>
+    <update id="updateStaffInfoIsUsedById" parameterType="java.lang.Integer">
+        update yb_base_staffinfo set is_used=0, user_id=null where ID = #{id}
+    </update>
+
+    <select id="getBaseStaffinfoVOByjobnum" resultType="com.sso.base.vo.BaseStaffinfoVO">
+        select * from yb_base_staffinfo where jobnum = #{jobnum}
+    </select>
+
+    <select id="getJobnumIsExit" resultType="java.lang.Integer">
+        select 1 from yb_base_staffinfo where jobnum = #{jobnum} limit 1
+    </select>
+    <select id="getProcessesSum" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM yb_base_staffinfo
+        WHERE processes LIKE CONCAT('%',#{prId},'%')
+    </select>
+
+    <select id="getUserListByPdId" resultType="com.sso.base.vo.BaseStaffinfoVO">
+        SELECT *,CONCAT(name,'--',jobnum) AS title,
+        (CASE
+        <if test="baseStaffinfoVO.bcId != null">
+            WHEN bc_id = #{baseStaffinfoVO.bcId} THEN 'false'
+        </if>
+        WHEN bc_id IS NOT NULL THEN 'true' ELSE 'false' END
+        ) AS disabled FROM yb_base_staffinfo
+         WHERE is_used = 1 AND dp_id = #{baseStaffinfoVO.dpId} AND mold=#{baseStaffinfoVO.mold}
+    </select>
+
+    <update id="updateStaffInfoBcIdById" parameterType="java.lang.Integer">
+        update yb_base_staffinfo set bc_id = #{bcId} where ID = #{id}
+    </update>
+
+    <select id="getNamesBybcId" resultType="java.lang.String">
+        SELECT GROUP_CONCAT(name separator ',') names FROM yb_base_staffinfo where bc_id = #{bcId} and is_used =1 GROUP BY bc_id
+    </select>
+
+    <select id="getIdsBybcId" resultType="java.lang.String">
+        SELECT GROUP_CONCAT(id separator ',') ids FROM yb_base_staffinfo where bc_id = #{bcId} and is_used =1 GROUP BY bc_id
+    </select>
+
+ <select id="factManInfo" resultType="com.sso.base.vo.StaffInfoVO">
+   SELECT b.account,y.jobnum,b.real_name,b.avatar,ybd.dp_name,
+   case jobs
+   when 1 then '机长'
+   when 2 then '班长'
+   when 3 then '车间主管'
+   when 4 then '排产员'
+   else '暂无' end as jobs
+   FROM blade_user b
+    JOIN yb_base_staffinfo y ON b.id = y.user_id
+   left join yb_base_deptinfo ybd on b.dept_id = ybd.id
+   <where>
+   and b.account !=#{staffInfo.account}
+   <if test="staffInfo.bcId !=null ">
+   and y.bc_id = #{staffInfo.bcId}
+   </if>
+</where>
+</select>
+</mapper>

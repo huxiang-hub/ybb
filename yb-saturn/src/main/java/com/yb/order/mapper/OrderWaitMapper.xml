@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.order.mapper.OrderWaitMapper">
+<resultMap id="OrderWaitVOMMap" type="com.yb.order.vo.OrderWaitVO">
+    <id column="id" property="id"/>
+    <result column="pd_id" property="pdId"/>
+    <result column="od_name" property="odName"/>
+    <result column="od_no" property="odNo"/>
+    <result column="od_count" property="odCount"/>
+    <result column="contract_num" property="contractNum"/>
+    <result column="contract_name" property="contractName"/>
+    <result column="waste_count" property="wasteCount"/>
+    <result column="cm_shortname" property="cmShortname"/>
+    <result column="limit_date" property="limitDate"/>
+    <result column="audit_status" property="auditStatus"/>
+    <result column="production_state" property="productionState"/>
+    <result column="create_at" property="createAt"/>
+    <result column="pd_name" property="pdName"/>
+
+</resultMap>
+
+    <select id="selectOrderWaitV" resultMap="OrderWaitVOMMap">
+        SELECT t3.*,b.pd_name
+        FROM yb_actset_checklog t1
+        LEFT JOIN yb_actset_ckflow t2
+        ON t1.aw_id = t2.id
+        LEFT JOIN yb_order_ordinfo t3
+        ON t1.db_id = t3.id
+        LEFT JOIN yb_prod_pdinfo b ON b.id=t3.pd_id
+        WHERE t3.production_state!=2 AND t2.aw_type LIKE CONCAT('%',#{modelVO.awType},'%')
+        AND t2.as_id = (
+        SELECT id FROM yb_actset_ckset WHERE as_type LIKE CONCAT('%',#{modelVO.asType},'%')
+        )
+        <if test="modelVO.status!=null">
+            AND t1.status =#{modelVO.status}
+        </if>
+        <if test="modelVO.orderId!=null">
+            AND t1.db_id =#{modelVO.orderId}
+        </if>
+        <if test="indentor != null">
+            AND t3.cm_shortname=#{indentor}
+        </if>
+        <if test="odNo != null">
+            AND t3.od_no=#{odNo}
+        </if>
+
+    </select>
+
+    <select id="selectOrderWaitById" resultType="com.yb.order.vo.OrderWaitVO">
+        SELECT a.*,b.pd_name
+         FROM yb_order_ordinfo a, yb_prod_pdinfo b
+         WHERE a.production_state=0 AND a.pd_id=b.id AND  a.id=#{odId}
+
+    </select>
+
+    <select id="orderWaitCount" resultType="int">
+        SELECT COUNT(*)
+        FROM yb_order_ordinfo a, yb_prod_pdinfo b
+        WHERE a.production_state=0 AND a.pd_id=b.id
+        <if test="indentor != null">
+            AND a.cm_shortname=#{indentor}
+        </if>
+        <if test="odNo != null">
+            AND a.od_no=#{odNo}
+        </if>
+
+    </select>
+
+    <select id="orderList" resultType="com.yb.order.vo.OrderWaitVO">
+
+        SELECT t3.*
+        FROM yb_actset_checklog t1
+        LEFT JOIN yb_actset_ckflow t2
+        ON t1.aw_id = t2.id
+        LEFT JOIN yb_order_ordinfo t3
+        ON t1.db_id = t3.id
+        WHERE t3.production_state != 2 AND t2.aw_type LIKE CONCAT('%',#{modelVO.awType},'%')
+        AND t2.as_id = (
+        SELECT id FROM yb_actset_ckset WHERE as_type LIKE CONCAT('%',#{modelVO.asType},'%')
+        )
+        <if test="modelVO.status != null">
+            AND t1.status =#{modelVO.status}
+        </if>
+        <if test="modelVO.orderId != null">
+            AND t1.db_id =#{modelVO.orderId}
+        </if>
+        <if test="modelVO.result != null">
+            AND t1.result =#{modelVO.result}
+        </if>
+
+    </select>
+</mapper>

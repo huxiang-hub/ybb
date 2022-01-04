@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anaysis.sqlservermapper.XyDeptMapper">
+
+
+    <select id="list" resultType="com.anaysis.entity.BaseDeptInfoVo">
+        SELECT
+            ID AS erpId,
+            ParentID AS erpPid,--父ID
+            BMMC AS dpName,--部门名称
+            ZLBM AS dpNum,--部门编号
+            BMMC AS fullName,--部门全称
+            2 AS classfiy, --默认生产类型
+            SFZX AS isDelete--是否删除
+            FROM Base_BMZL
+    </select>
+</mapper>

@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.supervise.mapper.SuperviseIntervalMapper">
+
+
+
+    <select id="getDayResultByCheckDay" resultType="com.yb.supervise.vo.SuperviseIntervalVO">
+        SELECT
+        IFNULL( SUM( pcout ), 0 ) AS dayCount,
+        ma_id,
+        d.`name`,
+        target_day
+        FROM
+        yb_supervise_regular syi
+        JOIN yb_machine_mainfo d ON syi.ma_id = d.id
+        WHERE
+        target_day LIKE concat(#{targetDate},'%')
+        <if test="dpId!=null and dpId!=''">
+            AND d.dp_id = #{dpId}
+        </if>
+        <if test="proType!=null and proType!=''">
+          and  #{proType} IN ( SELECT DISTINCT pr_id FROM yb_process_machlink WHERE ma_id = d.id)
+        </if>
+        GROUP BY
+        target_day,ma_id
+    </select>
+
+
+    <select id="getHourResultByCheckDay" resultType="com.yb.supervise.vo.SuperviseIntervalVO">
+        SELECT
+        IFNULL( SUM( pcout ), 0 ) as pcout,
+        b.`name`,
+        syi.target_hour,
+        syi.ma_id,target_day
+        FROM
+        yb_supervise_regular syi
+        JOIN yb_machine_mainfo b ON syi.ma_id = b.id
+        and b.is_used = 1
+        <if test="proType!=null and proType!=''">
+            AND  b.id IN ( SELECT DISTINCT ma_id FROM yb_process_machlink WHERE pr_id = #{proType})
+        </if>
+        WHERE 1=1
+        <if test="dpId!=null and dpId!=''">
+            AND b.dp_id = #{dpId}
+        </if>
+        AND ( target_day = #{targetDate} and target_hour &gt;= #{startTime}) and ( target_day = #{targetDate}  and target_hour &lt;= #{endTime})
+        GROUP BY
+        target_day, syi.target_hour,b.id
+    </select>
+
+
+    <select id="getHourResutPassDay" resultType="com.yb.supervise.vo.SuperviseIntervalVO">
+        SELECT
+        IFNULL( SUM( pcout ), 0 ) as pcout,
+        a.`name`,
+        syi.target_hour,
+        syi.ma_id,target_day
+        FROM
+        yb_supervise_regular syi
+        JOIN yb_machine_mainfo a ON syi.ma_id = a.id
+        and a.is_used = 1
+        <if test="proType!=null and proType!=''">
+            AND  a.id IN ( SELECT DISTINCT ma_id FROM yb_process_machlink WHERE pr_id = #{proType})
+        </if>
+        WHERE 1= 1
+        <if test="dpId!=null and dpId!=''">
+            AND a.dp_id = #{dpId}
+        </if>
+        AND ( target_day = #{targetDate} and target_hour &gt;= #{startHour}) or ( target_day = #{tomorrowDay}  and target_hour &lt; #{endHour})
+        GROUP BY
+        target_day, syi.target_hour,a.id
+    </select>
+
+    <select id="getWeekResultByCheckDay" resultType="com.yb.supervise.vo.SuperviseIntervalVO">
+        SELECT
+        IFNULL(SUM( pcout ),0) AS dayCount,
+        target_day,ma_id,ymm.`name`
+        FROM
+        yb_supervise_regular syi
+        LEFT JOIN yb_machine_mainfo ymm ON syi.ma_id = ymm.id
+        WHERE syi.target_day >= #{startTime}
+        and syi.target_day &lt;= #{endTime}
+        <if test="dpId!=null and dpId!=''">
+            AND ymm.dp_id = #{dpId}
+        </if>
+        <if test="proType!=null and proType!=''">
+            AND  #{proType} IN ( SELECT DISTINCT pr_id FROM yb_process_machlink WHERE ma_id = ymm.id)
+        </if>
+        GROUP BY
+        syi.target_day,ma_id
+    </select>
+
+    <select id="getSumTimeByMaId" resultType="java.lang.Integer">
+         SELECT IFNULL(SUM(diff_time),0) FROM yb_supervise_interval WHERE `status` =#{status}
+   and  start_time BETWEEN #{startTime} and #{endTime}
+   and ma_id =#{mtId}
+    </select>
+
+    <select id="getCalculateCkNameResult" resultType="com.yb.supervise.vo.SuperviseIntervalVO">
+        SELECT IFNULL(SUM(pcout), 0) AS dayCount, ma_id, ymm.`name`
+        FROM yb_supervise_regular syi
+        JOIN yb_machine_mainfo ymm ON syi.ma_id = ymm.id
+        WHERE
+        syi.start_time &gt;= #{startTimeformat} AND syi.end_time &lt;=  #{endTimeFormat}
+        <if test="dpId!=null and dpId!=''">
+            AND ymm.dp_id = #{dpId}
+        </if>
+        <if test="proType!=null and proType!=''">
+            AND  #{proType} IN ( SELECT DISTINCT pr_id FROM yb_process_machlink WHERE ma_id = ymm.id)
+        </if>
+        GROUP BY ma_id
+    </select>
+    <select id="SumBoxNumber" resultType="java.lang.Integer">
+        SELECT IFNULL(SUM(pcout),0) FROM yb_supervise_interval WHERE
+        start_time BETWEEN #{classStartTime} and #{classEndTime}
+        and ma_id =#{maId}
+    </select>
+
+
+   <select id="stopList" resultType="com.yb.panelapi.vo.MachineStopListVO">
+    select * from yb_supervise_interval ysi
+    where ysi.ma_id = #{request.maId}
+    and ysi.diff_time ${condition}
+    order by ysi.diff_time asc
+   </select>
+
+    <select id="getMaIdsByTargetDay" resultType="java.lang.Integer">
+        SELECT
+        	ma_id
+        FROM
+        	yb_supervise_interval
+        WHERE
+        	DATE_FORMAT(create_at, '%Y-%m-%d') = #{targetDay}
+        GROUP BY
+        	ma_id
+    </select>
+    <select id="productivityOfToday" resultType="java.util.Map">
+        SELECT
+        m.name AS maName,
+        SUM(
+        IFNULL( i.pcout, 0 )) AS total
+        FROM
+        yb_machine_mainfo m
+        LEFT JOIN yb_supervise_interval i ON m.id = i.ma_id
+        AND i.start_time >= #{startTime}
+        AND i.start_time &lt; #{endTime}
+        AND i.end_time &lt; #{endTime}
+        GROUP BY
+        m.id
+        ORDER BY
+        m.sort,m.ma_type
+    </select>
+    <select id="sumByDateMatype" resultType="com.yb.supervise.vo.SuperviseTowMonthVO">
+        SELECT
+            m.id,
+            m.name AS maName,
+            SUM(
+            IFNULL( i.pcout, 0 )) AS curMonthSum
+        FROM
+            yb_machine_mainfo m
+            LEFT JOIN yb_supervise_interval i ON m.id = i.ma_id
+            AND i.start_time LIKE #{curMonth}
+            AND i.end_time LIKE #{curMonth}
+        WHERE
+            m.ma_type = #{maType}
+        GROUP BY
+            m.id
+        ORDER BY
+            m.sort
+    </select>
+
+    <select id="getNowWsOpenTime" resultType="java.lang.Integer">
+        select ifnull(sum(diff_time),0)
+        from yb_supervise_interval
+        where status =1
+        and ma_id=#{maId}
+        and create_at >= #{startTime}
+        and create_at &lt;= #{endTime}
+    </select>
+
+
+<select id="getStatusChangePort" resultType="com.yb.machine.response.MachineStatusChangePortVO">
+select start_time, end_time, status, diff_time, sum(pcout)
+from yb_supervise_interval
+where target_day >= #{request.startTime}
+and target_day &lt;= #{request.endTime}
+and ma_id = #{request.maId}
+order by id asc
+</select>
+</mapper>

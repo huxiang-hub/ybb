@@ -1,0 +1,412 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.execute.mapper.ExecuteBrieferMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="executeBrieferResultMap" type="com.yb.execute.vo.ExecuteBrieferVO">
+        <id column="id" property="id"/>
+        <result column="es_id" property="esId"/>
+        <result column="count_num" property="countNum"/>
+        <result column="ready_num" property="readyNum"/>
+        <result column="stop_waste" property="stopWaste"/>
+        <result column="status" property="status"/>
+        <result column="box_num" property="boxNum"/>
+        <result column="product_num" property="productNum"/>
+        <result column="waste_num" property="wasteNum"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="handle" property="handle"/>
+        <result column="handle_time" property="handleTime"/>
+        <result column="create_at" property="createAt"/>
+        <result column="od_id" property="odId"/>
+        <result column="od_name" property="odName"/>
+        <result column="ex_status" property="exStatus"/>
+        <result column="time_set" property="timeSet"/>
+    </resultMap>
+
+
+    <select id="selectExecuteBrieferPage" resultMap="executeBrieferResultMap">
+        select * from yb_execute_briefer where is_deleted = 0
+    </select>
+    <select id="getNoReportOrder" resultType="com.yb.execute.vo.ExecuteBrieferVO">
+        SELECT b.sd_id,SUM(a.box_num) as box_num
+        FROM yb_execute_briefer a
+        LEFT JOIN yb_execute_info b ON a.ex_id = b.id
+        WHERE a.handle = 0
+        GROUP BY b.sd_id
+    </select>
+    <select id="selectByExId" resultType="com.yb.execute.vo.ExecuteBrieferVO">
+        SELECT a.* FROM yb_execute_briefer a
+        --LEFT JOIN yb_execute_info b ON a.ex_id = b.id
+        WHERE a.ex_id=#{exId}
+    </select>
+    <select id="executeBrieferCount" resultType="int">
+        SELECT COUNT(*)
+        FROM yb_execute_briefer a
+        LEFT JOIN yb_workbatch_ordlink c ON C.id=a.sd_id
+        <where>
+            <if test="wbNo != null">
+                AND c.wb_no = #{wbNo}
+            </if>
+            <if test="cmName != null">
+                AND c.cm_name LIKE concat('%',#{cmName},'%')
+            </if>
+        </where>
+
+    </select>
+
+    <select id="pageFindList" resultType="com.yb.execute.vo.ExecuteBrieferVO">
+        SELECT *
+        FROM yb_execute_briefer a
+        LEFT JOIN yb_workbatch_ordlink c ON c.id=a.sd_id
+        <where>
+            <if test="wbNo != null">
+                AND c.wb_no = #{wbNo}
+            </if>
+            <if test="cmName != null">
+                AND c.cm_name LIKE concat('%',#{cmName},'%')
+            </if>
+        </where>
+        LIMIT #{current},#{size}
+    </select>
+    <!--  <select id="findOrderByOne" resultType="com.yb.execute.vo.ExecuteBrieferVO">
+          SELECT a.*,f.od_id,c.od_name
+          FROM yb_execute_briefer a
+          JOIN yb_execute_state b ON a.es_id=b.id
+          JOIN yb_workbatch_ordlink d ON b.wb_id=d.id
+          JOIN yb_order_workbatch f ON d.wb_id=f.id
+          JOIN yb_order_ordinfo c ON f.od_id=c.id
+          <where>
+              <if test="orderId != null">
+                  c.id=#{orderId}
+              </if>
+              <if test="orderName != null">
+                  AND c.od_name=#{orderName}
+              </if>
+          </where>
+      </select>-->
+    <select id="getStartTimeByCondition" resultType="com.yb.execute.entity.ExecuteBriefer">
+    SELECT * from yb_execute_briefer yeb join yb_execute_examine yee on yeb.id = yee.bf_id WHERE yee.id=#{exId}
+    </select>
+
+    <select id="detailBatchNo" resultType="com.yb.execute.vo.ExecuteBrieferVO">
+        select
+            a.id,
+            a.es_id AS esId,
+            SUM(a.product_num) AS productNum,
+            SUM(a.count_num) AS countNum,
+            SUM(a.waste_num) AS wasteNum,
+            b.sd_id as sdId ,
+            c.pr_name as prName,
+            c.sort, c.status as sdStatus
+        from yb_execute_briefer a
+        LEFT JOIN yb_execute_info b on b.id=a.ex_id
+        LEFT JOIN  yb_workbatch_ordlink c on b.sd_id=c.id
+        where c.wb_id = #{wbId} and c.pt_id = #{id}
+        GROUP BY c.pr_id
+        ORDER BY c.sort
+    </select>
+
+    <select id="getExecuteVoByEsId" resultType="com.yb.execute.vo.ExecuteBrieferVO">
+SELECT
+	*,
+	ybf.id As ebId,
+	yes.ma_id As maId,
+	ymm.`name` AS machineName,
+	blade_user.`name` AS usrName,
+	ywo.plan_num As planNum
+FROM
+	yb_execute_briefer ybf
+	JOIN yb_execute_state yes ON ybf.es_id = yes.id
+	JOIN blade_user ON yes.us_id = blade_user.id
+	JOIN yb_machine_mainfo ymm ON ymm.id = yes.ma_id
+	JOIN yb_workbatch_ordlink ywo ON yes.sd_id=ywo.id
+WHERE
+	ybf.id =#{Id}
+    </select>
+    <select id="getByExId" resultType="com.yb.execute.entity.ExecuteBriefer">
+        SELECT * from yb_execute_briefer where ex_id = #{exId} limit 1
+   </select>
+
+    <select id="getNumberByExId" resultType="com.yb.execute.entity.ExecuteBriefer">
+        SELECT *
+        FROM yb_execute_briefer
+        <where>
+            ex_id IN
+            <foreach collection="exIds" item="exId" separator="," open="(" close=")">
+                #{exId}
+            </foreach>
+        </where>
+    </select>
+    <select id="getCountNumAndWasteNum" resultType="com.yb.supervise.vo.PerformanceAnalyVO">
+        select ifnull(sum(yeb.count_num),0) as goodNum ,ifnull(sum(yeb.waste_num),0) as wasteNum
+        from yb_execute_briefer yeb
+        left JOIN yb_execute_info yei on yeb.ex_id = yei.id
+        LEFT JOIN yb_machine_mainfo ymm on yei.ma_id = ymm.id
+        where 1=1
+        <if test="maType != null and maType != ''">
+            and ymm.ma_type = #{maType}
+        </if>
+        <if test="startTime != null ">
+            and yeb.create_at >= #{startTime}
+        </if>
+        <if test="endTime != null  ">
+            and yeb.create_at &lt;=#{endTime}
+        </if>
+    </select>
+    <select id="getShiftLastOrder" resultType="java.lang.Integer">
+        select yei.wf_id
+        from yb_execute_info yei
+        join yb_workbatch_shift yws on yws.id = yei.wf_id
+        where yei.ma_id = #{maId}
+        and yws.ws_id = #{wsId}
+        order by yei.start_time desc
+        limit 0,1
+    </select>
+
+    <select id="getCountNumBySdId" resultType="java.lang.Integer">
+        select sum(yeb.count_num) from yb_execute_briefer yeb
+        join yb_execute_info yei on yei.id = yeb.ex_id
+        where yei.sd_id = #{sdId}
+        <if test="exId != null">
+            and yei.id != #{exId}
+        </if>
+    </select>
+    <update id="updateCheck">
+    update yb_execute_briefer set
+       alter_product_num = product_num,
+       alter_count_num= count_num,
+       alter_waste_num =waste_num,
+        `product_num` = #{bfer.productNum},
+        `count_num` = #{bfer.countNum},
+        `waste_num` = #{bfer.wasteNum},ex_status = 1
+    where id = #{bfer.id}
+    </update>
+
+    <select id="getTotalBySdid" resultType="int">
+        select sum(count_num) from yb_execute_briefer where sd_id = #{sdid}
+    </select>
+    <select id="getTotalByWfid" resultType="int">
+        select sum(count_num) from yb_execute_briefer where wf_id = #{wfid}
+    </select>
+    <select id="getBybfId" resultType="com.yb.execute.entity.ExecuteBriefer">
+        select * from yb_execute_briefer where id = #{bfId}
+    </select>
+    <select id="getExecuteBrieferList" resultType="com.yb.execute.vo.ReportedVO">
+      SELECT
+            a.ex_id,
+        	a.id,
+        	a.box_num,
+        	a.ready_num,
+        	a.start_time,
+        	a.end_time,
+        	a.handle,
+        	a.count_num,
+        	a.handle_time,
+        	a.product_num,
+        	a.waste_num,
+        	b.plan_num,
+        	b.ck_name AS wsName,
+        	c.pd_name,
+        	c.cm_name,
+        	c.wb_no,
+        	d.`name` AS usName,
+        	a.ex_status,
+			e.target_day,
+			COUNT(f.id) AS totalNum
+-- 			h.process_instance_id AS processInstanceId
+        FROM
+        	yb_execute_briefer a
+        LEFT JOIN yb_workbatch_shift b ON b.id = a.wf_id
+        LEFT JOIN yb_execute_info e ON  e.id=a.ex_id
+        LEFT JOIN yb_workbatch_ordlink c ON c.id = b.sd_id
+        LEFT JOIN blade_user d ON d.id = a.handle_usid
+		LEFT JOIN yb_execute_traycard f ON f.ex_id=a.ex_id
+-- 		LEFT JOIN yb_execute_scrap g ON g.ex_id = a.ex_id
+--         LEFT JOIN yb_execute_spverify h ON h.sp_id = g.id
+        WHERE
+        	e.target_day = #{targetDay}
+        AND e.ma_id = #{maId}
+        AND e.ws_id = #{wsId}
+        GROUP BY a.id
+
+    </select>
+
+    <select id="orderProcessSchedule" resultType="com.yb.machine.response.OrderProcessScheduleVO">
+        select d.mno,d.`name` as ma_name,b.pr_name,a.id as wf_id,a.plan_num as scheduled_num
+        ,(select IFNULL(sum(count_num),0) from yb_execute_briefer e where e.wf_id = a.id) as product_num
+        ,(select IFNULL(sum(waste_num),0) from yb_execute_briefer e where e.wf_id = a.id) as waste_num
+        ,a.`shift_status` as wf_status,a.sd_date
+        from yb_workbatch_shift a
+        LEFT JOIN yb_workbatch_ordlink b on b.id = a.sd_id
+        left join yb_machine_mainfo d on a.ma_id = d.id
+        <where>
+            b.id = #{request.sdId} and a.plan_num is not null
+            <if test="request.prId != null and request.prId != ''">and b.pr_id = #{request.prId}</if>
+            <if test="request.wbNo != null and request.wbNo != ''">and b.wb_no = #{request.wbNo}</if>
+        </where>
+        order by d.name, a.sd_date
+    </select>
+
+    <select id="orderProcessScheduleold" resultType="com.yb.machine.response.OrderProcessScheduleVO">
+    select yws.ma_id,ifnull(sum(yws.plan_num),0)as scheduledNum ,ifnull(sum(yeb.count_num),0)  as productNum, ifnull(sum(yeb.waste_num),0)as wasteNum,
+    yeb.ex_status as status, ymm.name as maName, ywo.pr_name ,yws.id as wfId
+    from yb_workbatch_ordlink ywo
+    left join yb_workbatch_shift yws on ywo.id = yws.sd_id
+    left join yb_machine_mainfo ymm on yws.ma_id = ymm.id
+    left join yb_execute_briefer yeb on yeb.wf_id = yws.id
+    where ywo.pr_id = #{request.prId}
+    and ywo.wb_no = #{request.wbNo}
+    and ywo.id = #{request.sdId}
+    and yws.plan_num is not null
+    group BY yws.ma_id,yws.id
+    </select>
+
+    <select id="getExecuteBrieferDetail" resultType="com.yb.execute.vo.ExecuteBrieferDetailVO">
+         SELECT
+        	a.product_num,
+        	a.count_num,
+        	a.waste_num,
+        	f.ck_name AS wsName,
+        	c.pd_name,
+        	c.wb_no,
+        	c.pr_name,
+        	d.target_day AS exDate,
+        	d.start_time,
+        	d.end_time,
+        	g.`name` AS usName,
+        	COUNT( e.id ) AS totalNum,
+        	h.process_instance_id AS processInstanceId
+        FROM
+        	yb_execute_briefer a
+        	LEFT JOIN yb_workbatch_shift b ON b.id = a.wf_id
+        	LEFT JOIN yb_workbatch_ordlink c ON c.id = b.sd_id
+        	LEFT JOIN yb_execute_info d ON d.id = a.ex_id
+        	LEFT JOIN yb_execute_traycard e ON e.wf_id = b.id
+        	LEFT JOIN yb_workbatch_mainshift f ON f.id = d.ws_id
+        	LEFT JOIN blade_user g ON g.id = a.handle_usid
+        	LEFT JOIN yb_execute_scrap j ON j.ex_id = a.ex_id
+            LEFT JOIN yb_execute_spverify h ON h.sp_id = j.id
+        WHERE a.id=#{id}
+        GROUP BY
+        	a.id
+    </select>
+
+    <select id="traycardDetailedVOList" resultType="com.yb.execute.vo.TraycardDetailedVO">
+        SELECT
+        	b.wb_no,
+        	d.td_no,
+        	d.tray_no,
+        	d.tray_num,
+        	d.store_place AS stNo,
+        	d.end_time AS printTime,
+        	d.ex_status,
+        	e.`name` AS usName,
+        	f.ex_mold,
+        	f.data_before,
+        	f.data_after,
+        	f.ex_pics,
+        	g.sp_num AS difference,
+        	( SELECT NAME FROM blade_user WHERE id = f.ex_userid ) AS examineName,
+        	h.process_instance_id AS processInstanceId
+        FROM
+        	yb_execute_traycard d
+        	LEFT JOIN yb_execute_briefer a ON d.ex_id = a.ex_id
+        	LEFT JOIN yb_workbatch_ordlink b ON b.id = a.sd_id
+        	LEFT JOIN blade_user e ON e.id = d.us_id
+        	LEFT JOIN yb_execute_examine f ON f.ty_id = d.id
+        	LEFT JOIN yb_execute_scrap g ON g.ex_id = a.ex_id
+        	LEFT JOIN yb_execute_spverify h ON h.sp_id = g.id
+        WHERE a.id=#{id}
+        GROUP BY
+        	d.id
+    </select>
+
+    <select id="notExecuteBrieferList" resultType="com.yb.execute.vo.ExecuteExamineVO">
+        SELECT
+            a.ex_status,
+            a.es_id,
+            a.id AS bf_id,
+            a.handle_time,
+            a.handle_usid,
+            a.product_num,
+            a.count_num,
+            a.ex_id,
+            a.waste_num,
+            a.alter_product_num,
+            a.alter_count_num,
+            a.alter_waste_num,
+            m.`name` AS maName,
+            yei.ma_id AS maId,
+            e.id,
+            e.part_name,
+            e.od_no,
+            e.pr_id,
+            e.pr_name,
+            e.pr_des,
+            e.pd_id,
+            e.pd_code,
+            e.pd_name,
+            e.wb_no,
+            d.plan_num AS wsPlanNum,
+            d.sd_date AS wsSdDate,
+            d.waste_num AS wsWasteNum,
+            d.shift_status,
+            d.ck_name,
+            e.part_name AS ptName,
+            k.`name` AS handle_usname,
+            d.id AS wfId,
+            a.start_time AS bstartTime,
+            a.end_time AS bendTime,
+            a.ready_num,
+            a.box_num,
+            e.dp_id,
+            e.cm_name
+        FROM yb_execute_briefer a
+        <!--        LEFT JOIN yb_execute_examine y ON y.bf_id = a.id-->
+        LEFT JOIN yb_workbatch_shift d ON d.id=a.wf_id
+        LEFT JOIN yb_workbatch_ordlink e ON e.id = d.sd_id
+        LEFT JOIN blade_user k ON a.handle_usid = k.id
+        LEFT JOIN yb_execute_info yei ON yei.id = a.ex_id
+        LEFT JOIN yb_machine_mainfo m ON yei.ma_id = m.id
+        WHERE a.handle = 0
+            <if test="notExecuteBrieferRequest.pdName != null and notExecuteBrieferRequest.pdName != ''">
+                AND e.pd_name LIKE concat('%',#{notExecuteBrieferRequest.pdName},'%')
+            </if>
+            <if test="notExecuteBrieferRequest.wbNo != null and notExecuteBrieferRequest.wbNo != ''">
+                AND e.wb_no LIKE concat('%',#{notExecuteBrieferRequest.wbNo},'%')
+            </if>
+            <if test="notExecuteBrieferRequest.prName != null and notExecuteBrieferRequest.prName != ''">
+                AND e.pr_name LIKE concat('%',#{notExecuteBrieferRequest.prName},'%')
+            </if>
+            <if test="notExecuteBrieferRequest.maIdList != null and notExecuteBrieferRequest.maIdList.size() != 0">
+                AND m.id IN
+                <foreach collection="notExecuteBrieferRequest.maIdList" item="maId" separator="," open="(" close=")">
+                    #{maId}
+                </foreach>
+            </if>
+            <if test="notExecuteBrieferRequest.startTime != null and notExecuteBrieferRequest.startTime != '' and notExecuteBrieferRequest.endTime != null and notExecuteBrieferRequest.endTime != ''">
+                AND yei.target_day &lt;= #{notExecuteBrieferRequest.endTime}
+                AND yei.target_day &gt;= #{notExecuteBrieferRequest.startTime}
+            </if>
+            <if test="notExecuteBrieferRequest.startTime != null and notExecuteBrieferRequest.startTime != '' and (notExecuteBrieferRequest.endTime == null or notExecuteBrieferRequest.endTime == '')">
+                AND yei.target_day= #{notExecuteBrieferRequest.startTime}
+            </if>
+        GROUP BY a.id
+        ORDER BY a.handle_time DESC
+    </select>
+
+    <select id="notReportBrieferList" resultType="com.yb.execute.vo.ExecuteBrieferOrdlinkVO">
+        select  e.wb_no,e.pd_name,e.pr_id,d.plan_num,e.cm_name,d.waste_num,n.name as ma_name,
+        k.name us_name,m.target_day,l.ck_name ws_name,a.*
+        from yb_execute_briefer a
+        LEFT JOIN yb_workbatch_shift d ON d.id=a.wf_id
+        LEFT JOIN yb_workbatch_ordlink e ON e.id = d.sd_id
+        LEFT JOIN blade_user k ON a.handle_usid = k.id
+        LEFT JOIN yb_execute_info m ON m.id = a.ex_id
+        LEFT JOIN yb_machine_mainfo n ON m.ma_id = n.id
+		LEFT JOIN yb_workbatch_mainshift l on l.id = m.ws_id
+        WHERE m.ma_id = #{maId} and  (a.handle = 0 or a.handle is null)
+        order by a.start_time desc
+    </select>
+</mapper>

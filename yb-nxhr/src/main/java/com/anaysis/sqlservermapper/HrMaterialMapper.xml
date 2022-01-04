@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anaysis.sqlservermapper.HrMaterialMapper">
+
+    <select id="selectByBarCode" resultType="com.anaysis.entity.HrMaterial">
+        SELECT
+            M.Description, -- 原料名
+            SMS.StockItem, -- 原料号
+            SMS.StockDescription, -- 原料规格
+            SMS.BarCode, -- 条码
+            SMS.ActualQty, -- 库存量
+            SMS.StockMeter, -- 米数/张数
+            SMS.StockMark, -- 类型
+            SMS.ReceiveDate, -- 入库日期
+            SMS.Location, -- 库区
+            SMS.LocSub, -- 库位
+            SMS.ObjID as erpId -- erp唯一id
+        FROM
+            StoreMatrStock AS SMS WITH ( NOLOCK )
+			LEFT OUTER JOIN Material AS M ON SMS.StockItem= M.StockItem
+			AND SMS.StockType= M.StockType
+        WHERE
+            ISNULL( SMS.ActualQty, 0 ) > 0
+            and BarCode = #{barCode}
+    </select>
+    <select id="getPaperRoll" statementType="CALLABLE" resultType="com.alibaba.fastjson.JSONObject">
+        {
+          call #{param1}(
+                    #{param2,mode=IN,jdbcType=VARCHAR},
+                    #{param3,mode=IN,jdbcType=VARCHAR},
+                    #{param4,mode=IN,jdbcType=VARCHAR}
+                    )
+        }
+    </select>
+
+</mapper>

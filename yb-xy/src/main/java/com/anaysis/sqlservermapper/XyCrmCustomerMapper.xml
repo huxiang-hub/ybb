@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anaysis.sqlservermapper.XyCrmCustomerDao">
+    <select id="list" resultType="com.anaysis.entity.CrmCustomer">
+        SELECT
+            ID AS erpId,
+            KHBM AS cmNo,
+            KHMC AS cmName,
+            KHJC AS cmShortname,
+            KHMC AS company,
+            GSDZ AS addr
+         FROM Base_KHZL
+	</select>
+</mapper>

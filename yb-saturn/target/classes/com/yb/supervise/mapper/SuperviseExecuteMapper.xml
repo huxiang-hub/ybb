@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.supervise.mapper.SuperviseExecuteMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="superviseExecuteResultMap" type="com.yb.supervise.vo.SuperviseExecuteVO">
+        <id column="id" property="id"/>
+        <result column="uuid" property="uuid"/>
+        <result column="ma_id" property="maId"/>
+        <result column="wb_id" property="wbId"/>
+        <result column="sd_id" property="sdId"/>
+        <result column="start_num" property="startNum"/>
+        <result column="end_num" property="endNum"/>
+        <result column="ready_num" property="readyNum"/>
+        <result column="curr_num" property="currNum"/>
+        <result column="start_time" property="startTime"/>
+        <result column="exe_status" property="exeStatus"/>
+        <result column="event" property="event"/>
+        <result column="us_ids" property="usIds"/>
+        <result column="update_at" property="updateAt"/>
+        <result column="user_name" property="userName"/>
+        <result column="equipment_name" property="equipmentName"/>
+        <result column="complete_num" property="completeNum"/>
+        <result column="od_name" property="odName"/>
+        <result column="od_no" property="odNo"/>
+        <result column="od_count" property="odCount"/>
+        <result column="limit_date" property="limitDate"/>
+        <result column="exceed_date" property="exceedDate"/>
+        <result column="od_status" property="odStatus"/>
+    </resultMap>
+
+    <update id="updateStatusById">
+        update yb_supervise_execute set exeStatus=#{exeStatus} where id = #{osId}
+    </update>
+
+    <select id="selectSuperviseExecutePage" resultMap="superviseExecuteResultMap">
+        select * from yb_supervise_execute
+    </select>
+    <select id="getCurrNum" resultType="java.lang.Integer">
+        select curr_num from yb_supervise_execute where ma_id = #{maId};
+    </select>
+
+    <select id="getCurrNumByOderId" resultType="java.lang.Integer">
+        SELECT curr_num FROM yb_supervise_execute WHERE ma_id = #{maId}
+        <if test="sdId!=null">
+            AND sd_id = #{sdId}
+        </if>
+    </select>
+    <update id="updateStateToSuperviseExecute" parameterType="com.yb.supervise.entity.SuperviseExecute">
+        UPDATE  yb_supervise_execute
+        SET es_id =#{esId},
+        update_at = #{updateAt},
+        start_time = #{startTime},
+        exe_status =#{exeStatus},
+        event =#{event}
+        WHERE ma_id = #{maId}
+    </update>
+    <update id="updateStateToSupervise">
+         UPDATE  yb_supervise_execute  SET es_id =#{esId} WHERE ma_id = #{maId}
+    </update>
+    <select id="getExecuteStateByOdId" resultType="com.yb.supervise.entity.SuperviseExecute">
+        SELECT * FROM yb_supervise_execute WHERE  sd_id = #{sdId}
+    </select>
+
+    <select id="getExecuteOrder" resultType="com.yb.supervise.entity.SuperviseExecute">
+        select * from yb_supervise_execute
+        WHERE ma_id = #{maId}  limit 1
+    </select>
+    <select id="getExecuteOrderByother" resultType="java.lang.Integer">
+        select count(*) from yb_supervise_execute a where a.wf_id in(select wf_id from yb_supervise_execute where ma_id=#{maId})
+        and (UPPER(a.exe_status) = 'B' OR UPPER(a.exe_status) = 'C') and a.ma_id!=#{maId}
+    </select>
+    <update id="updateSuperviseExecuteBymMaId">
+        UPDATE  yb_supervise_execute  SET us_ids = #{usIds}
+         where  ma_id = #{maId}
+    </update>
+
+    <select id="findExecuteOrderStatus" resultType="com.yb.supervise.vo.SuperviseExecuteVO">
+        SELECT a.operator,b.`name` userName,c.`name` equipmentName,d.complete_num,g.od_name,g.od_no,d.plan_num,d.`status`,d.close_time,d.end_time
+        FROM yb_supervise_execute a
+        JOIN yb_base_staffinfo b ON b.user_id=a.operator
+        JOIN yb_machine_mainfo c ON c.id=a.ma_id
+        JOIN yb_workbatch_ordlink d ON d.id=a.sd_id
+        JOIN yb_order_workbatch f ON d.wb_id=f.id
+        JOIN yb_order_ordinfo g ON g.id=f.od_id
+        <where>
+            <if test="odName != null">
+                AND g.od_name LIKE concat('%',#{odName},'%')
+            </if>
+            <if test="userName != null">
+                AND b.name LIKE concat('%',#{userName},'%')
+            </if>
+            <if test="equipmentName != null">
+                AND c.name LIKE concat('%',#{equipmentName},'%')
+            </if>
+        </where>
+        limit #{current},#{size}
+    </select>
+    <select id="executeOrderCount" resultType="int">
+        SELECT COUNT(*)
+        FROM yb_supervise_execute a
+        JOIN yb_base_staffinfo b ON b.user_id=a.operator
+        JOIN yb_machine_mainfo c ON c.id=a.ma_id
+        JOIN yb_workbatch_ordlink d ON d.id=a.sd_id
+        JOIN yb_order_workbatch f ON d.wb_id=f.id
+        JOIN yb_order_ordinfo g ON g.id=f.od_id
+        <where>
+            <if test="odName != null">
+                AND g.od_name LIKE concat('%',#{odName},'%')
+            </if>
+            <if test="userName != null">
+                AND b.name LIKE concat('%',#{userName},'%')
+            </if>
+            <if test="equipmentName != null">
+                AND c.name LIKE concat('%',#{equipmentName},'%')
+            </if>
+        </where>
+    </select>
+    <select id="getBeanByUUID" resultType="com.yb.supervise.vo.SuperviseExecuteVO">
+       SELECT * FROM yb_supervise_execute WHERE uuid = #{uuid}
+    </select>
+    <select id="findByExeStatus" resultType="com.yb.supervise.entity.SuperviseExecute">
+        SELECT * FROM yb_supervise_execute WHERE exe_status = "C"
+    </select>
+    <select id="findMainfoBywfId" resultType="java.util.Map">
+        SELECT GROUP_CONCAT(b.name) as maName,count(*) as cnum FROM yb_supervise_execute a
+        LEFT JOIN yb_machine_mainfo b on b.id = a.ma_id WHERE wf_id = #{wfId} and (UPPER(exe_status) ='C' OR UPPER(exe_status) ='B')
+    </select>
+
+    <delete id="removerListByMaid" parameterType="java.lang.Integer">
+        DELETE FROM yb_supervise_execute WHERE ma_id IN
+        <foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="getByMaIdAndSdId" resultType="com.yb.supervise.entity.SuperviseExecute">
+     select * from yb_supervise_execute
+     where ma_id = #{maId}
+     and sd_id = #{sdId}
+    </select>
+
+    <select id="getNum" resultType="java.lang.Integer">
+    select  ifnull(sum(yse.curr_num),0) from yb_supervise_execute yse
+    join yb_workbatch_shift yws on yse.wf_id = yws.id
+     join yb_machine_mainfo ymm on yse.ma_id = ymm.id
+	join blade_dict bd on bd.dict_key = ymm.ma_type
+	where bd.code='maType'
+	and yse.event != 'D2'
+	and ymm.id in
+	   <foreach collection="maIds" index="index" item="maId" open="(" separator="," close=")">
+            #{maId}
+       </foreach>
+    </select>
+
+    <select id="getByMaId" resultType="com.yb.panelapi.vo.MachineStopVO">
+    select ywo.wb_no, ywo.cm_name
+    from yb_supervise_execute yse
+    inner join yb_workbatch_ordlink ywo on yse.sd_id = ywo.id
+    </select>
+
+    <select id="getStartNum" resultType="java.util.Map">
+    select yse.start_num, ysb.bln_accept
+    from yb_supervise_execute yse
+    inner join  yb_supervise_boxinfo ysb on yse.ma_id = ysb.ma_id
+    where ysb.ma_id = #{maId}
+</select>
+
+<update id="update">
+    update yb_supervise_execute
+    set  start_num = #{startNum}, ready_num = #{readyNum} , end_num = #{endNum},
+    end_time = #{endTime}, ready_time = #{readyTime}, curr_num = #{currNum}, start_time = #{startTime},version =version+1,
+    exe_status = #{exeStatus}, event = #{event}, update_at = #{updateAt},operator = #{operator},us_ids=#{usIds}, wf_id = #{wfId},
+    sd_id = #{sdId}, es_id = #{esId}, ex_id = #{exId}
+    where id = #{id}
+</update>
+</mapper>

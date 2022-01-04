@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.statis.mapper.StatisDayreachMapper">
+
+    <select id="selectDayreach" resultType="com.yb.statis.vo.StatisDayreachVO">
+        SELECT * FROM yb_statis_dayreach
+        <where>
+            <if test="dayreachParmsVO.targetDay != null and dayreachParmsVO.targetDay != ''">
+                AND target_day = #{dayreachParmsVO.targetDay}
+            </if>
+            <if test="dayreachParmsVO.maType != null">
+                AND ma_type = #{dayreachParmsVO.maType}
+            </if>
+            <if test="dayreachParmsVO.startDay != null and dayreachParmsVO.endDay != null">
+                AND target_day &lt;= #{dayreachParmsVO.endDay} AND target_day &gt;= #{dayreachParmsVO.startDay}
+            </if>
+        </where>
+    </select>
+
+
+    <select id="statisDayreachPage" resultType="com.yb.statis.vo.StatisDayreachVO">
+        SELECT a.*,b.dp_id FROM yb_statis_dayreach a
+        LEFT JOIN yb_machine_mainfo b ON b.ma_type=a.ma_type
+        <where>
+            <if test="statisDayreachVO.targetDay != null and statisDayreachVO.targetDay != ''">
+                AND a.target_day = #{statisDayreachVO.targetDay}
+            </if>
+            <if test="statisDayreachVO.maType != null">
+                AND a.ma_type = #{statisDayreachVO.maType}
+            </if>
+            <if test="statisDayreachVO.dpId != null and statisDayreachVO.dpId != 0">
+                AND b.dp_id = #{statisDayreachVO.dpId}
+            </if>
+        </where>
+        GROUP BY a.id
+    </select>
+</mapper>

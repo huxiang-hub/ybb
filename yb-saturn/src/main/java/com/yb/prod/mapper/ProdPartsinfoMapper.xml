@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.prod.mapper.ProdPartsinfoMapper">
+
+    <select id="selectPtNames" resultType="com.yb.prod.vo.ProdPartsinfoVo">
+       SELECT a.*
+        FROM yb_prod_partsinfo a
+        JOIN yb_order_ordinfo b ON b.pd_id=a.pd_id
+        JOIN yb_order_workbatch c ON c.od_id=b.id
+        WHERE a.pd_type = 1 AND c.status!=4 AND c.id=#{wbId}
+    </select>
+
+    <select id="listByPdId" resultType="com.yb.prod.vo.ProdPartsinfoVo">
+        select partsinfo.*, dict.dict_value AS ptTy from yb_prod_partsinfo partsinfo
+        LEFT JOIN  (SELECT * FROM blade_dict WHERE code='part_type') dict
+        ON partsinfo.pt_type = dict.dict_key
+        WHERE pd_id = #{pdId} and pd_type = #{pdType}
+    </select>
+
+    <delete id="removeByPdIdAndPdType" parameterType="java.lang.Integer">
+        DELETE FROM yb_prod_partsinfo WHERE pd_id = #{pdId} AND pd_type = #{pdType}
+    </delete>
+</mapper>

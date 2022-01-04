@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.stroe.mapper.StoreOutlogMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.yb.stroe.entity.StoreOutlog">
+        <id column="id" property="id" />
+        <result column="st_type" property="stType" />
+        <result column="st_id" property="stId" />
+        <result column="st_no" property="stNo" />
+        <result column="st_size" property="stSize" />
+        <result column="ml_id" property="mlId" />
+        <result column="et_id" property="etId" />
+        <result column="lay_num" property="layNum" />
+        <result column="create_at" property="createAt" />
+    </resultMap>
+
+</mapper>
+

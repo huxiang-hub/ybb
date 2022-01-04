@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.vim.chatapi.staff.mapper.StaffFlowMapper">
+    <insert id="saveStaffFlow" parameterType="com.vim.chatapi.staff.entity.StaffFlow" useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT INTO yb_staff_flow
+        (af_id,db_id,us_id,check_time,result,status,create_at)
+        VALUES
+        (#{afId},#{dbId},#{usId},#{checkTime},#{result},#{status},#{createAt})
+    </insert>
+    <update id="updateStaffFlow" parameterType="com.vim.chatapi.staff.entity.StaffFlow">
+        UPDATE yb_staff_flow  SET
+        status = #{status},
+        create_at = #{createAt},
+        af_id = #{afId},
+        us_id = #{usId},
+        check_time = #{checkTime},
+        result = #{result}
+        WHERE db_id = #{dbId}
+        and af_id = #{afId}
+
+    </update>
+</mapper>

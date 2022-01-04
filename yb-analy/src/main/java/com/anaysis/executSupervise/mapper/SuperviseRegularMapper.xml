@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anaysis.executSupervise.mapper.SuperviseRegularMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="superviseRegularResultMap" type="com.anaysis.executSupervise.entity.SuperviseRegular">
+        <id column="id" property="id"/>
+        <result column="ma_id" property="maId"/>
+        <result column="uuid" property="uuid"/>
+        <result column="status" property="status"/>
+        <result column="start_num" property="startNum"/>
+        <result column="end_num" property="endNum"/>
+        <result column="pcout" property="pcout"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="diff_time" property="diffNum"/>
+        <result column="curr_speed" property="currSpeed"/>
+        <result column="target_hour" property="targetHour"/>
+        <result column="target_min" property="targetMin"/>
+        <result column="target_day" property="targetDay"/>
+        <result column="create_at" property="createAt"/>
+        <result column="update_at" property="updateAt"/>
+    </resultMap>
+    <select id="getPreviousRegularLog" resultType="com.anaysis.executSupervise.entity.SuperviseRegular">
+        select * from yb_supervise_regular ysr
+        where ysr.uuid = #{uuid}
+        and ysr.update_at is null
+        order by ysr.create_at desc
+        limit 0,1
+    </select>
+
+    <select id="getPreviousLog" resultType="com.anaysis.executSupervise.entity.SuperviseRegular">
+        select * from yb_supervise_regular ysr
+        where ysr.uuid = #{uuid}
+        and ysr.target_day =''
+        and ysr.update_at is null
+        order by ysr.create_at desc
+        limit 0,1
+    </select>
+
+</mapper>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.vim.maintain.mapper.MaintainLoginfoMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="maintainLoginfoResultMap" type="com.vim.maintain.entity.MaintainLoginfo">
+        <id column="id" property="id"/>
+        <result column="ma_id" property="maId"/>
+        <result column="model" property="model"/>
+        <result column="remark" property="remark"/>
+        <result column="us_id" property="usId"/>
+        <result column="start_at" property="startAt"/>
+        <result column="finish_at" property="finishAt"/>
+        <result column="create_at" property="createAt"/>
+    </resultMap>
+
+
+    <select id="selectMaintainLoginfoPage" resultMap="maintainLoginfoResultMap">
+        select * from yb_maintain_loginfo where is_deleted = 0
+    </select>
+
+</mapper>

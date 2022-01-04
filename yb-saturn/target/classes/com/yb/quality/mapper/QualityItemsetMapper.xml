@@ -1,0 +1,479 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.quality.mapper.QualityItemsetMapper">
+
+
+	<update id="dropTable">
+        DROP TABLE IF EXISTS ${tableName}
+    </update>
+	<update id="creatTable" parameterType="String">
+        CREATE TABLE ${tableName}
+        (
+         id   int not null auto_increment,
+         wf_id int comment '排产班次id',
+         ma_id int comment '设备id',
+         us_id int comment '用户id',
+         img_id varchar(20) comment '图片id',
+         production_num int comment '生产数量',
+         quantity_declared int comment '抽检数量',
+         scrap_quantity int comment '报废数量',
+         report_status int comment '是否上报:0未上报, 1已上报',
+         update_at     timestamp comment '更新时间',
+         start_at   timestamp comment '开始时间',
+         end_at     timestamp comment '结束时间',
+         create_at     timestamp comment '创建时间',
+         PRIMARY KEY (id)
+        )
+    </update>
+
+	<select id="getInsertTableName" resultType="java.lang.String">
+        SELECT
+        	tab_name
+        FROM
+        	yb_quality_tacitly
+        WHERE
+        	py_id = #{pyId} AND check_type=#{checkType}
+    </select>
+
+	<select id="getInsertTableNames" resultType="java.lang.String">
+		SELECT
+		tab_name
+		FROM
+		yb_quality_tacitly
+		WHERE check_type= #{checkType}
+		AND py_id in
+		<foreach item="item" index="index" collection="pyIds" open="(" separator="," close=")">
+			'${item}'
+		</foreach>
+	</select>
+
+	<insert id="insetTable">
+		INSERT INTO ${tableName}
+		(
+		<foreach collection="fieldNameList" item="fieldName">
+			${fieldName},
+		</foreach>
+		create_at,
+		update_at
+		)VALUES (
+		<foreach collection="valList" item="val">
+			#{val},
+		</foreach>
+		NOW(),
+		NOW()
+		)
+	</insert>
+
+	<select id="getTableList" resultType="java.util.Map">
+		SELECT
+		a.*,
+		b.cm_name,
+		b.pd_name,
+		b.wb_no
+		FROM
+		${tableName} a
+		LEFT JOIN (
+		SELECT
+		yws.id,
+		yws.ma_id,
+		ywk.cm_name,
+		ywk.pd_name,
+		ywk.wb_no
+		FROM
+		yb_workbatch_shift yws
+		JOIN yb_workbatch_ordlink ywk ON ywk.id = yws.sd_id
+		) b ON a.wf_id = b.id
+		WHERE
+		1=1
+		<if test="qualityRequest.wfId != null">
+			AND a.wf_id = #{qualityRequest.wfId}
+		</if>
+
+		<if test="qualityRequest.startTime != null and qualityRequest.startTime != ''
+        	and qualityRequest.endTime != null and qualityRequest.endTime != ''">
+			AND a.start_at BETWEEN #{qualityRequest.startTime} AND #{qualityRequest.endTime}
+		</if>
+		<if test="qualityRequest.maIdList != null and qualityRequest.maIdList.size() != 0">
+			AND b.ma_id IN
+			<foreach collection="qualityRequest.maIdList" separator="," open="(" close=")" item="maId">
+				#{maId}
+			</foreach>
+		</if>
+	</select>
+
+
+	<!-- 新处理的关联多表的查询结构并且进行数据内容分页操作 -->
+	<select id="getTableListByTables" resultType="com.yb.quality.vo.QualityBaseVO">
+		select b.cm_name,b.pd_name,b.wb_no,qa.* from (
+		<foreach item="item" index="index" collection="tableNames" separator="union all">
+			SELECT
+			a.id,a.wf_id,z.name as maName,bu.name as usName,f.pic_url as picUrl,a.production_num,a.report_status,a.quantity_declared,a.scrap_quantity,a.start_at,a.end_at,a.create_at,a.update_at,'${item}'
+			as tab_name
+			FROM ${item} a
+			left join yb_workbatch_shift y on y.id = a.wf_id
+			left join yb_machine_mainfo z on z.id=a.ma_id
+			left join  yb_base_picture f on f.id=a.img_id
+			left join yb_workbatch_ordlink x on x.id = y.sd_id
+			left join blade_user bu on bu.id=a.us_id
+			<where>
+			 	<if test="qualityRequest.wbNo != null and qualityRequest.wbNo != ''">
+					AND x.wb_no like  '%${qualityRequest.wbNo}%' and x.id is not null
+				</if>
+				<if test="qualityRequest.startTime != null and qualityRequest.startTime != '' and qualityRequest.endTime != null and qualityRequest.endTime != ''">
+					AND a.start_at BETWEEN #{qualityRequest.startTime} AND #{qualityRequest.endTime}
+				</if>
+<!--				<if test="qualityRequest.wfId != null">-->
+<!--					AND a.wf_id = #{qualityRequest.wfId}-->
+<!--				</if>-->
+				<if test="qualityRequest.maIdList != null and qualityRequest.maIdList.size() != 0">
+					AND a.ma_id IN
+					<foreach collection="qualityRequest.maIdList" separator="," open="(" close=")" item="maId">
+						#{maId}
+					</foreach>
+				</if>
+				<if test="qualityRequest.usName!=null and qualityRequest.usName!=''">
+					and	bu.name like '%${qualityRequest.usName}%'
+				</if>
+			</where>
+		</foreach>
+		) qa
+		LEFT JOIN (
+		SELECT
+		yws.id,
+		yws.ma_id,
+		ywk.cm_name,
+		ywk.pd_name,
+		ywk.wb_no
+		FROM
+		yb_workbatch_shift yws
+		JOIN yb_workbatch_ordlink ywk ON ywk.id = yws.sd_id
+		) b ON qa.wf_id = b.id
+	</select>
+
+
+	<update id="addTableCols">
+        ALTER TABLE ${tableName} ADD COLUMN ${colName}  varchar(55) NULL COMMENT '${colShow}' AFTER `end_at`;
+    </update>
+
+	<insert id="insertQualityItemset">
+        INSERT INTO yb_quality_itemset (
+        	qt_id,
+        	py_id,
+        	py_name,
+        	col_num,
+        	col_name,
+        	col_show,
+        	col_type,
+        	col_info,
+        	col_val,
+        	col_desc,
+        	is_img,
+        	first_check,
+        	round_check,
+        	self_check,
+        	STATUS,
+        	us_id,
+        	create_at,
+        	update_at
+        )
+        VALUES
+        	(
+        		#{qtId},
+        		#{pyId},
+        		#{pyName},
+        		NULL,
+        		"wf_id",
+        		"排产班次id",
+        		0,
+        		NULL,
+        		NULL,
+        		NULL,
+        		0,
+        		#{firstCheck},
+        		#{roundCheck},
+        		#{selfCheck},
+        		1,
+        		#{usId},
+        		NOW(),
+        		NOW()
+        	),
+        	(
+        		#{qtId},
+        		#{pyId},
+        		#{pyName},
+        		NULL,
+        		"ma_id",
+        		"设备id",
+        		0,
+        		NULL,
+        		NULL,
+        		NULL,
+        		0,
+        		#{firstCheck},
+        		#{roundCheck},
+        		#{selfCheck},
+        		1,
+        		#{usId},
+        		NOW(),
+        		NOW()
+        	),
+        	(
+        		#{qtId},
+        		#{pyId},
+        		#{pyName},
+        		NULL,
+        		"us_id",
+        		"用户id",
+        		0,
+        		NULL,
+        		NULL,
+        		NULL,
+        		0,
+        		#{firstCheck},
+        		#{roundCheck},
+        		#{selfCheck},
+        		1,
+        		#{usId},
+        		NOW(),
+        		NOW()
+        	),
+        	(
+        		#{qtId},
+        		#{pyId},
+        		#{pyName},
+        		NULL,
+        		"img_id",
+        		"图片id",
+        		3,
+        		NULL,
+        		NULL,
+        		NULL,
+        		0,
+        		#{firstCheck},
+        		#{roundCheck},
+        		#{selfCheck},
+        		1,
+        		#{usId},
+        		NOW(),
+        		NOW()
+        	),
+        	(
+        		#{qtId},
+        		#{pyId},
+        		#{pyName},
+        		NULL,
+        		"production_num",
+        		"生产数量",
+        		0,
+        		NULL,
+        		NULL,
+        		NULL,
+        		0,
+        		#{firstCheck},
+        		#{roundCheck},
+        		#{selfCheck},
+        		1,
+        		#{usId},
+        		NOW(),
+        		NOW()
+        	),
+        	(
+        		#{qtId},
+        		#{pyId},
+        		#{pyName},
+        		NULL,
+        		"quantity_declared",
+        		"抽检数量",
+        		3,
+        		NULL,
+        		NULL,
+        		NULL,
+        		0,
+        		#{firstCheck},
+        		#{roundCheck},
+        		#{selfCheck},
+        		1,
+        		#{usId},
+        		NOW(),
+        		NOW()
+        	),
+        	(
+        		#{qtId},
+        		#{pyId},
+        		#{pyName},
+        		NULL,
+        		"scrap_quantity",
+        		"报废数量",
+        		3,
+        		NULL,
+        		NULL,
+        		NULL,
+        		0,
+        		#{firstCheck},
+        		#{roundCheck},
+        		#{selfCheck},
+        		1,
+        		#{usId},
+        		NOW(),
+        		NOW()
+        	),
+        	(
+        		#{qtId},
+        		#{pyId},
+        		#{pyName},
+        		NULL,
+        		"report_status",
+        		"是否上报",
+        		0,
+        		NULL,
+        		NULL,
+        		NULL,
+        		0,
+        		#{firstCheck},
+        		#{roundCheck},
+        		#{selfCheck},
+        		1,
+        		#{usId},
+        		NOW(),
+        		NOW()
+        	),
+        	(
+        		#{qtId},
+        		#{pyId},
+        		#{pyName},
+        		NULL,
+        		"start_at",
+        		"开始时间",
+        		0,
+        		NULL,
+        		NULL,
+        		NULL,
+        		0,
+        		#{firstCheck},
+        		#{roundCheck},
+        		#{selfCheck},
+        		1,
+        		#{usId},
+        		NOW(),
+        		NOW()
+        	),
+        	(
+        		#{qtId},
+        		#{pyId},
+        		#{pyName},
+        		NULL,
+        		"end_at",
+        		"结束时间",
+        		0,
+        		NULL,
+        		NULL,
+        		NULL,
+        		0,
+        		#{firstCheck},
+        		#{roundCheck},
+        		#{selfCheck},
+        		1,
+        		#{usId},
+        		NOW(),
+        		NOW()
+        	),
+        	(
+        		#{qtId},
+        		#{pyId},
+        		#{pyName},
+        		NULL,
+        		"update_at",
+        		"修改时间",
+        		0,
+        		NULL,
+        		NULL,
+        		NULL,
+        		0,
+        		#{firstCheck},
+        		#{roundCheck},
+        		#{selfCheck},
+        		1,
+        		#{usId},
+        		NOW(),
+        		NOW()
+        	),
+        	(
+        		#{qtId},
+        		#{pyId},
+        		#{pyName},
+        		NULL,
+        		"create_at",
+        		"创建时间",
+        		0,
+        		NULL,
+        		NULL,
+        		NULL,
+        		0,
+        		#{firstCheck},
+        		#{roundCheck},
+        		#{selfCheck},
+        		1,
+        		#{usId},
+        		NOW(),
+        		NOW()
+        	);
+    </insert>
+	<select id="getQualityItemsetList" resultType="com.yb.quality.entity.QualityItemset">
+       SELECT
+        	yqi.col_name,
+        	yqi.col_show,
+        	yqi.col_type,
+        	yqi.col_info,
+        	yqi.col_val,
+        	yqi.col_desc
+        FROM
+        	yb_quality_tacitly yqt
+        LEFT JOIN yb_quality_itemset yqi ON yqi.qt_id = yqt.id
+        WHERE
+            yqi.col_type != 0
+            AND yqi.status = 1
+            AND yqt.py_id = #{pyId}
+            AND yqt.check_type = #{checkType}
+    </select>
+	<select id="verifyTheField" resultType="java.lang.Integer">
+        SELECT
+        	count(*)
+        FROM
+        	information_schema. COLUMNS
+        WHERE
+        	table_name = #{tableName}
+            AND column_name = #{colName}
+    </select>
+	<update id="updateTable">
+		UPDATE
+		${tableName}
+		SET
+		<foreach collection="insertTableMap.keys" item="key" open="" close="" separator=",">
+			${key} = #{insertTableMap[${key}]}
+		</foreach>
+		,update_at=NOW()
+		WHERE id=#{id}
+	</update>
+
+	<select id="processList" resultType="com.yb.quality.vo.ProcessClassifyVo">
+		select *
+		from yb_process_classify
+	</select>
+
+	<select id="getMachins" resultType="com.yb.machine.vo.MachineMainfoVO">
+		select *
+		from yb_machine_mainfo ybm
+		left join yb_process_machlink ybp on  ybm.id=ybp.ma_id
+		join yb_process_classify ybc on ybp.py_id=ybc.id
+		<where>
+			ybm.is_used = 1
+			<if test="pyId!=null">
+			and ybc.id=#{pyId}
+			</if>
+		</where>
+	</select>
+
+    <select id="selectTableDetail" resultType="java.util.Map">
+		SELECT * FROM ${tabName} WHERE id = #{id}
+	</select>
+</mapper>

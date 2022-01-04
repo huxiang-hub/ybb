@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anaysis.sqlservermapper.FzWorkBatchMapper">
+
+    <select id="listIGzzxId" resultType="java.lang.Integer">
+        SELECT DISTINCT iGzzxId FROM scvDevice
+    </select>
+<!--    计划开始时间从七天前开始查询-->
+    <select id="listByIGzzxId" resultType="com.anaysis.entity.WorkbatchOrdlink">
+        SELECT
+        Job.ID AS id,
+        Job.id_Machine AS maId, --设备id
+        SUBSTRING(Job.cJobCode,0 , CHARINDEX('_', Job.cJobCode ,0)) AS odNo,--订单编号
+        Job.cPartName AS partName, -- 部件名称(差部件id,部件编号)
+        Job.cProductCode AS pdCode,--产品编号
+        Job.cProductName AS pdName, --产品名称(差产品类型)
+        tech.ID_ATech AS prId, -- 工序id
+        pr.prName AS prName, -- 工序名称
+        Job.nStdAmount AS planNum, -- 计划数量
+        Job.nDeliverAmount AS planNumber, --应交数量
+        Job.nConsumeAmount AS extraNum,--冗余数
+        Job.nCompleteAmount AS completeNum,--完成数量
+        Job.nDeliverAmount - Job.nCompleteAmount AS incompleteNum, -- 未完成数量
+        CONVERT(varchar(100), Job.dPlanStart, 20) AS startTime,--计划开始时间
+        Job.iStatus AS runStatus,--生产状态
+        CONVERT(varchar(100), Job.dFactStart, 20) AS actuallyStarttime,--实际开始时间
+<!--        CONVERT(varchar(100), Job.dFactEnd, 20) AS endTime,&#45;&#45;实际结束时间-->
+        Job.nPlanTime_R AS planTime,--计划用时
+        jobRemark.cPlanRemark AS remarks, -- 备注
+        CONVERT(varchar(100), Job.dCreate, 20) AS sdDate, -- 下单时间
+        CONVERT(varchar(100), Job.dCreate, 20) AS createAt, -- 下单时间
+        machine.dpId AS dpId
+        FROM
+            scMachineJob Job
+        LEFT JOIN scvDevice Dev ON Dev.iType &lt;&gt; 3 AND Job.id_Machine = Dev.Id
+        LEFT JOIN scMachineJobTech tech ON tech.ID_scMachineJob = job.ID
+        LEFT JOIN scMachineJobRemark jobRemark ON jobRemark.ID_scMachineJob = job.ID
+        LEFT JOIN (
+            SELECT
+                sh.ID AS Id,
+                sh.cCode AS prNo,
+                sh.cName AS prName,
+                sh.ID AS sort,
+                sh.istate AS status
+            FROM
+                sysTech sh
+            LEFT JOIN sysTech_MaterialClass ss1 ON sh.ID = ss1.ID_Tech
+            LEFT JOIN scvZMaterialClass ss2 ON ss2.cCode = ss1.cCode_Mat
+            WHERE
+                sh.iState > -1
+        ) pr ON tech.ID_ATech = pr.Id
+        JOIN (
+            SELECT
+                A.ID AS Id,
+                cJzbh AS mno,
+                A.cJzmc AS name,
+                A.cjzlxmc AS MachStyle,
+                A.cRemark AS Remark,
+                b.id as dpid,
+            CASE
+                    A.iStopUse
+                    WHEN 1 THEN
+                    'TRUE' ELSE 'FALSE'
+                END AS StopUse,
+                b.cbmmc AS Dept,
+                c.cgzzxmc AS Center,
+                c.cgzzxlx AS cType
+            FROM
+                MKerJzmb A
+                LEFT JOIN dzbm B ON A.cbmbh= B.cbmbh
+                LEFT JOIN MKernel C ON A.cBh= C.cBh
+        ) machine ON Job.id_Machine = machine.Id
+        AND Job.iType_Res = 0
+        WHERE Job.iStatus IN (0, 1, 2, 10, 20)
+        AND Job.iJobType IN (0, 4)
+        AND Job.iType_Res = 0
+        AND Job.iStatus = 0
+        AND Dev.iGzzxId = #{iGzzxId}
+        AND job.dPlanStart >= (getdate()-7)
+    </select>
+
+    <select id="selectById" resultType="com.anaysis.entity.WorkbatchOrdlink">
+        SELECT
+        Job.ID AS id,
+        Job.id_Machine AS maId, --设备id
+        SUBSTRING(Job.cJobCode,0 , CHARINDEX('_', Job.cJobCode ,0)) AS odNo,--订单编号
+        Job.cPartName AS partName, -- 部件名称(差部件id,部件编号)
+        Job.cProductCode AS pdCode,--产品编号
+        Job.cProductName AS pdName, --产品名称(差产品类型)
+        tech.ID_ATech AS prId, -- 工序id
+        pr.prName AS prName, -- 工序名称
+        Job.nStdAmount AS planNum, -- 计划数量
+        Job.nDeliverAmount AS planNumber, --应交数量
+        Job.nConsumeAmount AS extraNum,--冗余数
+        Job.nCompleteAmount AS completeNum,--完成数量
+        Job.nDeliverAmount - Job.nCompleteAmount AS incompleteNum, -- 未完成数量
+        CONVERT(varchar(100), Job.dPlanStart, 20) AS startTime,--计划开始时间
+        Job.iStatus AS runStatus,--生产状态
+        CONVERT(varchar(100), Job.dFactStart, 20) AS actuallyStarttime,--实际开始时间
+<!--        CONVERT(varchar(100), Job.dFactEnd, 20) AS endTime,&#45;&#45;实际结束时间-->
+        Job.nPlanTime_R AS planTime,--计划用时
+        jobRemark.cPlanRemark AS remarks, -- 备注
+        CONVERT(varchar(100), Job.dCreate, 20) AS sdDate, -- 下单时间
+        CONVERT(varchar(100), Job.dCreate, 20) AS createAt, -- 下单时间
+        machine.dpId AS dpId
+        FROM
+            scMachineJob Job
+        LEFT JOIN scvDevice Dev ON Dev.iType &lt;&gt; 3 AND Job.id_Machine = Dev.Id
+        LEFT JOIN scMachineJobTech tech ON tech.ID_scMachineJob = job.ID
+        LEFT JOIN scMachineJobRemark jobRemark ON jobRemark.ID_scMachineJob = job.ID
+        LEFT JOIN (
+            SELECT
+                sh.ID AS Id,
+                sh.cCode AS prNo,
+                sh.cName AS prName,
+                sh.ID AS sort,
+                sh.istate AS status
+            FROM
+                sysTech sh
+            LEFT JOIN sysTech_MaterialClass ss1 ON sh.ID = ss1.ID_Tech
+            LEFT JOIN scvZMaterialClass ss2 ON ss2.cCode = ss1.cCode_Mat
+            WHERE
+                sh.iState > -1
+        ) pr ON tech.ID_ATech = pr.Id
+        JOIN (
+            SELECT
+                A.ID AS Id,
+                cJzbh AS mno,
+                A.cJzmc AS name,
+                A.cjzlxmc AS MachStyle,
+                A.cRemark AS Remark,
+                b.id as dpid,
+            CASE
+                    A.iStopUse
+                    WHEN 1 THEN
+                    'TRUE' ELSE 'FALSE'
+                END AS StopUse,
+                b.cbmmc AS Dept,
+                c.cgzzxmc AS Center,
+                c.cgzzxlx AS cType
+            FROM
+                MKerJzmb A
+                LEFT JOIN dzbm B ON A.cbmbh= B.cbmbh
+                LEFT JOIN MKernel C ON A.cBh= C.cBh
+        ) machine ON Job.id_Machine = machine.Id
+        AND Job.iType_Res = 0
+        WHERE Job.iStatus IN (0, 1, 2, 10, 20)
+        AND Job.iJobType IN (0, 4)
+        AND Job.iType_Res = 0
+        AND Job.ID = #{Id}
+    </select>
+</mapper>

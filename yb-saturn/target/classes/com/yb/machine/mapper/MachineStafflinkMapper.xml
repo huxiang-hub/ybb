@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.machine.mapper.MachineStafflinkMapper">
+
+    <select id="getEquimentUserList" resultType="com.yb.machine.response.EquipmentUserPageVo">
+        select bu.id, bu.account, bu.password, ybm.name as maName,bu.phone, bu.dept_id ,ybd.dp_name as deptName, bu.real_name, bu.sex, bu.birthday, bu.name, bu.avatar, bu.email, bu.role_id as roleIds, bu.chat_no, bu.status, bu.unionid,bu.create_time,bu.update_time
+        from blade_user bu
+        join yb_base_deptinfo ybd on bu.dept_id = ybd.id
+        left join yb_machine_stafflink ybs on bu.id=ybs.us_id
+        join yb_machine_mainfo ybm on ybm.id=ybs.ma_id
+        <where>
+            and bu.id in (
+            select us_id
+            from yb_machine_stafflink
+            <where>
+                <if test="equipmentVO.maIdList !=null and equipmentVO.maIdList.size !=0">
+                    and ma_id in
+                    <foreach collection="equipmentVO.maIdList" index="index" item="maId" open="(" separator="," close=")">
+                        #{maId}
+                    </foreach>
+                </if>
+            </where>
+            )
+            <if test="equipmentVO.maIdList !=null and equipmentVO.maIdList.size !=0">
+                and ybs.ma_id in
+                <foreach collection="equipmentVO.maIdList" index="index" item="maId" open="(" separator="," close=")">
+                    #{maId}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+    <select id="page" resultType="com.yb.system.user.response.UserPageVo">
+        select ybs.ID,ybs.name,jobnum,phone,ybc.bc_name as bcName,ybs.dp_id,mold,ybd.dp_name as deptName,jobs,laborer,hire_time,processes,ybs.bc_id,ybs.user_id
+        from yb_base_staffinfo ybs
+        left join yb_base_deptinfo ybd on  ybs.dp_id = ybd.id
+        left join yb_base_classinfo ybc on ybs.bc_id = ybc.id
+        <where>
+            <if test="request.name != null and request.name != ''">
+                and ybs.name like concat('%',#{request.name},'%')
+            </if>
+            <if test="request.dpId != null and request.dpId !=0">
+                and ybs.dp_id = #{request.dpId}
+            </if>
+            <if test="request.bcId != null and request.bcId !=0">
+                and ybs.bc_id = #{request.bcId}
+            </if>
+        </where>
+    </select>
+
+    <select id="teamInformation" resultType="com.yb.system.user.response.TeamVo">
+        select *
+        from yb_base_classinfo
+    </select>
+
+    <select id="selectUsId" resultType="int">
+        select count(1)
+        from yb_machine_stafflink
+        <where>
+            <if test="maId !=null">
+                and ma_id = #{maId}
+            </if>
+            <if test="usId !=null">
+                and us_id = #{usId}
+            </if>
+        </where>
+    </select>
+
+    <delete id="deleteEquipmentUser" parameterType="com.yb.machine.response.getEquipmentVo">
+        delete from yb_machine_stafflink
+        <where>
+            <if test="equipment.usIdList !=null and equipment.usIdList.size !=0">
+                and us_id in
+                <foreach collection="equipment.usIdList" index="index" item="userId" open="(" separator="," close=")">
+                    #{userId}
+                </foreach>
+            </if>
+            <if test="equipment.maNameList !=null and equipment.maNameList.size !=0">
+                and ma_id in(
+                select  id
+                from yb_machine_mainfo
+                where name in
+                <foreach collection="equipment.maNameList" index="index" item="maName" open="(" separator="," close=")">
+                    #{maName}
+                </foreach>
+                )
+            </if>
+        </where>
+    </delete>
+
+    <insert id="equipmentAuthor" parameterType="java.util.ArrayList">
+        insert into yb_machine_stafflink(ma_id,us_id,jobs)
+        values
+        <foreach collection="roleAuthors" item="role" index="index" separator=",">
+            (#{role.ma_id},#{role.us_id},#{role.jobs})
+        </foreach>
+    </insert>
+
+    <!--****************勿删代码，机台人脸识别代码-->
+    <select id="getUsersByMaId" resultType="com.yb.machine.vo.UserFaceVO">
+        SELECT
+        	bu.id AS usId,
+					bu.account as jobnum,
+        	bu.`name` AS usName,
+        	bu.avatar AS avatarUrl,
+        	( CASE yms.jobs WHEN 1 THEN '机长'
+        	    WHEN 2 THEN '班长'
+        	    WHEN 3 THEN '车间主管'
+        	    WHEN 4 THEN '排产员'
+        	    ELSE '其他' END ) AS job
+        FROM
+        	yb_machine_stafflink yms
+        	LEFT JOIN blade_user bu ON bu.id = yms.us_id
+        WHERE
+        	yms.ma_id = #{maId}
+    </select>
+</mapper>

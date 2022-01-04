@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.exeset.mapper.ExesetFaultwasteMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="ExesetFaultwaste" type="com.yb.exeset.entity.ExesetFaultwaste">
+        <id column="id" property="id"/>
+        <result column="ma_id" property="maId"/>
+        <result column="mf_id" property="mfId"/>
+        <result column="fname" property="fname"/>
+        <result column="fvalue" property="fvalue"/>
+        <result column="over_time" property="overTime"/>
+        <result column="waste" property="waste"/>
+        <result column="create_at" property="createAt"/>
+        <result column="us_id" property="usId"/>
+        <result column="update_at"  property="updateAt"/>
+    </resultMap>
+
+    <select id="getExesetFaultwaste" resultMap="ExesetFaultwaste">
+        SELECT  * FROM yb_exeset_faultwaste
+        <where>
+          <if test="maId!=null"> ma_id = #{maId}</if>
+        </where>
+    </select>
+    <update id="setFaultwaste" parameterType="com.yb.exeset.entity.ExesetFaultwaste">
+        UPDATE yb_exeset_faultwaste
+        <set>
+            <if test="overTime!=null">over_time = #{overTime},</if>
+            <if test="waste!=null">waste = #{waste},</if>
+        </set>
+        <where>
+            <if test="maId!=null">id = #{id}</if>
+        </where>
+    </update>
+
+
+</mapper>

@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.execute.mapper.ExecuteTraycardMapper">
+
+    <select id="construction" resultType="com.yb.workbatch.vo.ConstructionVO">
+        SELECT
+        a.plan_num AS odCount,
+        a.pd_size,
+        a.pd_code AS pdName,
+        a.part_name AS ptName,
+        a.material_name,
+        a.remarks AS prDes,
+        a.pr_name,
+        a.down_porcess,
+        b.plan_num AS prPlanNum,
+        a.product_batch,
+        a.wb_no,
+        a.final_time,
+        a.cm_name,
+        a.od_no,
+        a.pd_name,
+        a.pr_route,
+        b.sd_date,
+        c.tray_no AS plateNo,
+        c.tray_num AS plateNumber,
+        d.`name` AS userName,
+        e.`name` AS maName,
+        f.dp_name,
+        c.remark
+        FROM
+        yb_execute_traycard c
+        LEFT JOIN yb_workbatch_shift b ON b.id = c.wf_id
+        LEFT JOIN yb_workbatch_ordlink a ON a.id = b.sd_id
+        LEFT JOIN blade_user d ON d.id = c.us_id
+        LEFT JOIN yb_machine_mainfo e ON e.id = a.ma_id
+        LEFT JOIN yb_base_deptinfo f ON f.id = a.dp_id
+        WHERE c.id IN
+        <foreach collection="etIdList" item="etId" separator="," open="(" close=")">
+            #{etId}
+        </foreach>
+
+    </select>
+
+    <delete id="deleteListById">
+        DELETE FROM yb_execute_traycard
+        WHERE wf_id=#{wfId}
+        <if test="etIdList != null and etIdList.size() > 0">
+            AND id NOT IN
+            <foreach collection="etIdList" item="etId" separator="," open="(" close=")">
+                #{etId}
+            </foreach>
+        </if>
+    </delete>
+
+    <update id="updateTraycardList">
+        UPDATE yb_execute_traycard
+        SET mp_id = #{mpId},remark=#{remark},store_place=#{storePlace},tray_num=#{trayNum},us_id=#{usId}
+        WHERE id IN
+        <foreach collection="etIdList" item="etId" separator="," open="(" close=")">
+            #{etId}
+        </foreach>
+
+    </update>
+
+    <select id="selectNeEtIdList" resultType="java.lang.Integer">
+        SELECT id FROM yb_execute_traycard
+        WHERE wf_id=#{wfId}
+        <if test="etIdList != null and etIdList.size() > 0">
+            AND id NOT IN
+            <foreach collection="etIdList" item="etId" separator="," open="(" close=")">
+                #{etId}
+            </foreach>
+        </if>
+    </select>
+
+    <update id="updateTraycardTotalNumList">
+        UPDATE yb_execute_traycard SET total_num=#{totalNum}
+        WHERE id IN
+        <foreach collection="etIdList" item="etId" open="(" close=")" separator=",">
+            #{etId}
+        </foreach>
+    </update>
+
+    <update id="updatePrintNumList">
+        UPDATE yb_execute_traycard
+        SET print_num = IFNULL( print_num, 0 ) + 1,
+        end_time = NOW( ),
+        update_at = NOW( ),
+        ty_status = 1
+        <if test="maId != null">
+            ,ma_id = #{maId}
+        </if>
+        <if test="exId != null">
+            ,ex_id = #{exId}
+        </if>
+        WHERE
+        id IN
+        <foreach collection="etIdList" item="etId" open="(" close=")" separator=",">
+            #{etId}
+        </foreach>
+        <if test="maId != null">
+            AND (ma_id=#{maId} OR ma_id IS NULL)
+        </if>
+
+    </update>
+    <select id="getTraycardData" resultType="com.yb.execute.vo.TraycardDataVO">
+        SELECT
+        a.id,
+        a.mp_id,
+        a.print_num,
+        a.td_no,
+        a.tray_num AS num,
+        a.store_place AS stNo,
+        a.tray_no,
+        b.ck_name,
+        c.pd_name,
+        c.pr_name,
+        c.wb_no,
+        d.`name` AS usName,
+        e.`name` AS maName,
+        a.start_time,
+        a.ma_id
+        FROM
+        yb_execute_traycard a
+        LEFT JOIN yb_workbatch_shift b ON b.id = a.wf_id
+        LEFT JOIN yb_workbatch_ordlink c ON c.id = b.sd_id
+        LEFT JOIN blade_user d ON d.id = a.us_id
+        LEFT JOIN yb_machine_mainfo e ON e.id = b.ma_id
+        WHERE
+        (a.ma_id IS NULL OR a.ma_id=#{maId})
+        AND
+        a.id IN
+        <foreach collection="etIdList" item="etId" open="(" close=")" separator=",">
+            #{etId}
+        </foreach>
+    </select>
+
+    <select id="getMaxId" resultType="java.lang.Integer">
+        SELECT
+        	IFNULL(MAX(id),0)
+        FROM
+        	`yb_execute_traycard`
+    </select>
+    <select id="getNoPrintEtIdList" resultType="java.lang.Integer">
+        SELECT
+        	id
+        FROM
+        	yb_execute_traycard
+        WHERE
+        	wf_id = #{wfId}
+        	AND ( print_num = 0 OR print_num IS NULL )
+    </select>
+
+    <select id="getExecuteTraycardByWfId" resultType="com.yb.execute.vo.ExecuteTraycardVO">
+        SELECT
+        	a.*,
+        	c.pd_name,
+        	c.pr_name,
+        	c.wb_no,
+        	e.`name` AS maName,
+        	b.ck_name AS wsName,
+        	d.`name` AS usName,
+        	a.end_time as print_time
+        FROM
+        	yb_execute_traycard a
+        LEFT JOIN yb_workbatch_shift b ON b.id = a.wf_id
+        LEFT JOIN yb_workbatch_ordlink c ON c.id = b.sd_id
+        LEFT JOIN blade_user d ON d.id = a.us_id
+        LEFT JOIN yb_machine_mainfo e ON e.id = b.ma_id
+        WHERE
+        	a.wf_id=#{wfId}
+        ORDER BY a.update_at
+
+    </select>
+
+    <select id="getTraycardMaterials" resultType="com.yb.execute.vo.TraycardMaterialsVO">
+        SELECT
+        	a.tray_num,
+        	GROUP_CONCAT("NO", a.tray_no, ".") AS tdNo,
+        	a.mp_id AS stId,
+        	a.store_place AS stNo,
+        	a.end_time AS printTime,
+        	d.`name` AS usName,
+        	c.is_review,
+        	e.`name` AS maName,
+        	b.create_at AS loadMaterialTime,
+        	CASE
+        WHEN b.id IS NULL THEN
+        	0
+        ELSE
+        	1
+        END AS isLoadMaterial
+        FROM
+        	yb_execute_traycard a
+        LEFT JOIN yb_execute_materials b ON b.et_id = a.id
+        LEFT JOIN yb_store_checklog c ON c.et_id = a.id
+        LEFT JOIN blade_user d ON d.id = a.us_id
+        LEFT JOIN yb_machine_mainfo e ON e.id = b.ma_id
+        WHERE a.wf_id=#{wfId}
+        GROUP BY a.id
+    </select>
+
+    <select id="getTraycardByTrayParam" resultType="com.yb.execute.vo.ExecuteTraycardVO">
+        select a.id,a.sd_id,a.wf_id,a.tray_no,a.tray_num,a.td_no,a.ex_id,a.ma_id,a.plan_num,
+        a.total_num,a.end_time,a.start_time,a.print_num,a.lay_num,a.store_place,a.mp_id,a.remark,
+        a.us_id,a.create_at,a.update_at,a.ty_status,a.ex_status,a.store_before,a.store_after,a.report_mark,
+        b.wb_no,a.end_time as print_time,c.`name` as us_name from yb_execute_traycard a
+        LEFT JOIN yb_workbatch_ordlink b on b.id = a.sd_id
+        LEFT JOIN yb_base_staffinfo c on c.user_id =a.us_id
+        <where>
+            <if test="trayParam.tyIds != null and trayParam.tyIds != ''">
+                and a.`id` in
+                <foreach item="item" index="index" collection="trayParam.tyIds.split(',')" open="(" separator="," close=")">
+                    '${item}'
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+    <select id="getTraycardByStoreinfo" resultType="com.yb.execute.vo.ExecuteTraycardVO">
+        select a.id,b.id as sd_id,a.et_pdnum tray_num,d.ex_id,e.ma_id,b.plan_num,
+        d.handle_usid as us_id,a.create_at,d.handle as ty_status,d.ex_status,
+        b.wb_no,a.create_at as print_time,c.`name` as us_name
+        from yb_store_inventory a
+        LEFT JOIN yb_execute_briefer d on d.id = a.db_id
+        LEFT JOIN yb_execute_info e on d.ex_id = e.id
+        LEFT JOIN yb_workbatch_ordlink b on b.id = d.sd_id
+        LEFT JOIN yb_base_staffinfo c on c.user_id =d.handle_usid
+        <where>
+            a.st_model=2 and d.sd_id= #{trayParam.sdId} and a.db_id is not null
+        </where>
+    </select>
+
+
+    <select id="processFlow" resultType="com.yb.execute.vo.TrayCardSumVO">
+        SELECT
+        	a.id AS sdId,
+        	a.pr_name,
+        	SUM(e.count_num) AS finishNum,
+        	SUM(b.plan_num) AS planNum,
+        	COUNT(c.id) totalNum,
+        	c.store_place AS stNo,
+        	e.start_time,
+        	d.`name` AS usName
+        FROM
+        	yb_workbatch_ordlink a
+        LEFT JOIN yb_workbatch_shift b ON b.sd_id = a.id
+        LEFT JOIN yb_execute_briefer e ON e.wf_id = b.id
+        LEFT JOIN yb_execute_traycard c ON c.sd_id = a.id
+        LEFT JOIN blade_user d ON d.id = c.us_id
+        WHERE
+        	a.wb_no = #{wbNo}
+        AND a.pr_id IN (
+        	SELECT
+        		pr_id
+        	FROM
+        		yb_prod_procelink
+        	WHERE
+        		pd_id = #{pdId}
+        	ORDER BY
+        		sort_num
+        )
+        GROUP BY a.id
+        ORDER BY a.sort,b.id
+    </select>
+    <select id="getByBfId" resultType="com.yb.execute.vo.PhoneTrayCardVO">
+        SELECT
+            DISTINCT
+            f.count_num as complete_num,
+            b.plan_num,
+            c.od_no,
+            d.id as seatId,
+            h.et_pdnum as etPdnum,
+            a.td_no,
+            d.st_no,
+            a.update_at as handle_time,
+            g.real_name,
+            b.sd_date,
+            b.ck_name,
+            a.ex_status,
+            f.id as bfId,
+            a.tray_no,
+            c.pd_name,
+            a.id as tyId,
+            j.name as maName,
+            IFNULL(k.data_before,h.et_pdnum) as dataBefore,
+            IFNULL(k.data_after,0) as dataAfter,
+            IFNULL(k.store_before,a.store_place) as storeBefore,
+            IFNULL(k.store_after,a.store_place) as storeAfter
+        FROM
+            yb_execute_traycard a
+            LEFT JOIN yb_workbatch_shift b ON a.wf_id = b.id
+            LEFT JOIN yb_workbatch_ordlink c ON a.sd_id = c.id
+            LEFT JOIN yb_store_seat d ON a.mp_id = d.id
+            LEFT JOIN yb_execute_info e ON a.ex_id = e.id
+            LEFT JOIN yb_execute_briefer f ON e.id = f.ex_id
+            LEFT JOIN blade_user g ON f.handle_usid = g.id
+            LEFT JOIN yb_store_inventory h on a.id = h.et_id
+            LEFT JOIN yb_machine_mainfo j ON b.ma_id = j.id
+            left join yb_execute_examine k on a.id = k.ty_id
+        <if test="bfId != null">
+            WHERE a.ex_id = (SELECT ex_id FROM yb_execute_briefer WHERE id = #{bfId})
+        </if>
+    </select>
+    <select id="getPhoneInfoBySeatId" resultType="com.yb.execute.vo.PhoneSeatTrayInfoRecordVO">
+        SELECT
+            a.tray_no,
+            a.td_no,
+            c.pd_name,
+            b.et_pdnum AS pdTotal,
+            d.real_name AS reportName,
+            e.ck_name,
+            e.sd_date
+        FROM
+            yb_execute_traycard a
+            LEFT JOIN yb_store_inventory b ON a.id = b.et_id
+            LEFT JOIN yb_workbatch_ordlink c ON a.sd_id = c.id
+            LEFT JOIN blade_user d ON a.us_id = d.id
+            LEFT JOIN yb_workbatch_shift e ON a.wf_id = e.id
+        where b.st_id = #{seatId}
+    </select>
+</mapper>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anaysis.sqlservermapper.FzSaUserMapper">
+    <select id="list" resultType="com.anaysis.entity.SaUser">
+        select id,cusername as account,cpasswordhash as password,czgxm as name,cshowname as real_name,ibmid as dp_id from dzZG a where idisabled = 0
+    </select>
+
+    <select id="getUserList" resultType="com.anaysis.entity.SaUser">
+         select *,
+id as id,
+dzZG.cUserName as account,
+dzZG.cpasswordhash as password,
+dzZG.Czgxm as name,
+dzZG.Czgxm as realname,
+(CASE cxb WHEN '男' THEN 1 WHEN '女' THEN 0 END) as sex
+from dzZG where 1 = 1
+    </select>
+</mapper>

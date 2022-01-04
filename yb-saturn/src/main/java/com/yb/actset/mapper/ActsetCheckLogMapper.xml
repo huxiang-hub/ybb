@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.actset.mapper.ActsetCheckLogMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="checkLogResultMap" type="com.yb.actset.entity.ActsetCheckLog">
+        <id column="id" property="id"/>
+        <result column="as_id" property="asId"/>
+        <result column="db_id" property="dbId"/>
+        <result column="us_id" property="usId"/>
+        <result column="check_time" property="checkTime"/>
+        <result column="result" property="result"/>
+        <result column="status" property="status"/>
+        <result column="create_at" property="createAt"/>
+    </resultMap>
+    <select id="getLogCount" resultType="java.lang.Integer">
+        SELECT COUNT(aw_id) FROM
+        (SELECT aw_id FROM yb_actset_checklog
+        WHERE db_id = #{orderId} GROUP BY aw_id) t1
+    </select>
+    <select id="getActsetCheckLog" resultType="com.yb.actset.vo.ActsetCheckLogVO">
+        <!--
+        SELECT t1.*,
+        t2.as_id AS asId,
+        t2.sort
+        FROM (SELECT * FROM yb_actset_checklog WHERE db_id =#{orderId} AND status = #{status}) t1
+        LEFT JOIN yb_actset_ckflow t2
+        ON t1.aw_id = t2.id
+        WHERE t2.aw_type = #{awType}
+        AND t2.as_id = (SELECT id FROM yb_actset_ckset WHERE as_type =#{asType})
+        -->
+        SELECT t1.*,
+        t2.as_id AS asId,
+        t2.sort
+        FROM (SELECT * FROM yb_actset_checklog WHERE id =#{logId}) t1
+        LEFT JOIN yb_actset_ckflow t2
+        ON t1.aw_id = t2.id
+    </select>
+    <select id="getActsetCheckLogs" resultType="com.yb.actset.vo.ActsetCheckLogVO">
+        SELECT t1.* FROM yb_actset_checklog t1
+        LEFT JOIN yb_actset_ckflow t2
+        ON t1.aw_id = t2.id
+        WHERE t2.aw_type = #{awType}
+        AND t2.as_id = (
+        SELECT id FROM yb_actset_ckset WHERE as_type = #{asType}
+        )
+        <if test = "status!=null"> AND t1.status = #{status}</if>
+        <if test = "orderId!=null"> AND t1.db_id = #{orderId}</if>
+    </select>
+    <select id="getOrderCheckLogs" resultType="com.yb.actset.vo.OrderCheckModelVO">
+    SELECT
+      t1.id AS logId,
+      t1.check_time AS checkTime,
+      t1.result,
+      t1.status,
+      t3.*
+      FROM yb_actset_checklog t1
+      LEFT JOIN yb_actset_ckflow t2
+      ON t1.aw_id = t2.id
+      LEFT JOIN yb_order_ordinfo t3
+      ON t1.db_id = t3.id
+      WHERE t2.aw_type = #{modelVO.awType}
+      AND t2.as_id = (
+      SELECT id FROM yb_actset_ckset WHERE as_type = #{modelVO.asType}
+      )
+      <if test="modelVO.status!=null">
+          AND t1.status =#{modelVO.status}
+      </if>
+      <if test="modelVO.orderId!=null">
+          AND t1.db_id =#{modelVO.orderId}
+      </if>
+      <if test="modelVO.result!=null">
+          AND t1.result =#{modelVO.result}
+      </if>
+      ORDER BY t1.create_at DESC
+    </select>
+    <select id="getProdCheckLogs"  resultType="com.yb.actset.vo.OrderCheckModelVO">
+      SELECT
+      t1.id AS logId,
+      t1.check_time AS checkTime,
+      t1.result,
+      t1.status,
+      t3.*
+      FROM yb_actset_checklog t1
+      LEFT JOIN yb_actset_ckflow t2
+      ON t1.aw_id = t2.id
+      LEFT JOIN yb_prod_pdinfo t3
+      ON t1.db_id = t3.id
+      WHERE t2.aw_type= #{modelVO.awType}
+      AND t2.as_id = (
+      SELECT id FROM yb_actset_ckset WHERE as_type = #{modelVO.asType}
+      )
+        <if test="modelVO.status!=null">
+            AND t1.status =#{modelVO.status}
+        </if>
+        <if test="modelVO.orderId!=null">
+            AND t1.db_id =#{modelVO.orderId}
+        </if>
+        <if test="modelVO.orderId!=null">
+            AND t1.result =#{modelVO.result}
+        </if>
+    </select>
+    <select id="getAwIdByType" resultType="com.yb.actset.entity.ActsetCkflow">
+        SELECT t1.*  FROM  yb_actset_ckset t2
+        LEFT JOIN yb_actset_ckflow t1
+        ON t1.as_id = t2.id
+        WHERE t2.as_type = #{asType}
+        AND t1.aw_type = #{awType}
+    </select>
+    <select id="getMoreNewCheckLog" resultType="com.yb.actset.entity.ActsetCheckLog">
+        SELECT  * FROM yb_actset_checklog
+        WHERE db_id = #{orderId}
+        ORDER BY id DESC LIMIT 1
+    </select>
+    <select id="getOrderCheckLogsAndPdName" resultType="com.yb.actset.vo.OrderCheckModelVO">
+        SELECT a.*,b.pd_name AS pdName FROM
+        (SELECT
+        t1.id AS logId,
+        t1.check_time AS checkTime,
+        t1.result,
+        t1.status,
+        t3.*
+        FROM yb_actset_checklog t1
+        LEFT JOIN yb_actset_ckflow t2
+        ON t1.aw_id = t2.id
+        LEFT JOIN yb_order_ordinfo t3
+        ON t1.db_id = t3.id
+        WHERE t2.aw_type = #{modelVO.awType}
+        AND t2.as_id = (
+        SELECT id FROM yb_actset_ckset WHERE as_type = #{modelVO.asType}
+        )
+        <if test="modelVO.status!=null">
+            AND t1.status =#{modelVO.status}
+        </if>
+        <if test="modelVO.orderId!=null">
+            AND t1.db_id =#{modelVO.orderId}
+        </if>
+        <if test="modelVO.result!=null">
+            AND t1.result =#{modelVO.result}
+        </if>
+        <if test="modelVO.odNo!=null">
+            AND t3.od_no LIKE CONCAt('%',#{modelVO.odNo},'%')
+        </if>
+        <if test="modelVO.cmName!=null">
+            AND t3.cm_name LIKE CONCAt('%',#{modelVO.cmName},'%')
+        </if>
+        <if test="modelVO.prId != null || modelVO.maId != null">
+            AND t3.id IN (
+            SELECT DISTINCT a.id FROM yb_order_ordinfo a
+            LEFT JOIN yb_prod_partsinfo c ON a.pd_id = c.pd_id
+            LEFT JOIN yb_prod_procelink d ON c.id = d.pt_id
+            LEFT JOIN yb_process_machlink e ON d.pr_id = e.pr_id
+            WHERE 1=1
+            <if test="modelVO.prId != null">
+                AND d.pr_id = #{modelVO.prId}
+            </if>
+             <if test="modelVO.maId != null">
+                AND e.ma_id = #{modelVO.maId}
+             </if>
+            )
+        </if>
+        )
+        as a LEFT JOIN yb_prod_pdinfo as b on a.pd_id = b.id
+    </select>
+</mapper>

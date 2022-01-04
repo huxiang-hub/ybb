@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.panel.mapper.PanelMenuMapper">
+    <select id="getMuName" resultType="java.lang.String">
+        select mu_name
+        from yb_panel_menu
+        <where>
+            <if test="muIds!=null and muIds.size>0">
+                id in
+                <foreach collection="muIds" item="muId" index="index" open="(" close=")" separator=",">
+                    #{muId}
+                </foreach>
+                and status = 1
+            </if>
+        </where>
+    </select>
+
+    <select id="getPanelMenuAll" resultType="com.yb.panel.vo.PanelMenuVO">
+        select *
+        from yb_panel_menu
+    </select>
+</mapper>

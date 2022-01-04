@@ -1,0 +1,8 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  org.springblade.common.activemq.ActiveMsgUtil,\
+  org.springblade.common.modelMapper.ModelMapperConfig,\
+  org.springblade.common.activemq.ConsumerConfiguration,\
+  org.springblade.common.config.BladeCommonConfiguration,\
+  org.springblade.common.resubmit.service.impl.ReSubmitServiceImpl,\
+  org.springblade.common.exception.CommonExceptionHandler,\
+  org.springblade.common.activemq.Config

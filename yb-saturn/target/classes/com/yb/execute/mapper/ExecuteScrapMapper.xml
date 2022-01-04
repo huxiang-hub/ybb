@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.execute.mapper.ExecuteScrapMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="executeScrapResultMap" type="com.yb.execute.entity.ExecuteScrap">
+        <id column="id" property="id"/>
+        <result column="wb_no" property="wbNo"/>
+        <result column="sd_id" property="sdId"/>
+        <result column="wf_id" property="wfId"/>
+        <result column="ex_id" property="exId"/>
+        <result column="sp_mold" property="spMold"/>
+        <result column="sp_before" property="spBefore"/>
+        <result column="sp_after" property="spAfter"/>
+        <result column="sp_num" property="spNum"/>
+        <result column="sp_reason" property="spReason"/>
+        <result column="sp_other" property="spOther"/>
+        <result column="ty_ids" property="tyIds"/>
+        <result column="ws_id" property="wsId"/>
+        <result column="us_id" property="usId"/>
+        <result column="ex_desc" property="exDesc"/>
+        <result column="create_at" property="createAt"/>
+        <result column="update_at" property="updateAt"/>
+    </resultMap>
+
+
+    <select id="selectExecuteScrapPage" resultMap="executeScrapResultMap">
+        select * from yb_execute_scrap where is_deleted = 0
+    </select>
+    <select id="getPhoneList" resultType="com.yb.execute.vo.ExecuteScrapVO">
+        SELECT
+            a.*,
+            b.pd_name,
+            b.pr_name,
+            c.ck_name,
+            d.real_name AS usName,
+            b.cm_name,
+            f.name as maName,
+            h.real_name as reportName,
+            e.process_instance_id,
+            ifnull(e.ex_status, 1) as exStatus
+        FROM
+            yb_execute_scrap a
+            LEFT JOIN yb_workbatch_ordlink b ON a.sd_id = b.id
+            LEFT JOIN yb_workbatch_shift c ON a.wf_id = c.id
+            LEFT JOIN blade_user d ON a.us_id = d.id
+            LEFT JOIN yb_execute_spverify e ON a.id = e.sp_id
+            LEFT JOIN yb_machine_mainfo f ON c.ma_id = f.id
+            LEFT JOIN yb_execute_info g ON a.ex_id = g.id
+            LEFT JOIN blade_user h ON g.us_id = h.id
+            where 1 = 1
+            <if test="exStatus != null and exStatus != ''"> and e.ex_status=#{exStatus}</if>
+            order by a.create_at desc
+    </select>
+
+    <select id="getPhoneDetail" resultType="com.yb.execute.vo.ExecuteScrapVO">
+        SELECT
+        a.*,
+        b.pd_name,
+        b.pr_name,
+        c.ck_name,
+        d.real_name AS usName,
+        b.cm_name,
+        f.name as maName,
+        h.real_name as reportName,
+        e.process_instance_id,
+        ifnull(e.ex_status, 1) as exStatus
+        FROM
+        yb_execute_scrap a
+        LEFT JOIN yb_workbatch_ordlink b ON a.sd_id = b.id
+        LEFT JOIN yb_workbatch_shift c ON a.wf_id = c.id
+        LEFT JOIN blade_user d ON a.us_id = d.id
+        LEFT JOIN yb_execute_spverify e ON a.id = e.sp_id
+        LEFT JOIN yb_machine_mainfo f ON c.ma_id = f.id
+        LEFT JOIN yb_execute_info g ON a.ex_id = g.id
+        LEFT JOIN blade_user h ON g.us_id = h.id
+        where a.id = #{id}
+        order by a.create_at desc
+    </select>
+
+</mapper>

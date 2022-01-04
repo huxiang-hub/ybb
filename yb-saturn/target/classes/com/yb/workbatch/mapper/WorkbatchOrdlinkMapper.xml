@@ -1,0 +1,1744 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.workbatch.mapper.WorkbatchOrdlinkMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="workbatchOrdlinkResultMap" type="com.yb.workbatch.entity.WorkbatchOrdlink">
+        <id column="id" property="id"/>
+        <result column="wb_id" property="wbId"/>
+        <result column="ma_id" property="maId"/>
+        <result column="erp_wbid" property="erpWbid"/>
+        <result column="od_no" property="odNo"/>
+        <result column="pt_id" property="ptId"/>
+        <result column="pt_no" property="ptNo"/>
+        <result column="part_name" property="partName"/>
+        <result column="pr_id" property="prId"/>
+        <result column="pr_name" property="prName"/>
+        <result column="pr_des" property="prDes"/>
+        <result column="pd_code" property="pdCode"/>
+        <result column="pd_name" property="pdName"/>
+        <result column="pd_type" property="pdType"/>
+        <result column="pd_imageurl" property="pdImageurl"/>
+        <result column="plan_num" property="planNum"/>
+        <result column="plan_number" property="planNumber"/>
+        <result column="complete_num" property="completeNum"/>
+        <result column="incomplete_num" property="incompleteNum"/>
+        <result column="extra_num" property="extraNum"/>
+        <result column="status" property="status"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="actually_starttime" property="actuallyStarttime"/>
+        <result column="close_time" property="closeTime"/>
+        <result column="plan_time" property="planTime"/>
+        <result column="waste" property="waste"/>
+        <result column="nbwaste" property="nbwaste"/>
+        <result column="remarks" property="remarks"/>
+        <result column="run_status" property="runStatus"/>
+        <result column="create_at" property="createAt"/>
+        <result column="update_at" property="updateAt"/>
+        <result column="sd_sort" property="sdSort"/>
+    </resultMap>
+
+
+    <select id="selectWorkbatchOrdlinkPage" resultType="com.yb.workbatch.vo.WorkbatchOrdlinkVO">
+        SELECT
+        b.`name` as machineName,
+        a.*,
+        c.batch_no,
+        d.od_name,
+        a.od_no,
+        a.run_status as icon
+        FROM
+        yb_workbatch_ordlink a
+        LEFT JOIN yb_machine_mainfo b ON a.ma_id = b.id
+        LEFT JOIN yb_order_workbatch c ON a.wb_id = c.id
+        LEFT JOIN yb_order_ordinfo d ON c.od_id = d.id
+        <where>
+            <if test="workbatchOrdlink.machineName!=null and workbatchOrdlink.machineName!=''">
+                and b.`name` like CONCAt('%',#{workbatchOrdlink.machineName},'%')
+            </if>
+            <if test="workbatchOrdlink.batchNo!=null and workbatchOrdlink.batchNo!=''">
+                and c.batch_no like CONCAt('%',#{workbatchOrdlink.batchNo},'%')
+            </if>
+            <if test="workbatchOrdlink.odNo!=null and workbatchOrdlink.odNo!=''">
+                and a.od_no like CONCAt('%',#{workbatchOrdlink.odNo},'%')
+            </if>
+            <if test="workbatchOrdlink.sdDate!=null and workbatchOrdlink.sdDate!=''">
+                and a.sd_date = #{workbatchOrdlink.sdDate}
+            </if>
+            <if test="workbatchOrdlink.closeTime!=null">
+                and #{workbatchOrdlink.closeTime} &lt;= a.close_time
+                and a.close_time &lt;= #{workbatchOrdlink.closeTimeEnd}
+            </if>
+            <if test="workbatchOrdlink.prId!=null and workbatchOrdlink.prId!=0">
+                and a.pr_id like CONCAt('%',#{workbatchOrdlink.prId},'%')
+            </if>
+            <if test="workbatchOrdlink.maId!=null and workbatchOrdlink.maId!=0">
+                and a.ma_id like CONCAt('%',#{workbatchOrdlink.maId},'%')
+            </if>
+            <if test="workbatchOrdlink.dpId!=null and workbatchOrdlink.dpId!=0">
+                and a.dp_id like CONCAt('%',#{workbatchOrdlink.dpId},'%')
+            </if>
+        </where>
+        ORDER BY a.sd_Sort
+    </select>
+
+    <select id="getOrderList" resultType="com.yb.workbatch.entity.WorkbatchOrdlink">
+        select * from yb_workbatch_ordlink where ma_id = #{maId}
+        <if test="pdName != null">
+            AND pd_name LIKE CONCAt('%',#{pdName},'%')
+        </if>
+        <if test="odNo != null">
+            AND od_no LIKE CONCAt('%',#{odNo},'%')
+        </if>
+        <if test="runStatus != null">
+            AND run_status = #{runStatus}
+        </if>
+        AND run_status &lt;&gt; 2 --不查询生产完成的
+    </select>
+
+    <select id="getRunOrder" resultType="com.yb.workbatch.vo.WorkbatchOrdlinkVO">
+        select distinct `c`.`id` AS `id`,`c`.`wb_id` AS `wbId`,`c`.`pt_id` AS `ptId`,`c`.`pt_no` AS `ptNo`,`c`.`part_name` AS `partName`,`c`.`erp_wb_id` AS `erpWbId`,`c`.`ma_id` AS `maId`,`c`.`od_no` AS `odNo`,`c`.`pr_id` AS `prId`,`c`.`pr_name` AS `prName`,`c`.`pr_des` AS `prDes`,`c`.`sort` AS `sort`,`c`.`pd_code` AS `pdCode`,`c`.`pd_name` AS `pdName`,`c`.`pd_imageurl` AS `pdImageurl`,`c`.`pd_type` AS `pdType`,`c`.`plan_num` AS `planNum`,`c`.`plan_number` AS `planNumber`,`c`.`complete_num` AS `completeNum`,`c`.`incomplete_num` AS `incompleteNum`,`c`.`extra_num` AS `extraNum`,`c`.`end_time` AS `endTime`,`c`.`actually_starttime` AS `actuallyStarttime`,`c`.`close_time` AS `closeTime`,`c`.`start_time` AS `startTime`,`c`.`plan_time` AS `planTime`,`c`.`waste` AS `waste`,`c`.`nbwaste` AS `nbwaste`,`c`.`remarks` AS `remarks`,`c`.`run_status` AS `runStatus`,`c`.`update_at` AS `updateAt`,`c`.`status` AS `status`,`c`.`sd_date` AS `sdDate`,`c`.`ws_id` AS `wsId`,`c`.`duty_num` AS `dutyNum`,`c`.`create_at` AS `createAt`,`c`.`sd_sort` AS `sdSort`,`c`.`dp_id` AS `dpId`,`c`.`us_id` AS `usId`,`c`.`cm_name` AS `cmName`,`c`.`erp_id` AS `erpId`,`c`.`final_time` AS `finalTime`,`c`.`material_name` AS `materialName`,`c`.`up_porcess` AS `upPorcess`,`c`.`down_porcess` AS `downPorcess`,`c`.`ctp_num` AS `ctpNum`,`c`.`second_remark` AS `secondRemark`,`c`.`ingredient_name` AS `ingredientName`,`c`.`ingredient_num` AS `ingredientNum`,`c`.`ingredient_time` AS `ingredientTime`,`c`.`upprocess_sort` AS `upprocessSort`,`c`.`pt_size` AS `ptSize`,`c`.`wb_no` AS `wbNo`,`c`.`preorder` AS `preorder`,`c`.`od_type` AS `odType` ,
+        e.id as infoId
+        FROM yb_workbatch_ordlink c
+                 left JOIN yb_execute_info e on e.sd_id = c.id
+        where c.run_status = #{runStatus} and c.status = #{status} and c.ma_id = #{maId} and e.`status`=0  ORDER BY e.create_at desc LIMIT 1
+    </select>
+
+    <select id="getUserRunOrder" resultType="com.yb.workbatch.vo.WorkbatchOrdlinkVO">
+        SELECT DISTINCT a.*
+        FROM yb_workbatch_ordlink a
+          WHERE a.us_id = #{usId}
+          and a.run_status = #{runStatus}
+          and a.status = #{status}
+    </select>
+
+    <select id="getNoReportOrder" resultType="com.yb.workbatch.vo.WorkbatchOrdlinkVO">
+        SELECT c.*, a.box_num as pro_num, a.es_id, a.id as bId ,c.cm_name as indentor, e.ws_id as wsId, e.id as wfId, c.part_name as ptName, e.plan_num AS shiftNum,e.finish_num
+        FROM yb_execute_briefer a
+                 LEFT JOIN yb_execute_info b
+                           ON a.ex_id = b.id
+                 LEFT JOIN yb_workbatch_ordlink c
+                           ON b.sd_id = c.id
+                 LEFT JOIN yb_order_workbatch d
+                           ON c.wb_id = d.id
+                 LEFT JOIN yb_workbatch_shift e on e.id = a.wf_id
+          WHERE a.handle = 0
+          and e.shift_status =3
+          and b.ma_id = #{maId}
+    </select>
+    <select id="getNoReportOrderByIsRecepro" resultType="com.yb.workbatch.vo.WorkbatchOrdlinkVO">
+        SELECT c.*, a.box_num as pro_num, a.es_id, a.id as bId ,c.cm_name as indentor, e.ws_id as wsId, e.id as wfId, c.part_name as ptName, e.plan_num AS shiftNum,e.finish_num
+        FROM yb_execute_briefer a
+                            LEFT JOIN yb_execute_info b
+                           ON a.ex_id = b.id
+                 LEFT JOIN yb_workbatch_ordlink c
+                           ON b.sd_id = c.id
+                 LEFT JOIN yb_order_workbatch d
+                           ON c.wb_id = d.id
+                 LEFT JOIN yb_workbatch_shift e on e.id = a.wf_id
+          WHERE a.handle = 0
+          and b.ma_id = #{maId}
+    </select>
+    <select id="getUserBrieferOrder" resultType="com.yb.workbatch.vo.WorkbatchOrdlinkVO">
+        SELECT c.*, a.box_num as pro_num, a.es_id, a.id as bId ,e.cm_name as indentor
+        FROM yb_execute_briefer a
+                 LEFT JOIN yb_execute_info b
+                           ON a.ex_id = b.id
+                 LEFT JOIN yb_workbatch_ordlink c
+                           ON b.sd_id = c.id
+                 LEFT JOIN yb_order_workbatch d
+                           ON c.wb_id = d.id
+                 LEFT JOIN yb_order_ordinfo e
+                           ON d.od_id = e.id
+        WHERE a.handle = 0
+          AND c.us_id = #{usId}
+    </select>
+    <select id="getFaultAndQuality" resultType="com.yb.panelapi.common.TempEntity">
+        SELECT DISTINCT(a.sd_id), a.wb_id
+        FROM yb_execute_state a
+        WHERE a.ma_id = #{maId}
+          and a.`event` = '${event}'
+    </select>
+    <select id="getOrderListByOrderId" resultType="com.yb.workbatch.entity.WorkbatchOrdlink">
+        SELECT a.*
+        FROM yb_workbatch_ordlink a
+                 LEFT JOIN yb_order_workbatch b
+                           ON a.wb_id = b.id
+                 LEFT JOIN yb_order_ordinfo c
+                           ON b.od_id = c.id
+        WHERE c.id = #{id}
+    </select>
+    <select id="getOrderName" resultType="java.lang.String">
+        SELECT c.od_name
+        FROM yb_workbatch_ordlink a
+                 LEFT JOIN yb_order_workbatch b ON a.wb_id = b.id
+                 LEFT JOIN yb_order_ordinfo c ON b.od_id = c.id
+        WHERE a.id = #{sdId}
+    </select>
+
+
+    <select id="getMaAssignment" resultType="com.yb.workbatch.vo.WorkbatchOrdlinkVO">
+        SELECT a.*, b.batch_no
+        FROM yb_workbatch_ordlink a
+        LEFT JOIN yb_order_workbatch b ON a.wb_id = b.id
+        LEFT JOIN yb_workbatch_shift c ON c.id = a.ws_id
+        WHERE a.`status` IN ('0','6','7')
+        AND a.start_time LIKE CONCAt(#{startTime}, '%')
+        AND a.ma_id = #{maId}
+        AND c.ck_name = #{ckName}
+        ORDER BY a.sd_sort DESC
+    </select>
+
+    <select id="getWorkbatchOrdlinkVOList" resultType="com.yb.workbatch.vo.WorkbatchOeeShiftinVO">
+        SELECT a.ck_name,a.end_time AS ckEndTime,a.id AS ckId,a.sd_id,a.start_time AS ckStartTime,a.stay_time AS
+        ckStayTime
+        ,b.status,b.ws_id,b.close_time,b.complete_num,b.end_time,b.extra_num,b.id,b.ma_id,b.od_no,b.ordlink_time,b.part_name,b.pt_id,b.pd_name,b.plan_num,b.plan_number,b.plan_time,b.pr_id,b.pr_name,b.start_time
+        ,c.before_ptid,c.before_ptname,c.before_ptno,c.difficult_num,c.id AS
+        oeeId,c.maintain,c.maintain_num,c.maintain_stay,c.meal_num,c.meal_stay,c.mould_num,c.mould_stay,c.produce_pre_time,c.quality_num,c.wk_id
+        FROM yb_workbatch_shift a
+        LEFT JOIN yb_workbatch_ordlink b ON b.id=a.sd_id
+        LEFT JOIN yb_workbatch_ordoee c ON c.wk_id=b.id
+        WHERE (b.status='0' OR b.status='7')
+        <if test="ckName != null">
+            AND a.ck_name = #{ckName}
+        </if>
+
+
+    </select>
+    <select id="planProducePage" resultType="com.yb.workbatch.vo.PlanProduceModelVO">
+        SELECT t10.*,t9.`status` ,t9.logId FROM
+        (SELECT
+        t1.id,
+        t1.create_at,
+        t1.part_name AS partName,
+        t1.od_no AS odNo,
+        t2.od_name AS odName,
+        t3.batch_no AS batchNo,
+        t1.pr_name AS prName,
+        t1.start_time AS startTime,
+        t1.close_time AS closeTime,
+        t1.update_at,
+        t1.plan_number AS planNumber,
+        t1.extra_num AS extraNum,
+        t4.ck_name AS ckName,
+        t5.name AS maName
+        FROM yb_workbatch_ordlink t1
+        LEFT JOIN yb_order_ordinfo t2
+        ON t2.od_no = t1.od_no
+        LEFT JOIN yb_order_workbatch t3
+        ON t3.id = t1.wb_id
+        LEFT JOIN yb_workbatch_shift t4
+        ON t1.ws_id = t4.id
+        LEFT JOIN yb_machine_mainfo t5
+        ON t5.id = t1.ma_id ) t10
+        JOIN
+        (SELECT t6.id AS logId,t6.db_id,t6.status FROM yb_actset_checklog t6
+        LEFT JOIN yb_actset_ckflow t7
+        ON t6.aw_id = t7.id
+        LEFT JOIN yb_actset_ckset t8
+        ON t7.as_id = t8.id
+        WHERE t7.aw_type =#{workbatchOrdlink.awType}
+        AND t8.as_type =#{workbatchOrdlink.asType}) t9
+        ON t10.id = t9.db_id
+        <where>
+            <if test="workbatchOrdlink.odName!=null">AND t10.odName LIKE CONCAT('%',#{workbatchOrdlink.odName},'%')</if>
+            <if test="workbatchOrdlink.odNo!=null">AND t10.odNo LIKE CONCAT('%',#{workbatchOrdlink.odNo},'%')</if>
+            <if test="workbatchOrdlink.status!=null">AND t9.status = #{workbatchOrdlink.status}</if>
+        </where>
+        ORDER BY t10.id DESC
+    </select>
+
+    <select id="planProduceDetail" resultType="com.yb.workbatch.vo.PlanProduceModelVO">
+        SELECT t10.*,t9.`status` ,t9.logId FROM
+        (SELECT
+        t1.id,
+        t1.create_at,
+        t1.part_name AS partName,
+        t1.od_no AS odNo,
+        t2.od_name AS odName,
+        t3.batch_no AS batchNo,
+        t1.pr_name AS prName,
+        t1.start_time AS startTime,
+        t1.close_time AS closeTime,
+        t1.update_at,
+        t1.plan_number AS planNumber,
+        t1.extra_num AS extraNum,
+        t4.ck_name AS ckName,
+        t5.name AS maName
+        FROM yb_workbatch_ordlink t1
+        LEFT JOIN yb_order_ordinfo t2
+        ON t2.od_no = t1.od_no
+        LEFT JOIN yb_order_workbatch t3
+        ON t3.id = t1.wb_id
+        LEFT JOIN yb_workbatch_shift t4
+        ON t1.ws_id = t4.id
+        LEFT JOIN yb_machine_mainfo t5
+        ON t5.id = t1.ma_id
+        WHERE t1.id = #{workbatchOrdlink.id}) t10
+        JOIN
+        (SELECT t6.id AS logId,t6.db_id,t6.status FROM yb_actset_checklog t6
+        LEFT JOIN yb_actset_ckflow t7
+        ON t6.aw_id = t7.id
+        LEFT JOIN yb_actset_ckset t8
+        ON t7.as_id = t8.id
+        WHERE t7.aw_type =#{workbatchOrdlink.awType}
+        AND t8.as_type =#{workbatchOrdlink.asType}) t9
+        ON t10.id = t9.db_id
+    </select>
+
+    <select id="planProduceToActSetPage" resultType="com.yb.workbatch.vo.PlanProduceModelVO">
+        SELECT
+        t1.id,
+        t1.create_at,
+        t1.part_name AS partName,
+        t1.od_no AS odNo,
+        t2.od_name AS odName,
+        t3.batch_no AS batchNo,
+        t1.pr_name AS prName,
+        t1.start_time AS startTime,
+        t1.close_time AS closeTime,
+        t1.plan_number AS planNumber,
+        t1.extra_num AS extraNum,
+        t4.ck_name AS ckName,
+        t5.name AS maName
+        FROM yb_workbatch_ordlink t1
+        LEFT JOIN yb_order_ordinfo t2
+        ON t2.od_no = t1.od_no
+        LEFT JOIN yb_order_workbatch t3
+        ON t3.id = t1.wb_id
+        LEFT JOIN yb_workbatch_shift t4
+        ON t1.ws_id = t4.id
+        LEFT JOIN yb_machine_mainfo t5
+        ON t5.id = t1.ma_id
+        WHERE t1.`status` =#{workbatchOrdlink.status}
+        <if test="workbatchOrdlink.odName!=null">AND t2.od_name LIKE CONCAT('%',#{workbatchOrdlink.odName},'%')</if>
+        <if test="workbatchOrdlink.odNo!=null">AND t1.od_no LIKE CONCAT('%',#{workbatchOrdlink.odNo},'%')</if>
+        ORDER BY t1.create_at DESC
+    </select>
+    <select id="getOdIdByWbId" resultType="java.lang.Integer">
+        SELECT a.id
+        FROM yb_order_ordinfo a
+                 LEFT JOIN yb_order_workbatch b
+                           ON a.id = b.od_id
+        WHERE b.id = #{wbId}
+    </select>
+
+    <select id="getWorkBatchInfoBySdId" resultType="com.yb.workbatch.vo.WorkbatchOrdlinkVO">
+        SELECT *
+        FROM yb_workbatch_ordlink yor
+                 LEFT JOIN yb_order_workbatch yow ON yor.wb_id = yow.id
+                 LEFT JOIN yb_order_ordinfo yoo ON yow.od_id = yoo.id
+                 LEFT JOIN yb_prod_pdinfo ypp ON yoo.pd_id = ypp.id
+        WHERE yor.id = #{sdId}
+    </select>
+
+    <select id="workbatchOrdlinkoeeExcel" resultType="com.yb.workbatch.vo.WorkbatchOrdlinkVO">
+        SELECT a.*,b.meal_stay,d.dp_name,e.`name` AS machineName
+        FROM yb_workbatch_ordlink a
+        LEFT JOIN yb_workbatch_shift c ON c.id=a.ws_id
+        LEFT JOIN v_machshift b ON b.ws_id=c.ws_id
+        LEFT JOIN yb_base_deptinfo d ON d.id=a.dp_id
+        LEFT JOIN yb_machine_mainfo e ON e.id = a.ma_id
+        <where>
+            <if test="workbatchOrdlinkVO.dpName != null">
+                AND d.dp_name LIKE concat('%',#{workbatchOrdlinkVO.dpName},'%')
+            </if>
+            <if test="workbatchOrdlinkVO.prName != null">
+                AND a.pr_name LIKE concat('%',#{workbatchOrdlinkVO.prName},'%')
+            </if>
+            <if test="workbatchOrdlinkVO.machineName != null">
+                AND e.`name` LIKE concat('%',#{workbatchOrdlinkVO.machineName},'%')
+            </if>
+        </where>
+    </select>
+
+    <select id="getDeptMachineAll" resultType="com.yb.workbatch.vo.WorkbatchOrdlinkVO">
+        SELECT a.*, b.batch_no
+        FROM yb_workbatch_ordlink a
+        LEFT JOIN yb_order_workbatch b ON a.wb_id = b.id
+        LEFT JOIN yb_workbatch_shift c ON c.id = a.ws_id
+        WHERE a.`status` IN ('0','6','7')
+        AND a.start_time LIKE CONCAt(#{startTime}, '%')
+        AND a.dp_id = #{dpId}
+        AND c.ck_name = #{ckName}
+        ORDER BY a.sd_sort DESC
+    </select>
+
+
+    <select id="getMachineSdOrderList" resultType="com.yb.workbatch.entity.WorkbatchOrdlink">
+        SELECT DISTINCT c.*
+        FROM yb_workbatch_ordlink c
+        LEFT JOIN yb_process_machlink b on c.pr_id = b.pr_id
+        where b.ma_id = #{maId}
+        AND c.status = "1"
+        AND c.run_status = 0
+    </select>
+
+    <select id="getNoMachineSdOrderList" resultType="com.yb.workbatch.entity.WorkbatchOrdlink">
+        SELECT DISTINCT c.*
+        FROM yb_workbatch_ordlink c
+        LEFT JOIN yb_process_machlink b on c.pr_id = b.pr_id
+        where c.ma_id =#{maId}
+        and c.ma_id is null
+        AND c.status = 1
+        and c.run_status = 0
+    </select>
+
+    <select id="findWorkbatchOrdlink" resultType="com.yb.workbatch.vo.WorkbatchOrdlinkVO">
+        SELECT c.*, NULL AS prRoute, a.id as wfId,a.sd_date AS wsSdDate,d.ma_type, c.part_name as
+        ptName,a.is_auto,IFNULL(a.wfsort_islock,0) AS wfsortIslock,a.ws_id,d.name AS machineName
+        FROM yb_workbatch_shift a
+        LEFT JOIN yb_workbatch_ordlink c ON c.id = a.sd_id
+        LEFT JOIN yb_process_machlink b on c.pr_id = b.pr_id and b.ma_id=a.ma_id
+        LEFT JOIN yb_machine_mainfo d ON d.id = a.ma_id
+        where a.ma_id = #{waitOrder.maId}
+        <if test="waitOrder.sdDate != null and waitOrder.sdDate != ''">
+            AND a.sd_date=#{waitOrder.sdDate}
+        </if>
+        <if test="waitOrder.pdName != null and waitOrder.pdName != ''">
+            AND c.pd_name LIKE CONCAt('%',#{waitOrder.pdName},'%')
+        </if>
+        <if test="waitOrder.odNo != null and waitOrder.odNo != ''">
+            AND c.od_no LIKE CONCAt('%',#{waitOrder.odNo},'%')
+        </if>
+        <if test="waitOrder.wbNo != null and waitOrder.wbNo != ''">
+            AND c.wb_no LIKE CONCAt('%',#{waitOrder.wbNo},'%')
+        </if>
+<!--        <if test="waitOrder.wsId != null and waitOrder.wsId != ''">-->
+<!--            AND a.ws_id = #{waitOrder.wsId}-->
+<!--        </if>-->
+        <if test="startDate != null and startDate != '' and endDate != null and endDate != ''">
+            AND a.sd_date &gt;= #{startDate} AND a.sd_date &lt;= #{endDate}
+        </if>
+        AND a.status = 1
+        AND (a.shift_status=0 OR a.shift_status = 4)
+        order by a.ws_id,SUBSTRING_INDEX(a.sd_sort, '-', -1);
+    </select>
+
+    <select id="findWorkbatchOrdlinkByMatype" resultType="com.yb.workbatch.vo.WorkbatchOrdlinkVO">
+        SELECT distinct c.*, NULL AS prRoute, a.id as wfId,a.sd_date AS wsSdDate,d.ma_type, c.part_name as
+        ptName,a.is_auto,IFNULL(a.wfsort_islock,0) AS wfsortIslock
+        FROM yb_workbatch_ordlink c
+        LEFT JOIN yb_process_machlink b on c.pr_id = b.pr_id
+        LEFT JOIN yb_workbatch_shift a ON a.sd_id=c.id
+        LEFT JOIN yb_machine_mainfo d ON d.id = c.ma_id
+        where d.ma_type = #{waitOrder.maType}
+        <if test="waitOrder.sdDate != null and waitOrder.sdDate != ''">
+            AND a.sd_date=#{waitOrder.sdDate}
+        </if>
+        <if test="waitOrder.pdName != null and waitOrder.pdName != ''">
+            AND c.pd_name LIKE CONCAt('%',#{waitOrder.pdName},'%')
+        </if>
+        <if test="waitOrder.odNo != null and waitOrder.odNo != ''">
+            AND c.od_no LIKE CONCAt('%',#{waitOrder.odNo},'%')
+        </if>
+        <if test="waitOrder.wbNo != null and waitOrder.wbNo != ''">
+            AND c.wb_no LIKE CONCAt('%',#{waitOrder.wbNo},'%')
+        </if>
+        <if test="waitOrder.wsId != null and waitOrder.wsId != ''">
+            AND a.ws_id = #{waitOrder.wsId}
+        </if>
+        <if test="startDate != null and startDate != '' and endDate != null and endDate != ''">
+            AND a.sd_date &gt;= #{startDate} AND a.sd_date &lt;= #{endDate}
+        </if>
+        AND (a.status = 1 or a.status = 2)
+        AND (a.shift_status=0 OR a.shift_status = 1 OR a.shift_status = 3 OR a.shift_status = 4)
+        order by SUBSTRING_INDEX(a.sd_sort, '-', -1);
+    </select>
+
+    <select id="findWorkbatchOrdlinkNew" resultType="com.yb.workbatch.vo.WorkbatchShiftListVO">
+        SELECT c.id as sd_Id ,a.Id as wf_Id,c.pr_Id,a.ma_Id,c.wb_no,
+        f.pd_name,d.name as ma_name,c.cm_name,b.pr_name,c.complete_num,a.plan_num,a.is_auto,a.shift_status
+        FROM yb_workbatch_shift a
+        LEFT JOIN yb_workbatch_ordlink c ON c.id = a.sd_id
+        LEFT JOIN yb_process_workinfo b on c.pr_id = b.id
+        LEFT JOIN yb_machine_mainfo d ON d.id = a.ma_id
+        LEFT JOIN yb_prod_pdinfo f on f.id = c.pd_id
+        where
+        a.ma_id = #{waitOrder.maId}
+        <if test="waitOrder.sdDate != null and waitOrder.sdDate != ''">
+            AND a.sd_date=#{waitOrder.sdDate}
+        </if>
+        <if test="waitOrder.pdName != null and waitOrder.pdName != ''">
+            AND f.pd_name LIKE CONCAt('%',#{waitOrder.pdName},'%')
+        </if>
+        <if test="waitOrder.wbNo != null and waitOrder.wbNo != ''">
+            AND c.wb_no LIKE CONCAt('%',#{waitOrder.wbNo},'%')
+        </if>
+        <if test="waitOrder.wsId != null and waitOrder.wsId != ''">
+            AND a.ws_id = #{waitOrder.wsId}
+        </if>
+        <if test="startDate != null and startDate != '' and endDate != null and endDate != ''">
+            AND a.sd_date &gt;= #{startDate} AND a.sd_date &lt;= #{endDate}
+        </if>
+        AND a.status = 1
+        AND (a.shift_status=0 OR a.shift_status = 4 or a.shift_status=1 or a.shift_status =3 )
+        order by a.ws_id,SUBSTRING_INDEX(a.sd_sort, '-', -1);
+    </select>
+
+
+    <select id="getOrderListByPrids" resultType="com.yb.workbatch.vo.WorkbatchShiftListVO">
+        SELECT c.id as sd_Id ,a.Id as wf_Id,c.pr_Id,a.ma_Id,c.wb_no,
+        f.pd_name,d.name as ma_name,c.cm_name,b.pr_name,c.complete_num,a.plan_num,a.is_auto,a.shift_status
+        FROM yb_workbatch_shift a
+        LEFT JOIN yb_workbatch_ordlink c ON c.id = a.sd_id
+        LEFT JOIN yb_process_workinfo b on c.pr_id = b.id
+        LEFT JOIN yb_machine_mainfo d ON d.id = a.ma_id
+        LEFT JOIN yb_prod_pdinfo f on f.id = c.pd_id
+        <where>
+            <if test="prIds!= null and prIds != ''">
+                c.pr_id in
+                <foreach item="item" index="index" collection="prIds.split(',')" open="(" separator="," close=")">
+                    ${item}
+                </foreach>
+            </if>
+            <!--            <if test="waitOrder.sdDate != null and waitOrder.sdDate != ''">-->
+            <!--                AND a.sd_date=#{waitOrder.sdDate}-->
+            <!--            </if>-->
+            <!--            <if test="waitOrder.pdName != null and waitOrder.pdName != ''">-->
+            <!--                AND c.pd_name LIKE CONCAt('%',#{waitOrder.pdName},'%')-->
+            <!--            </if>-->
+            <!--            <if test="waitOrder.odNo != null and waitOrder.odNo != ''">-->
+            <!--                AND c.od_no LIKE CONCAt('%',#{waitOrder.odNo},'%')-->
+            <!--            </if>-->
+            <!--            <if test="waitOrder.wbNo != null and waitOrder.wbNo != ''">-->
+            <!--                AND c.wb_no LIKE CONCAt('%',#{waitOrder.wbNo},'%')-->
+            <!--            </if>-->
+            <!--            <if test="waitOrder.wsId != null and waitOrder.wsId != ''">-->
+            <!--                AND a.ws_id = #{waitOrder.wsId}-->
+            <!--            </if>-->
+            <if test="startDate != null and startDate != '' and endDate != null and endDate != ''">
+                AND a.sd_date &gt;= #{startDate} AND a.sd_date &lt;= #{endDate}
+            </if>
+            AND (a.status = 1 or a.status = 2)
+            AND (a.shift_status=0 OR a.shift_status = 1 OR a.shift_status = 3 OR a.shift_status = 4)
+        </where>
+        order by SUBSTRING_INDEX(a.sd_sort, '-', -1);
+    </select>
+
+
+    <select id="findWorkbatchOrdlinkCount" resultType="java.util.Map">
+        select count(*) as cnum,sd_date from yb_workbatch_shift a
+        LEFT JOIN yb_machine_mainfo b on b.id=a.ma_id
+        <where>
+            <if test="waitOrder.maId != null">
+                AND a.ma_id= #{waitOrder.maId} AND (a.shift_status = 0 OR a.shift_status = 4)
+            </if>
+            <if test="waitOrder.maType != null">
+                AND b.ma_type= #{waitOrder.maType} AND (a.shift_status =0 OR a.shift_status =1 OR a.shift_status =3 OR
+                a.shift_status=4)
+            </if>
+            <if test="startDate != null and startDate != '' and endDate != null and endDate != ''">
+                AND a.sd_date &gt;= #{startDate} AND a.sd_date &lt;= #{endDate}
+            </if>
+        </where>
+        GROUP BY sd_date order by sd_date
+    </select>
+
+    <select id="findNotHaveMaidWorkbatchOrdlink" resultType="com.yb.workbatch.entity.WorkbatchOrdlink">
+        SELECT DISTINCT c.*
+        FROM yb_workbatch_ordlink c
+        LEFT JOIN yb_process_machlink b on c.pr_id = b.pr_id
+        LEFT JOIN yb_workbatch_shift a ON a.sd_id=c.id
+        where b.ma_id in (SELECT distinct ymm.id
+        from yb_machine_mainfo ymm
+        where ymm.dp_id = #{waitOrder.dpId})
+        and b.pr_id in (SELECT g.pr_id from yb_process_machlink g where g.ma_id = #{waitOrder.maId} )
+        -- and c.ma_id is null
+        <if test="waitOrder.pdName != null">
+            AND c.pd_name LIKE CONCAt('%',#{waitOrder.pdName},'%')
+        </if>
+        <if test="waitOrder.sdDate != null">
+            AND a.sd_date=#{waitOrder.sdDate}
+        </if>
+        <if test="waitOrder.odNo != null">
+            AND c.od_no LIKE CONCAt('%',#{waitOrder.odNo},'%')
+        </if>
+        <if test="startDate != null and startDate != '' and endDate != null and endDate != ''">
+            AND a.sd_date &gt;= #{startDate} AND a.sd_date &lt;= #{endDate}
+        </if>
+        AND c.status = 1
+        and c.run_status = 0
+        and c.id not in
+        <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>;
+    </select>
+
+    <select id="getSortUP" resultType="com.yb.workbatch.entity.WorkbatchOrdlink">
+        SELECT * FROM yb_workbatch_ordlink WHERE sd_sort = (
+        SELECT MAX(sd_sort) FROM yb_workbatch_ordlink WHERE
+        sd_sort &lt; (SELECT sd_sort FROM yb_workbatch_ordlink WHERE id = #{id})
+        )
+    </select>
+    <select id="getSortDown" resultType="com.yb.workbatch.entity.WorkbatchOrdlink">
+        SELECT * FROM yb_workbatch_ordlink WHERE sd_sort = (
+        SELECT MIN(sd_sort) FROM yb_workbatch_ordlink WHERE
+        sd_sort &gt; (SELECT sd_sort FROM yb_workbatch_ordlink WHERE id =  #{id}))
+    </select>
+
+    <select id="getSdSort" resultType="java.lang.String">
+          SELECT
+            IFNULL(sd_sort,0) as sdSort
+            FROM
+                yb_workbatch_ordlink
+            WHERE
+                1 = 1
+            ORDER BY
+                sd_sort DESC
+                LIMIT 1
+
+</select>
+
+    <select id="selectPlanMainch" resultType="com.yb.workbatch.vo.PlanStateTime">
+        SELECT
+        a.ma_id,b.ws_id,b.pro_begin_time,b.pro_finish_time,b.mould_stay,c.meal_onetime,c.meal_secondtime,c.meal_thirdtime,
+        b.sd_date,b.id,d.name AS maName
+        FROM yb_workbatch_ordlink a
+        JOIN yb_workbatch_shift b ON b.sd_id=a.id
+        JOIN v_machshift c ON c.id=b.ws_id
+        JOIN yb_machine_mainfo d ON d.id=b.ma_id
+        WHERE b.sd_date &gt;= #{startTime} AND b.sd_date &lt;= #{endTime}
+        <if test="wsId != null and wsId != 0">
+            AND b.ws_id=#{wsId}
+        </if>
+        <if test="maType != null">
+            AND d.ma_type=#{maType}
+        </if>
+        <if test="maIdSet != null and maIdSet.size()>0">
+            AND b.ma_id IN
+            <foreach collection="maIdSet" item="maId" open="(" close=")" separator=",">
+                #{maId}
+            </foreach>
+        </if>
+        GROUP BY a.ma_id,b.ws_id,b.sd_id,b.id
+    </select>
+    <select id="getReceivedOrder" resultType="com.yb.workbatch.vo.WorkbatchOrdlinkVO">
+          select distinct `c`.`id` AS `id`,`c`.`wb_id` AS `wbId`,`c`.`pt_id` AS `ptId`,`c`.`pt_no` AS `ptNo`,`c`.`part_name` AS `partName`,`c`.`erp_wb_id` AS `erpWbId`,`c`.`ma_id` AS `maId`,`c`.`od_no` AS `odNo`,`c`.`pr_id` AS `prId`,`c`.`pr_name` AS `prName`,`c`.`pr_des` AS `prDes`,`c`.`sort` AS `sort`,`c`.`pd_code` AS `pdCode`,`c`.`pd_name` AS `pdName`,`c`.`pd_imageurl` AS `pdImageurl`,`c`.`pd_type` AS `pdType`,`c`.`plan_num` AS `planNum`,`c`.`plan_number` AS `planNumber`,`c`.`complete_num` AS `completeNum`,`c`.`incomplete_num` AS `incompleteNum`,`c`.`extra_num` AS `extraNum`,`c`.`end_time` AS `endTime`,`c`.`actually_starttime` AS `actuallyStarttime`,`c`.`close_time` AS `closeTime`,`c`.`start_time` AS `startTime`,`c`.`plan_time` AS `planTime`,`c`.`waste` AS `waste`,`c`.`nbwaste` AS `nbwaste`,`c`.`remarks` AS `remarks`,yws.shift_status AS `runStatus`,`c`.`update_at` AS `updateAt`,`yws`.`status` AS `status`,`c`.`sd_date` AS `sdDate`,`c`.`ws_id` AS `wsId`,`c`.`duty_num` AS `dutyNum`,`c`.`create_at` AS `createAt`,`c`.`sd_sort` AS `sdSort`,`c`.`dp_id` AS `dpId`,`c`.`us_id` AS `usId`,`c`.`cm_name` AS `cmName`,`c`.`erp_id` AS `erpId`,`c`.`final_time` AS `finalTime`,`c`.`material_name` AS `materialName`,`c`.`up_porcess` AS `upPorcess`,`c`.`down_porcess` AS `downPorcess`,`c`.`ctp_num` AS `ctpNum`,`c`.`second_remark` AS `secondRemark`,`c`.`ingredient_name` AS `ingredientName`,`c`.`ingredient_num` AS `ingredientNum`,`c`.`ingredient_time` AS `ingredientTime`,`c`.`upprocess_sort` AS `upprocessSort`,`c`.`pt_size` AS `ptSize`,`c`.`wb_no` AS `wbNo`,`c`.`preorder` AS `preorder`,`c`.`od_type` AS `odType` ,
+          e.id as infoId,' ' as prRoute, yws.id as wfId,ymm.ma_type AS maType,c.operate_size,c.pd_size, c.part_name as ptName
+          FROM yb_workbatch_ordlink c
+                   LEFT JOIN yb_execute_info e on e.sd_id = c.id
+				   LEFT JOIN yb_machine_mainfo ymm ON ymm.id=c.ma_id
+                   join yb_workbatch_shift yws on yws.sd_id = c.id
+          where b.ma_id in (SELECT y.id
+                          from yb_machine_mainfo ymm
+                                   LEFT JOIN yb_machine_mainfo y on y.dp_id = ymm.dp_id
+                          where ymm.id = #{maId})
+          and b.pr_id in (SELECT g.pr_id from yb_process_machlink g where g.ma_id = #{maId} )
+          and (yws.status = 1 OR yws.status = 2)
+          and (yws.shift_status =1)
+          and e.ma_id = #{maId}
+          and e.end_time is null
+          GROUP BY `c`.`id`
+    </select>
+    <select id="getReceivedOrderByMaInfo" resultType="com.yb.workbatch.vo.WorkbatchOrdlinkVO">
+        select distinct `c`.`id` AS `id`,`c`.`wb_id` AS `wbId`,`c`.`pt_id` AS `ptId`,`c`.`pt_no` AS `ptNo`,`c`.`part_name` AS `partName`,`c`.`erp_wb_id` AS `erpWbId`,`c`.`ma_id` AS `maId`,`c`.`od_no` AS `odNo`,`c`.`pr_id` AS `prId`,`c`.`pr_name` AS `prName`,`c`.`pr_des` AS `prDes`,`c`.`sort` AS `sort`,`c`.`pd_code` AS `pdCode`,`c`.`pd_name` AS `pdName`,`c`.`pd_imageurl` AS `pdImageurl`,`c`.`pd_type` AS `pdType`,`c`.`plan_num` AS `planNum`,`c`.`plan_number` AS `planNumber`,`c`.`complete_num` AS `completeNum`,`c`.`incomplete_num` AS `incompleteNum`,`c`.`extra_num` AS `extraNum`,`c`.`end_time` AS `endTime`,`c`.`actually_starttime` AS `actuallyStarttime`,`c`.`close_time` AS `closeTime`,`c`.`start_time` AS `startTime`,`c`.`plan_time` AS `planTime`,`c`.`waste` AS `waste`,`c`.`nbwaste` AS `nbwaste`,`c`.`remarks` AS `remarks`,yws.shift_status AS `runStatus`,`c`.`update_at` AS `updateAt`,`yws`.`status` AS `status`,`c`.`sd_date` AS `sdDate`,`c`.`ws_id` AS `wsId`,`c`.`duty_num` AS `dutyNum`,`c`.`create_at` AS `createAt`,`c`.`sd_sort` AS `sdSort`,`c`.`dp_id` AS `dpId`,`c`.`us_id` AS `usId`,`c`.`cm_name` AS `cmName`,`c`.`erp_id` AS `erpId`,`c`.`final_time` AS `finalTime`,`c`.`material_name` AS `materialName`,`c`.`up_porcess` AS `upPorcess`,`c`.`down_porcess` AS `downPorcess`,`c`.`ctp_num` AS `ctpNum`,`c`.`second_remark` AS `secondRemark`,`c`.`ingredient_name` AS `ingredientName`,`c`.`ingredient_num` AS `ingredientNum`,`c`.`ingredient_time` AS `ingredientTime`,`c`.`upprocess_sort` AS `upprocessSort`,`c`.`pt_size` AS `ptSize`,`c`.`wb_no` AS `wbNo`,`c`.`preorder` AS `preorder`,`c`.`od_type` AS `odType` ,
+          e.id as infoId,' ' as prRoute, yws.id as wfId,c.operate_size,c.pd_size, c.part_name as ptName,d.ma_type
+          FROM yb_workbatch_ordlink c
+                   LEFT JOIN yb_process_machlink b on c.pr_id = b.pr_id
+                   LEFT JOIN yb_execute_info e on e.sd_id = c.id
+                   join yb_workbatch_shift yws on yws.sd_id = c.id
+                    LEFT JOIN yb_machine_mainfo d on d.id = yws.ma_id
+          where (yws.status = 1 OR yws.status = 2)
+          and (yws.shift_status =1)
+          and yws.ma_id = #{maId}
+          and e.end_time is null
+          GROUP BY `c`.`id`
+    </select>
+    <select id="getReceivedOrderBywfId" resultType="com.yb.workbatch.vo.WorkbatchOrdlinkVO">
+            select distinct `c`.`id` AS `id`,`c`.`wb_id` AS `wbId`,`c`.`pt_id` AS `ptId`,`c`.`pt_no` AS `ptNo`,`c`.`part_name` AS `partName`,
+        `c`.`erp_wb_id` AS `erpWbId`,`c`.`ma_id` AS `maId`,`c`.`od_no` AS `odNo`,`c`.`pr_id` AS `prId`,`c`.`pr_name` AS `prName`,
+        `c`.`pr_des` AS `prDes`,`c`.`sort` AS `sort`,`c`.`pd_code` AS `pdCode`,`c`.`pd_name` AS `pdName`,`c`.`pd_imageurl` AS `pdImageurl`,
+        `c`.`pd_type` AS `pdType`,`c`.`plan_num` AS `planNum`,`c`.`plan_number` AS `planNumber`,`c`.`complete_num` AS `completeNum`,
+        `c`.`incomplete_num` AS `incompleteNum`,`c`.`extra_num` AS `extraNum`,`c`.`end_time` AS `endTime`,`c`.`actually_starttime` AS `actuallyStarttime`,
+        `c`.`close_time` AS `closeTime`,`c`.`start_time` AS `startTime`,`c`.`plan_time` AS `planTime`,`c`.`waste` AS `waste`,`c`.`nbwaste` AS `nbwaste`,
+        `c`.`remarks` AS `remarks`,yws.shift_status AS `runStatus`,`c`.`update_at` AS `updateAt`,`yws`.`status` AS `status`,`c`.`sd_date` AS `sdDate`,
+        `c`.`ws_id` AS `wsId`,`c`.`duty_num` AS `dutyNum`,`c`.`create_at` AS `createAt`,`c`.`sd_sort` AS `sdSort`,`c`.`dp_id` AS `dpId`,`c`.`us_id` AS `usId`,
+        `c`.`cm_name` AS `cmName`,`c`.`erp_id` AS `erpId`,`c`.`final_time` AS `finalTime`,`c`.`material_name` AS `materialName`,`c`.`up_porcess` AS `upPorcess`,
+        `c`.`down_porcess` AS `downPorcess`,`c`.`ctp_num` AS `ctpNum`,`c`.`second_remark` AS `secondRemark`,`c`.`ingredient_name` AS `ingredientName`,`c`.`ingredient_num` AS `ingredientNum`,
+        `c`.`ingredient_time` AS `ingredientTime`,`c`.`upprocess_sort` AS `upprocessSort`,`c`.`pt_size` AS `ptSize`,`c`.`wb_no` AS `wbNo`,`c`.`preorder` AS `preorder`,
+        `c`.`od_type` AS `odType` ,e.id as infoId,' ' as prRoute, yws.id as wfId,c.operate_size,c.pd_size, c.part_name as ptName,d.ma_type, c.complete_num as sdCoutNum
+                  FROM yb_workbatch_shift yws
+        LEFT JOIN yb_execute_info e on e.wf_id = yws.id
+        LEFT JOIN yb_workbatch_ordlink c on c.id = yws.sd_id
+        LEFT JOIN yb_machine_mainfo d on d.id = yws.ma_id
+        where yws.id= #{wfId} GROUP BY `c`.`id`
+    </select>
+    <select id="getwaitWorkBatchOrd" resultType="com.yb.workbatch.vo.WorkbatchOrdlinkVO">
+        SELECT DISTINCT a.*, b.id, b.wk_id, b.before_ptid, b.before_ptname, b.before_ptno,
+        b.mould_num, b.difficult_num, b.plan_time,
+        b.erp_speed, b.produce_pre_time, b.create_at, b.update_at, c.* ,
+        a.plan_num AS allPlanNum,e.status as wf_status,
+        CASE
+        WHEN e.plan_num IS null THEN a.plan_num
+        ELSE e.plan_num END AS planNum,
+        CASE
+        WHEN e.speed IS null THEN b.speed
+        ELSE e.speed END AS speed,
+        CASE
+        WHEN e.mould_stay IS null THEN b.mould_stay
+        ELSE e.mould_stay END AS mouldStay,
+        CASE
+        WHEN e.plan_total_time IS null THEN b.plan_total_time
+        ELSE e.plan_total_time END AS planTotalTime,
+        CASE
+        WHEN e.sd_date IS null THEN a.sd_date
+        ELSE e.sd_date END AS sdDate,
+        (a.plan_num-(select ifnull(sum(yws.plan_num),0) from yb_workbatch_shift yws where yws.sd_id = a.id and
+        e.shift_status !=2 and yws.sd_date != #{sdDate})-a.complete_num)as sumPlanNum
+        ,e.id as wfId , a.id as sdId, e.waste_num as wasteNum,
+        e.shift_status as shiftStatus,
+        e.finish_num as finishNum,
+        (select sum(h.plan_num) from yb_workbatch_shift h where h.sd_id = a.id) as shiftAllNum,
+        e.pro_begin_time as proBeginTime, e.pro_finish_time as proFinishTime,
+        ymm.name as machineName,
+        e.wfsort_islock as wfsortIslock,
+        e.sd_sort as sdSort
+        FROM yb_workbatch_shift e
+        join yb_machine_mainfo ymm on e.ma_id = ymm.id
+        JOIN yb_workbatch_ordlink a ON a.id = e.sd_id
+        LEFT JOIN yb_workbatch_ordoee b ON a.id = b.wk_id
+        LEFT JOIN yb_workbatch_expcut c ON a.id = c.sd_id
+        LEFT JOIN yb_workbatch_expprint d ON a.id = d.sd_id
+        where 1=1
+        <if test="type != null">
+            AND a.status IN ('0', '1', '2', '3', '4', '7', '9')
+        </if>
+        <if test="maIdList != null and maIdList.size() != 0">
+            AND e.ma_id IN
+            <foreach collection="maIdList" item="maId" open="(" close=")" separator=",">
+                #{maId}
+            </foreach>
+        </if>
+        <if test="maId != null">
+            AND e.ma_id = #{maId}
+        </if>
+        <if test="sdDateStartDate != null and sdDateStartDate != '' and sdDateEndDate != null and sdDateEndDate != ''">
+            AND e.sd_date &lt;= #{sdDateEndDate} AND e.sd_date &gt;= #{sdDateStartDate}
+        </if>
+        <if test="sdDateStartDate != null and sdDateStartDate != '' and (sdDateEndDate == null or sdDateEndDate == '')">
+            AND IF(e.sd_date is null ,a.sd_date = #{sdDateStartDate}, e.sd_date = #{sdDateStartDate})
+        </if>
+        <if test="sdDate != null">
+            AND IF(e.sd_date is null ,a.sd_date = #{sdDate}, e.sd_date = #{sdDate})
+        </if>
+        <if test="wsIdList != null and wsIdList.size() != 0">
+            AND e.ws_id IN
+            <foreach collection="wsIdList" item="wsId" separator="," open="(" close=")">
+                #{wsId}
+            </foreach>
+        </if>
+        <if test="wsId != null">
+            AND e.ws_id = #{wsId}
+        </if>
+        <if test="wbNo != null and wbNo !=''">
+            AND a.wb_no LIKE concat('%', #{wbNo}, '%')
+        </if>
+        order by e.sd_sort asc
+    </select>
+
+
+    <select id="getyetWorkBatchOrd" resultType="com.yb.workbatch.vo.WorkbatchOrdlinkVO">
+        SELECT DISTINCT a.*,
+        b.`wk_id` AS `wk_id`,
+        b.`before_ptid` AS `before_ptid`,
+        b.`before_ptname` AS `before_ptname`,
+        b.`before_ptno` AS `before_ptno`,
+        b.`mould_stay` AS `mould_stay`,
+        b.`mould_num` AS `mould_num`,
+        b.`difficult_num` AS `difficult_num`,
+        b.`produce_pre_time` AS `produce_pre_time`,
+        b.`erp_speed` AS `erp_speed`, c.sd_id ,c.cut_no,
+        a.plan_num AS allPlanNum,
+        CASE
+        WHEN e.plan_num IS null THEN a.plan_num
+        ELSE e.plan_num END AS planNum,
+        CASE
+        WHEN e.speed IS null THEN ifNull(b.speed,0)
+        ELSE e.speed END AS speed,
+        CASE
+        WHEN e.mould_stay IS null THEN b.mould_stay
+        ELSE e.mould_stay END AS mouldStay,
+        CASE
+        WHEN e.plan_total_time IS null THEN b.plan_total_time
+        ELSE e.plan_total_time END AS planTotalTime,
+        CASE
+        WHEN e.sd_date IS null THEN a.sd_date
+        ELSE e.sd_date END AS sdDate,
+        (select ifnull(sum(yws.plan_num),0)from yb_workbatch_shift yws where yws.sd_id = a.id and e.shift_status !=2 )as
+        sumPlanNumber,
+        (select count(1) from yb_workbatch_shift y where a.id = y.sd_id) as shiftNum,
+        ymm.name as machineName
+        FROM yb_workbatch_ordlink a
+        join yb_machine_mainfo ymm on a.ma_id = ymm.id
+        LEFT JOIN yb_workbatch_ordoee b ON a.id = b.wk_id
+        LEFT JOIN yb_workbatch_expcut c ON a.id = c.sd_id
+        LEFT JOIN yb_workbatch_expprint d ON a.id = d.sd_id
+        LEFT JOIN yb_workbatch_shift e ON a.id = e.sd_id
+        where 1=1
+        <if test="parm.type != null">
+            AND a.status IN ('-1', '0', '6', '9')
+        </if>
+        <if test="parm.maIdList != null and parm.maIdList.size() != 0">
+            AND a.ma_id IN
+            <foreach collection="parm.maIdList" item="maId" open="(" close=")" separator=",">
+                #{maId}
+            </foreach>
+        </if>
+        <if test="parm.maId != null and parm.maId != ''">
+            AND a.ma_id = #{parm.maId}
+        </if>
+        <if test="parm.partName != null and parm.partName != ''">
+            AND a.part_name LIKE concat('%', #{parm.partName}, '%')
+        </if>
+        <if test="parm.wbNo != null and parm.wbNo != ''">
+            AND a.wb_no LIKE concat('%', #{parm.wbNo}, '%')
+        </if>
+        <if test=" parm.cmName != null and parm.cmName != ''">
+            AND a.cm_name LIKE concat('%', #{parm.cmName}, '%')
+        </if>
+        <if test="parm.pdName != null and parm.pdName != ''">
+            AND a.pd_name LIKE concat('%', #{parm.pdName}, '%')
+        </if>
+        <if test="parm.prName != null and parm.prName != ''">
+            AND a.pr_name LIKE concat('%', #{parm.prName}, '%')
+        </if>
+        <if test="parm.upPorcess != null and parm.upPorcess != ''">
+            AND a.up_porcess LIKE concat('%', #{parm.upPorcess}, '%')
+        </if>
+        <if test="parm.sdDate != null">
+            AND IF(e.sd_date is null ,a.sd_date = #{parm.sdDate}, e.sd_date = #{parm.sdDate})
+        </if>
+        <if test="parm.sdDate != null">
+            AND IF(e.sd_date is null ,a.sd_date = #{parm.sdDate}, e.sd_date = #{parm.sdDate})
+        </if>
+        <if test="prIds != null and prIds.size > 0">
+            AND pr_id IN
+            <foreach collection="prIds" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        group by a.id
+        <if test="parm.orderBy != null and parm.orderBy != '' ">
+            ${parm.orderBy }
+        </if>
+        <if test="parm.orderBy == null and parm.orderBy == ''">
+            order by a.create_at asc
+        </if>
+    </select>
+
+    <select id="findByMaId" resultMap="workbatchOrdlinkResultMap">
+        select * from yb_workbatch_ordlink
+        where ma_id = #{maId}
+        and status in(1, 2, 6)
+        and run_status in(0, 1)
+        order by start_time asc
+    </select>
+
+    <select id="findByWsIds" resultMap="workbatchOrdlinkResultMap">
+    select * from yb_workbatch_ordlink
+    where ws_id in #{wsIds}
+    order by sd_sort asc
+    </select>
+    <select id="getOrdLinkBysdate" parameterType="com.yb.workbatch.entity.WorkbatchOrdlink"
+            resultType="com.yb.workbatch.entity.WorkbatchOrdlink">
+        select * from yb_workbatch_ordlink
+    where ws_id = #{wsId} and ma_id = #{maId} and sd_date = #{sdDate}
+    order by 9999999 asc
+    </select>
+    <select id="getMachineBytargetDay" resultType="java.lang.Integer">
+        select a.ma_id from yb_workbatch_ordlink a
+        LEFT JOIN yb_workbatch_shift b on b.sd_id = a.id
+        where b.sd_date=#{targetDay} and b.ws_id=#{wsId} group by a.ma_id
+    </select>
+    <select id="getMachineBySaDate" resultType="java.lang.Integer">
+        select a.ma_id from yb_workbatch_ordlink a
+        LEFT JOIN yb_workbatch_shift b on b.sd_id = a.id
+        where b.sd_date=#{targetDay} group by a.ma_id
+    </select>
+
+    <select id="selectListBytargetDay" resultType="com.yb.workbatch.entity.WorkbatchOrdlink">
+        select a.* from yb_workbatch_ordlink a
+        LEFT JOIN yb_workbatch_shift b on b.sd_id = a.id
+        where a.sd_date=#{targetDay} and b.ws_id=#{wsId} and a.ma_id = #{maId} order by sd_sort,sort
+    </select>
+
+    <select id="getDayList" resultType="com.yb.workbatch.entity.WorkbatchOrdlink">
+        SELECT *
+        FROM yb_workbatch_ordlink
+        LEFT JOIN yb_process_machlink b on c.pr_id = b.pr_id
+        WHERE sd_date &gt;= #{startDate} AND sd_date &lt;= #{endDate} AND ma_id=#{maId}
+        and c.status = 1
+        and c.run_status = 0
+    </select>
+    <select id="findOrdLinkByWbNoAndPrIdAndDate" resultType="com.yb.statis.vo.MasterPlanExeVO">
+        SELECT
+        wo.pr_name as prName ,oee.plan_total_time as planTime, wo.final_time as predictDeliveryTime,
+        wo.end_time as realDeliveryTime, wo.actually_starttime as actuallyStarttime,a.total as rate
+        FROM
+        yb_workbatch_ordlink wo
+        left JOIN yb_supervise_schedule a on a.batch_id = wo.wb_id AND a.pr_id = wo.pr_id
+        LEFT JOIN yb_workbatch_ordoee oee on wo.id =oee.wk_id
+        where wo.wb_id= #{wbId}
+        <if test="prId != null ">
+            and wo.pr_id = #{prId}
+        </if>
+
+        ORDER BY wo.create_at asc
+    </select>
+
+    <select id="getListByshift" resultType="com.yb.workbatch.vo.WorkbatchOrdlinkShiftVO">
+    SELECT
+	`a`.`id` AS `id`,
+	`a`.`wb_id` AS `wb_id`,
+	`a`.`pt_id` AS `pt_id`,
+	`a`.`pt_no` AS `pt_no`,
+	`a`.`part_name` AS `part_name`,
+	`a`.`ma_id` AS `ma_id`,
+	`a`.`od_no` AS `od_no`,
+	`a`.`pr_id` AS `pr_id`,
+	`a`.`pr_name` AS `pr_name`,
+	`a`.`pr_des` AS `pr_des`,
+	`a`.`sort` AS `sort`,
+	`a`.`pd_code` AS `pd_code`,
+	`a`.`pd_name` AS `pd_name`,
+	`a`.`pd_type` AS `pd_type`,
+	`a`.`plan_number` AS `plan_number`,
+	`a`.`complete_num` AS `complete_num`,
+	`a`.`extra_num` AS `extra_num`,
+	`a`.`actually_starttime` AS `actually_starttime`,
+	`a`.`close_time` AS `close_time`,
+	`b`.`plan_total_time` AS `plan_time`,
+	`a`.`waste` AS `waste`,
+	`a`.`nbwaste` AS `nbwaste`,
+	`a`.`remarks` AS `remarks`,
+	`a`.`run_status` AS `run_status`,
+	`a`.`update_at` AS `update_at`,
+	`a`.`status` AS `status`,
+	`b`.`sd_sort` AS `sd_sort`,
+	`a`.`dp_id` AS `dp_id`,
+	`a`.`us_id` AS `us_id`,
+	`a`.`cm_name` AS `cm_name`,
+	`a`.`pt_size` AS `pt_size`,
+	`a`.`pr_route` AS `pr_route`,
+	`a`.`wb_no` AS `wb_no`,
+	`a`.`od_type` AS `od_type`,
+	`b`.`sd_id` AS `sd_id`,
+	IFNULL( b.sd_date, a.sd_date ) AS `sd_date`,
+	IFNULL( b.mould_stay, c.mould_stay ) AS `mould_stay`,
+	IFNULL( b.speed, c.speed ) AS `speed`,
+	IFNULL( b.plan_num, a.plan_num ) AS `plan_num`,
+	IFNULL( b.plan_total_time, c.plan_total_time ) AS `plan_total_time`,
+	`b`.`ws_id` AS `ws_id`,
+	`b`.`pro_begin_time` AS `pro_begin_time`,
+	`b`.`pro_finish_time` AS `pro_finish_time`,
+	`b`.`ck_name` AS `ck_name`,
+	`b`.`start_time` AS `start_time`,
+	`b`.`end_time` AS `end_time`,
+	`b`.`stay_time` AS `stay_time`,
+	`b`.`create_at` AS `create_at`
+    FROM `yb_workbatch_shift` `b`
+	LEFT JOIN `yb_workbatch_ordlink` `a` ON `b`.`sd_id` = `a`.`id`
+    LEFT JOIN `yb_workbatch_ordoee` c on c.wk_id=a.id
+	where b.sd_date = #{targetDay} and b.ws_id = #{wsId} and b.ma_id = #{maId}
+	order by b.sd_sort
+    </select>
+    <select id="getWorkShiftBymaIdwsId" resultType="com.yb.workbatch.entity.WorkbatchShift">
+    select b.*
+    FROM `yb_workbatch_shift` `b`
+	LEFT JOIN `yb_workbatch_ordlink` `a` ON `b`.`sd_id` = `a`.`id`
+        where b.sd_date = #{targetDay} and b.ws_id = #{wsId} and b.ma_id = #{maId}
+        order by b.sd_sort
+    </select>
+
+    <select id="getById" resultType="com.yb.workbatch.vo.WorkbatchOrdlinkShiftVO">
+    SELECT
+	`a`.`id` AS `id`,
+	`a`.`wb_id` AS `wb_id`,
+	`a`.`pt_id` AS `pt_id`,
+	`a`.`pt_no` AS `pt_no`,
+	`a`.`part_name` AS `part_name`,
+	`a`.`ma_id` AS `ma_id`,
+	`a`.`od_no` AS `od_no`,
+	`a`.`pr_id` AS `pr_id`,
+	`a`.`pr_name` AS `pr_name`,
+	`a`.`pr_des` AS `pr_des`,
+	`a`.`sort` AS `sort`,
+	`a`.`pd_code` AS `pd_code`,
+	`a`.`pd_name` AS `pd_name`,
+	`a`.`pd_type` AS `pd_type`,
+	`a`.`plan_number` AS `plan_number`,
+	`a`.`complete_num` AS `complete_num`,
+	`a`.`extra_num` AS `extra_num`,
+	`a`.`actually_starttime` AS `actually_starttime`,
+	`a`.`close_time` AS `close_time`,
+	`a`.`plan_time` AS `plan_time`,
+	`a`.`waste` AS `waste`,
+	`a`.`nbwaste` AS `nbwaste`,
+	`a`.`remarks` AS `remarks`,
+	`a`.`run_status` AS `run_status`,
+	`a`.`update_at` AS `update_at`,
+	`a`.`status` AS `status`,
+	`a`.`sd_sort` AS `sd_sort`,
+	`a`.`dp_id` AS `dp_id`,
+	`a`.`us_id` AS `us_id`,
+	`a`.`cm_name` AS `cm_name`,
+	`a`.`pt_size` AS `pt_size`,
+	`a`.`pr_route` AS `pr_route`,
+	`a`.`wb_no` AS `wb_no`,
+	`a`.`od_type` AS `od_type`,
+	`b`.`sd_id` AS `sd_id`,
+	IFNULL( b.sd_date, a.sd_date ) AS `sd_date`,
+	IFNULL( b.mould_stay, c.mould_stay ) AS `mould_stay`,
+	IFNULL( b.speed, c.speed ) AS `speed`,
+	IFNULL( b.plan_num, a.plan_num ) AS `plan_num`,
+	IFNULL( b.plan_total_time, c.plan_total_time ) AS `plan_total_time`,
+	`b`.`ws_id` AS `ws_id`,
+	`b`.`pro_begin_time` AS `pro_begin_time`,
+	`b`.`pro_finish_time` AS `pro_finish_time`,
+	`b`.`ck_name` AS `ck_name`,
+	`b`.`start_time` AS `start_time`,
+	`b`.`end_time` AS `end_time`,
+	`b`.`stay_time` AS `stay_time`,
+	`b`.`create_at` AS `create_at`
+    FROM `yb_workbatch_ordlink` `a`
+	LEFT JOIN `yb_workbatch_shift` `b` ON `b`.`sd_id` = `a`.`id`
+    LEFT JOIN `yb_workbatch_ordoee` c on c.wk_id=a.id
+	where  a.id = #{id}
+	GROUP BY a.id
+    </select>
+
+    <select id="getOrdById" resultType="com.yb.workbatch.entity.WorkbatchOrdlink">
+        select * from yb_workbatch_ordlink where id = #{id}
+    </select>
+
+    <select id="getWorkbatchOrd" resultType="com.yb.workbatch.vo.WorkbatchOrdlinkShiftVO">
+        SELECT
+        `a`.`id` AS `id`,
+        `a`.`wb_id` AS `wb_id`,
+        `a`.`pt_id` AS `pt_id`,
+        `a`.`pt_no` AS `pt_no`,
+        `a`.`part_name` AS `part_name`,
+        `a`.`ma_id` AS `ma_id`,
+        `a`.`od_no` AS `od_no`,
+        `a`.`pr_id` AS `pr_id`,
+        `a`.`pr_name` AS `pr_name`,
+        `a`.`pr_des` AS `pr_des`,
+        `a`.`sort` AS `sort`,
+        `a`.`pd_code` AS `pd_code`,
+        `a`.`pd_name` AS `pd_name`,
+        `a`.`pd_type` AS `pd_type`,
+        `a`.`plan_number` AS `plan_number`,
+        `a`.`complete_num` AS `complete_num`,
+        `a`.`extra_num` AS `extra_num`,
+        `a`.`actually_starttime` AS `actually_starttime`,
+        `a`.`close_time` AS `close_time`,
+        `a`.`plan_time` AS `plan_time`,
+        `a`.`waste` AS `waste`,
+        `a`.`nbwaste` AS `nbwaste`,
+        `a`.`remarks` AS `remarks`,
+        `a`.`run_status` AS `run_status`,
+        `a`.`update_at` AS `update_at`,
+        `a`.`status` AS `status`,
+        `a`.`sd_sort` AS `sd_sort`,
+        `a`.`dp_id` AS `dp_id`,
+        `a`.`us_id` AS `us_id`,
+        `a`.`cm_name` AS `cm_name`,
+        `a`.`pt_size` AS `pt_size`,
+        `a`.`pr_route` AS `pr_route`,
+        `a`.`wb_no` AS `wb_no`,
+        `a`.`od_type` AS `od_type`,
+        `b`.`sd_id` AS `sd_id`,
+        IFNULL( b.sd_date, a.sd_date ) AS `sd_date`,
+        IFNULL( b.mould_stay, c.mould_stay ) AS `mould_stay`,
+        IFNULL( b.speed, c.speed ) AS `speed`,
+        IFNULL( b.plan_num, a.plan_num ) AS `plan_num`,
+        IFNULL( b.plan_total_time, c.plan_total_time ) AS `plan_total_time`,
+        `b`.`ws_id` AS `ws_id`,
+        `b`.`pro_begin_time` AS `pro_begin_time`,
+        `b`.`pro_finish_time` AS `pro_finish_time`,
+        `b`.`ck_name` AS `ck_name`,
+        `b`.`start_time` AS `start_time`,
+        `b`.`end_time` AS `end_time`,
+        `b`.`stay_time` AS `stay_time`,
+        `b`.`create_at` AS `create_at`
+        FROM `yb_workbatch_ordlink` `a`
+        LEFT JOIN `yb_workbatch_shift` `b` ON `b`.`sd_id` = `a`.`id` AND b.sd_date = #{sdDate} AND b.ws_id = #{wsId} and b.ma_id = #{maId} and b.id = #{wfId}
+        LEFT JOIN `yb_workbatch_ordoee` c on c.wk_id=a.id
+        where  a.id = #{id}
+        </select>
+
+    <select id="getOrdlinkOeeBySdId" resultType="com.yb.workbatch.vo.WorkbatchOrdlinkOeeVO">
+    SELECT
+	`a`.`id` AS `id`,
+	`a`.`wb_id` AS `wb_id`,
+	`a`.`pt_id` AS `pt_id`,
+	`a`.`pt_no` AS `pt_no`,
+	`a`.`part_name` AS `part_name`,
+	`a`.`ma_id` AS `ma_id`,
+	`a`.`od_no` AS `od_no`,
+	`a`.`pr_id` AS `pr_id`,
+	`a`.`pr_name` AS `pr_name`,
+	`a`.`pr_des` AS `pr_des`,
+	`a`.`sort` AS `sort`,
+	`a`.`pd_code` AS `pd_code`,
+	`a`.`pd_name` AS `pd_name`,
+	`a`.`pd_type` AS `pd_type`,
+	`a`.`plan_number` AS `plan_number`,
+	`a`.`complete_num` AS `complete_num`,
+	`a`.`extra_num` AS `extra_num`,
+	`a`.`actually_starttime` AS `actually_starttime`,
+	`a`.`close_time` AS `close_time`,
+	`a`.`plan_time` AS `plan_time`,
+	`a`.`waste` AS `waste`,
+	`a`.`nbwaste` AS `nbwaste`,
+	`a`.`remarks` AS `remarks`,
+	`a`.`run_status` AS `run_status`,
+	`a`.`update_at` AS `update_at`,
+	`a`.`status` AS `status`,
+	`a`.`sd_sort` AS `sd_sort`,
+	`a`.`dp_id` AS `dp_id`,
+	`a`.`us_id` AS `us_id`,
+	`a`.`cm_name` AS `cm_name`,
+	`a`.`pt_size` AS `pt_size`,
+	`a`.`pr_route` AS `pr_route`,
+	`a`.`wb_no` AS `wb_no`,
+	`a`.`od_type` AS `od_type`,
+	`b`.`sd_id` AS `sd_id`,
+	IFNULL( b.sd_date, a.sd_date ) AS `sd_date`,
+	IFNULL( b.mould_stay, c.mould_stay ) AS `mould_stay`,
+	IFNULL( b.speed, c.speed ) AS `speed`,
+	IFNULL( b.plan_num, a.plan_num ) AS `plan_num`,
+	IFNULL( b.plan_total_time, c.plan_total_time ) AS `plan_total_time`,
+	`b`.`ws_id` AS `ws_id`,
+	`b`.`pro_begin_time` AS `pro_begin_time`,
+	`b`.`pro_finish_time` AS `pro_finish_time`,
+	`b`.`ck_name` AS `ck_name`,
+	`b`.`start_time` AS `start_time`,
+	`b`.`end_time` AS `end_time`,
+	`b`.`stay_time` AS `stay_time`,
+	`b`.`create_at` AS `create_at`,
+	c.speed ,c.mould_stay
+    FROM `yb_workbatch_ordlink` `a`
+	LEFT JOIN `yb_workbatch_shift` `b` ON `b`.`sd_id` = `a`.`id`
+    LEFT JOIN `yb_workbatch_ordoee` c on c.wk_id=a.id
+	where  a.id = #{id}
+    </select>
+
+    <select id="selectBatchIdsAndWfIds" parameterType="java.lang.Integer"
+            resultType="com.yb.workbatch.vo.WorkbatchOrdlinkShiftVO">
+        SELECT
+        `a`.`id` AS `id`,
+        `a`.`wb_id` AS `wb_id`,
+        `a`.`pt_id` AS `pt_id`,
+        `a`.`pt_no` AS `pt_no`,
+        `a`.`part_name` AS `part_name`,
+        `a`.`ma_id` AS `ma_id`,
+        `a`.`od_no` AS `od_no`,
+        `a`.`pr_id` AS `pr_id`,
+        `a`.`pr_name` AS `pr_name`,
+        `a`.`pr_des` AS `pr_des`,
+        `a`.`sort` AS `sort`,
+        `a`.`pd_code` AS `pd_code`,
+        `a`.`pd_name` AS `pd_name`,
+        `a`.`pd_type` AS `pd_type`,
+        `a`.`plan_number` AS `plan_number`,
+        `a`.`complete_num` AS `complete_num`,
+        `a`.`extra_num` AS `extra_num`,
+        `a`.`actually_starttime` AS `actually_starttime`,
+        `a`.`close_time` AS `close_time`,
+        `a`.`plan_time` AS `plan_time`,
+        `a`.`waste` AS `waste`,
+        `a`.`nbwaste` AS `nbwaste`,
+        `a`.`remarks` AS `remarks`,
+        `a`.`run_status` AS `run_status`,
+        `a`.`update_at` AS `update_at`,
+        `a`.`status` AS `status`,
+        `a`.`sd_sort` AS `sd_sort`,
+        `a`.`dp_id` AS `dp_id`,
+        `a`.`us_id` AS `us_id`,
+        `a`.`cm_name` AS `cm_name`,
+        `a`.`pt_size` AS `pt_size`,
+        `a`.`pr_route` AS `pr_route`,
+        `a`.`wb_no` AS `wb_no`,
+        `a`.`od_type` AS `od_type`,
+        `a`.`plan_num` AS `planNum`,
+        `b`.`id` AS `wf_id`,
+        `b`.`sd_id` AS `sd_id`,
+        IFNULL( b.sd_date, a.sd_date ) AS `sd_date`,
+        IFNULL( b.mould_stay, c.mould_stay ) AS `mould_stay`,
+        IFNULL( b.speed, c.speed ) AS `speed`,
+        IFNULL( b.plan_total_time, c.plan_total_time ) AS `plan_total_time`,
+        `b`.`ws_id` AS `ws_id`,
+        `b`.`pro_begin_time` AS `pro_begin_time`,
+        `b`.`pro_finish_time` AS `pro_finish_time`,
+        `b`.`ck_name` AS `ck_name`,
+        `b`.`start_time` AS `start_time`,
+        `b`.`end_time` AS `end_time`,
+        `b`.`stay_time` AS `stay_time`,
+        `b`.`create_at` AS `create_at`
+        FROM `yb_workbatch_ordlink` `a`
+        LEFT JOIN `yb_workbatch_shift` `b` ON `b`.`sd_id` = `a`.`id`
+        LEFT JOIN `yb_workbatch_ordoee` c on c.wk_id=a.id
+        where a.id in
+        <foreach collection="ids" item="id" index="index" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+        <if test="wfIds != null and wfIds.size() != 0">
+            and b.id in
+            <foreach collection="wfIds" item="id" index="index" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+        </if>
+    </select>
+    <select id="selectBatchIds" parameterType="java.lang.Integer"
+            resultType="com.yb.workbatch.vo.WorkbatchOrdlinkShiftVO">
+        SELECT
+        `a`.`id` AS `id`,
+        `a`.`wb_id` AS `wb_id`,
+        `a`.`pt_id` AS `pt_id`,
+        `a`.`pt_no` AS `pt_no`,
+        `a`.`part_name` AS `part_name`,
+        `a`.`ma_id` AS `ma_id`,
+        `a`.`od_no` AS `od_no`,
+        `a`.`pr_id` AS `pr_id`,
+        `a`.`pr_name` AS `pr_name`,
+        `a`.`pr_des` AS `pr_des`,
+        `a`.`sort` AS `sort`,
+        `a`.`pd_code` AS `pd_code`,
+        `a`.`pd_name` AS `pd_name`,
+        `a`.`pd_type` AS `pd_type`,
+        `a`.`plan_number` AS `plan_number`,
+        `a`.`complete_num` AS `complete_num`,
+        `a`.`extra_num` AS `extra_num`,
+        `a`.`actually_starttime` AS `actually_starttime`,
+        `a`.`close_time` AS `close_time`,
+        `a`.`plan_time` AS `plan_time`,
+        `a`.`waste` AS `waste`,
+        `a`.`nbwaste` AS `nbwaste`,
+        `a`.`remarks` AS `remarks`,
+        `a`.`run_status` AS `run_status`,
+        `a`.`update_at` AS `update_at`,
+        `a`.`status` AS `status`,
+        `a`.`sd_sort` AS `sd_sort`,
+        `a`.`dp_id` AS `dp_id`,
+        `a`.`us_id` AS `us_id`,
+        `a`.`cm_name` AS `cm_name`,
+        `a`.`pt_size` AS `pt_size`,
+        `a`.`pr_route` AS `pr_route`,
+        `a`.`wb_no` AS `wb_no`,
+        `a`.`od_type` AS `od_type`,
+        `a`.`plan_num` AS `planNum`,
+        `b`.`id` AS `wf_id`,
+        `b`.`sd_id` AS `sd_id`,
+        IFNULL( b.sd_date, a.sd_date ) AS `sd_date`,
+        IFNULL( b.mould_stay, c.mould_stay ) AS `mould_stay`,
+        IFNULL( b.speed, c.speed ) AS `speed`,
+        IFNULL( b.plan_total_time, c.plan_total_time ) AS `plan_total_time`,
+        `b`.`ws_id` AS `ws_id`,
+        `b`.`pro_begin_time` AS `pro_begin_time`,
+        `b`.`pro_finish_time` AS `pro_finish_time`,
+        `b`.`ck_name` AS `ck_name`,
+        `b`.`start_time` AS `start_time`,
+        `b`.`end_time` AS `end_time`,
+        `b`.`stay_time` AS `stay_time`,
+        `b`.`create_at` AS `create_at`
+        FROM `yb_workbatch_ordlink` `a`
+        LEFT JOIN `yb_workbatch_shift` `b` ON `b`.`sd_id` = `a`.`id`
+        LEFT JOIN `yb_workbatch_ordoee` c on c.wk_id=a.id
+        where a.id in
+        <foreach collection="ids" item="id" index="index" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="selectBatchWsIds" parameterType="java.lang.Integer"
+            resultType="com.yb.workbatch.vo.WorkbatchOrdlinkShiftVO">
+        SELECT
+        `a`.`id` AS `id`,
+        `a`.`wb_id` AS `wb_id`,
+        `a`.`pt_id` AS `pt_id`,
+        `a`.`pt_no` AS `pt_no`,
+        `a`.`part_name` AS `part_name`,
+        `a`.`ma_id` AS `ma_id`,
+        `a`.`od_no` AS `od_no`,
+        `a`.`pr_id` AS `pr_id`,
+        `a`.`pr_name` AS `pr_name`,
+        `a`.`pr_des` AS `pr_des`,
+        `a`.`sort` AS `sort`,
+        `a`.`pd_code` AS `pd_code`,
+        `a`.`pd_name` AS `pd_name`,
+        `a`.`pd_type` AS `pd_type`,
+        `a`.`plan_number` AS `plan_number`,
+        `a`.`complete_num` AS `complete_num`,
+        `a`.`extra_num` AS `extra_num`,
+        `a`.`actually_starttime` AS `actually_starttime`,
+        `a`.`close_time` AS `close_time`,
+        `a`.`plan_time` AS `plan_time`,
+        `a`.`waste` AS `waste`,
+        `a`.`nbwaste` AS `nbwaste`,
+        `a`.`remarks` AS `remarks`,
+        `a`.`run_status` AS `run_status`,
+        `a`.`update_at` AS `update_at`,
+        `a`.`status` AS `status`,
+        `a`.`sd_sort` AS `sd_sort`,
+        `a`.`dp_id` AS `dp_id`,
+        `a`.`us_id` AS `us_id`,
+        `a`.`cm_name` AS `cm_name`,
+        `a`.`pt_size` AS `pt_size`,
+        `a`.`pr_route` AS `pr_route`,
+        `a`.`wb_no` AS `wb_no`,
+        `a`.`od_type` AS `od_type`,
+        `b`.`sd_id` AS `sd_id`,
+        IFNULL( b.sd_date, a.sd_date ) AS `sd_date`,
+        IFNULL( b.mould_stay, c.mould_stay ) AS `mould_stay`,
+        IFNULL( b.speed, c.speed ) AS `speed`,
+        IFNULL( b.plan_num, a.plan_num ) AS `plan_num`,
+        IFNULL( b.plan_total_time, c.plan_total_time ) AS `plan_total_time`,
+        `b`.`ws_id` AS `ws_id`,
+        `b`.`pro_begin_time` AS `pro_begin_time`,
+        `b`.`pro_finish_time` AS `pro_finish_time`,
+        `b`.`ck_name` AS `ck_name`,
+        `b`.`start_time` AS `start_time`,
+        `b`.`end_time` AS `end_time`,
+        `b`.`stay_time` AS `stay_time`,
+        `b`.`create_at` AS `create_at`
+        FROM `yb_workbatch_ordlink` `a`
+        LEFT JOIN `yb_workbatch_shift` `b` ON `b`.`sd_id` = `a`.`id`
+        LEFT JOIN `yb_workbatch_ordoee` c on c.wk_id=a.id
+        where b.ws_id in
+        <foreach collection="wsIds" item="id" index="index" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="getMaIdList" resultType="com.yb.workbatch.entity.WorkbatchOrdlink">
+    SELECT *
+    FROM yb_workbatch_ordlink ywo
+    LEFT JOIN yb_workbatch_shift yws ON yws.sd_id=ywo.id
+    WHERE ywo.sd_date=#{sdDate} and yws.ws_id=#{wsId}
+     GROUP BY a.ma_id
+    </select>
+
+    <select id="getBySdDate" resultType="java.lang.Integer">
+        select a.ma_id from yb_workbatch_ordlink a
+        LEFT JOIN yb_workbatch_shift b on b.sd_id = a.id
+        where 1=1
+        <if test="sdDate != null and sdDate != ''">
+            and b.sd_date=#{sdDate}
+        </if>
+        <if test="wsId != null and wsId != 0">
+            and b.ws_id=#{wsId}
+        </if>
+        GROUP BY a.ma_id
+    </select>
+    <select id="workbathByDownOrd" resultType="com.yb.workbatch.entity.WorkbatchOrdlink">
+        select * from yb_workbatch_ordlink a
+        where a.pt_id = #{ordlink.ptId} and  wb_no = #{ordlink.wbNo}
+        and a.pr_id in (select pr_id from yb_prod_procelink b where b.pt_id = #{ordlink.ptId}
+        and sort_num >(select sort_num from yb_prod_procelink c where c.pr_id=#{ordlink.prId} and c.pt_id = #{ordlink.ptId}))
+    </select>
+    <update id="updateBysdsort" parameterType="com.yb.workbatch.entity.WorkbatchOrdlink">
+    update yb_workbatch_ordlink
+    set sd_sort = #{sdSort},update_at= now()
+    where id = #{id}
+    </update>
+
+    <select id="selectBySdDateMaIdWsId" resultType="com.yb.workbatch.vo.WorkbatchOrdlinkVO">
+        SELECT b.sd_sort, b.sd_date,a.*, c.`name` AS machineName, c.ma_type, d.dp_name, b.speed, b.mould_stay AS mouldStay, b.pro_begin_time AS sfStartTime, b.pro_finish_time AS sfEndTime, b.ck_name AS ckName, b.plan_num AS sdCoutNum, b.waste_num AS wasteNum
+        FROM yb_workbatch_shift b
+        LEFT JOIN yb_workbatch_ordlink a ON b.sd_id = a.id
+        LEFT JOIN yb_machine_mainfo c ON c.id = a.ma_id
+        LEFT JOIN yb_base_deptinfo d ON d.id = a.dp_id
+        WHERE b.ws_id=#{wsId} AND b.sd_date=#{sdDate} AND a.ma_id=#{maId}
+--         AND b.`shift_status`=0
+        order by b.sd_sort
+    </select>
+
+    <select id="getBySdDateAndSdIdAndWsId" resultType="com.yb.workbatch.entity.WorkbatchOrdlink">
+    SELECT
+	a.*
+    FROM `yb_workbatch_ordlink` `a`
+	where  a.id = #{sdId}
+    </select>
+
+    <select id="getSumPlanNum" resultType="java.lang.Integer">
+    select IFNULL(sum(yws.plan_num),0)
+    from yb_workbatch_shift yws
+    where yws.sd_id = #{sdId}
+    and yws.shift_status != 2
+    </select>
+
+    <select id="findByWbNoAndPtIdAndPrId" resultMap="workbatchOrdlinkResultMap">
+        select * from yb_workbatch_ordlink
+        where wb_no = #{wbNo}
+        and pr_id = #{prId}
+        and pt_id = #{ptId}
+    </select>
+
+    <update id="updateOrdStatusBySdsort">
+        update yb_workbatch_ordlink
+        set sd_sort = #{sdSort},sd_date = #{sdDate},status = #{status},update_at= now()
+        where id = #{id}
+    </update>
+
+    <update id="updateOrdStatus">
+        update yb_workbatch_ordlink
+        set status = #{status},ma_id = #{maId},update_at= now()
+        where id = #{id}
+    </update>
+    <update id="updateBindByMaId">
+        update yb_workbatch_ordlink
+        set status = #{status},ma_id = #{maId},update_at= now()
+        where id = #{id}
+    </update>
+    <update id="updatePlannumById">
+        update yb_workbatch_ordlink
+        set plan_num = #{planNum},update_at= now()
+        where id = #{id}
+    </update>
+    <update id="updateOtherInfo">
+        update yb_workbatch_ordlink
+        <set>
+            update_at = now(),
+            <if test="remarks != null">`remarks` = #{remarks},</if>
+            <if test="secondRemark != null">`second_remark` = #{secondRemark},</if>
+            <if test="ingredientTime != null">`ingredient_time` = #{ingredientTime},</if>
+            <if test="finalTime != null">`final_time` = #{finalTime},</if>
+        </set>
+        where id = #{id}
+    </update>
+    <update id="updateAcceptByUsId">
+        update yb_workbatch_ordlink
+        set run_status = #{runStatus},update_at= now()
+        where id = #{id}
+    </update>
+
+    <select id="selectSquareList" resultType="com.yb.workbatch.vo.SquareVO">
+        SELECT a.wf_id,IFNULL(a.product_num,0) AS productNum,c.operate_size AS operateSize,a.handle_usid AS handleUsid
+        FROM yb_execute_briefer a
+        LEFT JOIN yb_workbatch_shift b ON b.id=a.wf_id
+        LEFT JOIN yb_workbatch_ordlink c ON c.id=b.sd_id
+        WHERE b.ws_id=#{wsId} AND b.sd_date=#{targetDay} AND c.ma_id=#{maId}
+    </select>
+
+    <select id="ruleQuery" resultMap="workbatchOrdlinkResultMap">
+        select * from yb_workbatch_ordlink
+        <where>
+            ${whereSql}
+        </where>
+    </select>
+
+    <select id="findByWbNoAndPrName" resultType="com.yb.workbatch.entity.WorkbatchOrdlink">
+        select * from yb_workbatch_ordlink
+        where wb_no=#{wbNo}
+        and  down_porcess=#{prName}
+        LIMIT 1
+    </select>
+
+    <!--    <select id="getOneByWfId" resultType="com.yb.workbatch.vo.WorkbatchOrdlinkVO">
+            SELECT
+                ywo.pd_name,
+                ywo.cm_name,
+                ywo.wb_no,
+                ywf.plan_num,
+                ywf.finish_num
+            FROM
+                yb_workbatch_ordlink ywo
+            LEFT JOIN yb_workbatch_shift ywf ON ywf.sd_id = ywo.id
+            WHERE
+                ywf.id = #{voWfId}
+        </select>-->
+    <select id="getWorkbatchOrdlinkVOListByWfIdList" resultType="com.yb.workbatch.vo.WorkbatchOrdlinkVO">
+        SELECT
+        ywf.id AS wfId,
+        ywo.pd_name,
+        ywo.cm_name,
+        ywo.wb_no,
+        ywf.plan_num,
+        ywf.finish_num
+        FROM
+        yb_workbatch_ordlink ywo
+        LEFT JOIN yb_workbatch_shift ywf ON ywf.sd_id = ywo.id
+        <where>
+            <if test="wfIdSet != null and wfIdSet.size() > 0">
+                ywf.id IN
+                <foreach collection="wfIdSet" item="wfId" separator="," open="(" close=")">
+                    #{wfId}
+                </foreach>
+            </if>
+        </where>
+    </select>
+    <select id="getArticlesCmNameOdNoVOList" resultType="com.yb.workbatch.vo.ArticlesOrderVO">
+        SELECT
+        cm_name,
+        od_no,
+        SUM(plan_num) AS odCount
+        FROM
+        `yb_workbatch_ordlink`
+        WHERE
+        `status` BETWEEN - 1
+        AND 2
+        <if test="articlesBeingProcessedParmVO.pdName != null and articlesBeingProcessedParmVO.pdName != ''">
+            AND pd_name LIKE concat('%', #{articlesBeingProcessedParmVO.pdName}, '%')
+        </if>
+        <if test="articlesBeingProcessedParmVO.wbNo != null and articlesBeingProcessedParmVO.wbNo != ''">
+            AND wb_no LIKE concat('%', #{articlesBeingProcessedParmVO.wbNo}, '%')
+        </if>
+        GROUP BY
+        cm_name,
+        od_no
+    </select>
+    <select id="getArticlesWbProcessVOList" resultType="com.yb.workbatch.vo.ArticlesProcessVO">
+        SELECT
+        a.od_no,
+        a.wb_no,
+        a.id AS sdId,
+        b.sort_num,
+        a.pr_id,
+        a.pr_name,
+        a.pt_id,
+        a.plan_num,
+        a.plan_number,
+        a.complete_num,
+        a.extra_num,
+        IFNULL(a.waste, 0) AS waste,
+        a.`status`
+        FROM
+        `yb_workbatch_ordlink` a
+        LEFT JOIN yb_prod_procelink b ON b.pr_id = a.pr_id
+        AND b.pt_id = a.pt_id
+        WHERE
+        a.od_no = #{odNo}
+        <if test="articlesBeingProcessedParmVO.pdName != null and articlesBeingProcessedParmVO.pdName != ''">
+            AND a.pd_name LIKE concat('%', #{articlesBeingProcessedParmVO.pdName}, '%')
+        </if>
+        <if test="articlesBeingProcessedParmVO.wbNo != null and articlesBeingProcessedParmVO.wbNo != ''">
+            AND a.wb_no LIKE concat('%', #{articlesBeingProcessedParmVO.wbNo}, '%')
+        </if>
+        <!--             AND `status` BETWEEN -1 AND 2-->
+        GROUP BY
+        a.wb_no,
+        a.id
+        ORDER BY
+        a.wb_no,
+        b.sort_num
+    </select>
+    <select id="getArticlesShiftList" resultType="com.yb.workbatch.vo.ArticlesShiftVO">
+        SELECT
+        	a.id AS wfId,
+        	a.sd_id,
+        	a.ma_id,
+        	a.pro_begin_time,
+        	a.plan_num,
+        	b.`name` AS maName,
+        	IFNULL(c.product_num, 0) AS product_num,
+        	IFNULL(c.count_num, 0) AS count_num,
+        	IFNULL(c.waste_num, 0) AS waste_num,
+        	(c.count_num / a.plan_num) AS yieldRate
+        FROM
+        	yb_workbatch_shift a
+        LEFT JOIN yb_machine_mainfo b ON b.id = a.ma_id
+        LEFT JOIN yb_execute_briefer c ON c.wf_id = a.id
+        WHERE
+        	a.sd_id = #{sdId}
+        GROUP BY
+        	a.id
+    </select>
+
+    <select id="getWfIdList" resultType="java.lang.Integer">
+        SELECT
+        	id
+        FROM
+        	yb_workbatch_shift
+        WHERE
+        	`status` IN (1, 2, 3)
+        AND sd_date = #{targetDay}
+        AND ws_id = #{wsId}
+    </select>
+
+    <update id="updateByworksNum">
+        update yb_workbatch_ordlink set arrange_num = #{wknum}
+        <if test="status != null and status != ''">
+            ,status=#{status}
+        </if>
+        where id = #{sdId}
+    </update>
+    <update id="setCompleteNum">
+        update yb_workbatch_ordlink set complete_num = #{completeNum},incomplete_num=#{incompleteNum}
+        where id = #{sdId}
+    </update>
+
+    <select id="orderDetail" resultType="com.yb.machine.response.OrderDetailVO">
+        select  ywo.id, ywo.wb_no, ywo.cm_name, ywo.pr_name ,ywo.pr_id,ypp.sort_num as sort,ywo.plan_num,ywo.arrange_num,
+        (select IFNULL(sum(yeb.count_num),0) from yb_execute_briefer yeb where ywo.id = yeb.sd_id ) as countNum,
+        (select IFNULL(sum(yeb.waste_num),0) from yb_execute_briefer yeb where ywo.id = yeb.sd_id ) as wasteNum
+        from yb_workbatch_ordlink ywo
+         join yb_prod_procelink ypp on ywo.pd_id = ypp.pd_id and ywo.pr_id=ypp.pr_id
+        where ywo.id is not null
+        and ywo.wb_no = #{request.wbNo}
+        group by ywo.wb_no,ywo.pr_id,ywo.id
+        order by ypp.sort_num asc
+    </select>
+
+    <select id="getUpProcessSdIdByWfId" resultType="java.lang.Integer">
+      SELECT
+        	ywo.id
+        FROM
+        	yb_workbatch_ordlink ywo
+        JOIN (
+        	SELECT
+        		ypp.pr_id,
+        		ypp.sort_num,
+        		b.wb_no
+        	FROM
+        		yb_prod_procelink ypp
+        	JOIN (
+        		SELECT
+        			ypp.sort_num,
+        			a.pd_id,
+        			a.wb_no
+        		FROM
+        			yb_prod_procelink ypp
+        		JOIN (
+        			SELECT
+        				a.id,
+        				a.wb_no,
+        				a.pd_id,
+        				a.pr_id
+        			FROM
+        				`yb_workbatch_ordlink` a
+        			LEFT JOIN yb_workbatch_shift b ON b.sd_id = a.id
+        			WHERE
+        				b.id = #{wfId}
+        		) a ON ypp.pr_id = a.pr_id
+        		AND a.pd_id = ypp.pd_id
+        	) b ON b.sort_num > ypp.sort_num
+        	AND b.pd_id = ypp.pd_id
+        	ORDER BY
+        		ypp.sort_num DESC
+        	LIMIT 1
+        ) a ON a.pr_id = ywo.pr_id
+        AND a.wb_no = ywo.wb_no
+    </select>
+
+    <select id="productionSchedulingDetails" resultType="com.yb.workbatch.vo.WorkbatchShiftDetailVO">
+        SELECT
+        a.*, b.pd_name,
+        b.pr_name,
+        b.wb_no
+        FROM
+        `yb_workbatch_shift` a
+        LEFT JOIN yb_workbatch_ordlink b ON b.id = a.sd_id
+        WHERE 1=1
+        <if test="detailsParam.maIdList != null and detailsParam.maIdList.size() != 0">
+            AND a.ma_id IN
+            <foreach collection="detailsParam.maIdList" item="maId" separator="," open="(" close=")">
+                #{maId}
+            </foreach>
+        </if>
+        <if test="detailsParam.wsIdList != null and detailsParam.wsIdList.size() != 0">
+            AND a.ws_id IN
+            <foreach collection="detailsParam.wsIdList" item="wsId" open="(" close=")" separator=",">
+                #{wsId}
+            </foreach>
+        </if>
+        <if test="detailsParam.endTime == null or detailsParam.endTime == ''">
+            AND a.sd_date = #{detailsParam.starTime}
+        </if>
+        <if test="detailsParam.endTime != null and detailsParam.endTime != ''">
+            AND a.sd_date &lt;= #{detailsParam.endTime}
+            AND a.sd_date &gt;= #{detailsParam.starTime}
+        </if>
+    </select>
+
+    <select id="getSaturability" resultType="com.yb.workbatch.vo.SaturabilityVO">
+        SELECT
+        a.sd_date,
+        SUM(a.plan_total_time) AS planTotalTime,
+        SUBSTRING(a.sd_date, 9) AS day
+        FROM
+        yb_workbatch_shift a
+        WHERE 1=1
+        <if test="detailsParam.maIdList != null and detailsParam.maIdList.size() != 0">
+            AND a.ma_id IN
+            <foreach collection="detailsParam.maIdList" item="maId" separator="," open="(" close=")">
+                #{maId}
+            </foreach>
+        </if>
+        <if test="detailsParam.wsIdList != null and detailsParam.wsIdList.size() != 0">
+            AND a.ws_id IN
+            <foreach collection="detailsParam.wsIdList" item="wsId" open="(" close=")" separator=",">
+                #{wsId}
+            </foreach>
+        </if>
+        <if test="detailsParam.endTime == null or detailsParam.endTime == ''">
+            AND a.sd_date = #{detailsParam.starTime}
+        </if>
+        <if test="detailsParam.endTime != null and detailsParam.endTime != ''">
+            AND a.sd_date &lt;= #{detailsParam.endTime}
+            AND a.sd_date &gt;= #{detailsParam.starTime}
+        </if>
+        GROUP BY
+        a.sd_date
+    </select>
+
+    <select id="getOrdshiftById" resultType="com.yb.workbatch.vo.WorkbatchOrdlinkShiftVO">
+        SELECT
+        `a`.`id` AS `id`,
+        `a`.`wb_id` AS `wb_id`,
+        `a`.`pt_id` AS `pt_id`,
+        `a`.`pt_no` AS `pt_no`,
+        `a`.`part_name` AS `part_name`,
+        `a`.`ma_id` AS `ma_id`,
+        `a`.`od_no` AS `od_no`,
+        `a`.`pr_id` AS `pr_id`,
+        `a`.`pr_name` AS `pr_name`,
+        `a`.`pr_des` AS `pr_des`,
+        `a`.`sort` AS `sort`,
+        `a`.`pd_code` AS `pd_code`,
+        `a`.`pd_name` AS `pd_name`,
+        `a`.`pd_type` AS `pd_type`,
+        `a`.`plan_number` AS `plan_number`,
+        `a`.`complete_num` AS `complete_num`,
+        `a`.`extra_num` AS `extra_num`,
+        `a`.`actually_starttime` AS `actually_starttime`,
+        `a`.`close_time` AS `close_time`,
+        `a`.`plan_time` AS `plan_time`,
+        `a`.`waste` AS `waste`,
+        `a`.`nbwaste` AS `nbwaste`,
+        `a`.`remarks` AS `remarks`,
+        `a`.`run_status` AS `run_status`,
+        `a`.`update_at` AS `update_at`,
+        `a`.`status` AS `status`,
+        `a`.`sd_sort` AS `sd_sort`,
+        `a`.`dp_id` AS `dp_id`,
+        `a`.`us_id` AS `us_id`,
+        `a`.`cm_name` AS `cm_name`,
+        `a`.`pt_size` AS `pt_size`,
+        `a`.`pr_route` AS `pr_route`,
+        `a`.`wb_no` AS `wb_no`,
+        `a`.`od_type` AS `od_type`,
+        `b`.`sd_id` AS `sd_id`,
+        IFNULL( b.sd_date, a.sd_date ) AS `sd_date`,
+        IFNULL( b.mould_stay, c.mould_stay ) AS `mould_stay`,
+        IFNULL( b.speed, c.speed ) AS `speed`,
+        IFNULL( b.plan_num, a.plan_num ) AS `plan_num`,
+        IFNULL( b.plan_total_time, c.plan_total_time ) AS `plan_total_time`,
+        `b`.`ws_id` AS `ws_id`,
+        `b`.`pro_begin_time` AS `pro_begin_time`,
+        `b`.`pro_finish_time` AS `pro_finish_time`,
+        `b`.`ck_name` AS `ck_name`,
+        `b`.`start_time` AS `start_time`,
+        `b`.`end_time` AS `end_time`,
+        `b`.`stay_time` AS `stay_time`,
+        `b`.`create_at` AS `create_at`
+        FROM `yb_workbatch_ordlink` `a`
+        LEFT JOIN `yb_workbatch_shift` `b` ON `b`.`sd_id` = `a`.`id`
+        LEFT JOIN `yb_workbatch_ordoee` c on c.wk_id=a.id
+        where  a.id = #{id}
+        GROUP BY a.id
+    </select>
+
+</mapper>

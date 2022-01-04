@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.workbatch.mapper.WorkbymaMapper">
+
+    <select id="getAllList" resultType="com.yb.workbatch.vo.WorkbymaVO">
+        select *
+        from v_workbyma
+        <where>
+            <if test="workbyma.sdDate!=null and workbyma.sdDate!=''">
+                and sd_date =#{workbyma.sdDate}
+            </if>
+            <if test="workbyma.wsId!=null and workbyma.wsId!=''">
+                and ws_id =#{workbyma.wsId}
+            </if>
+        </where>
+    </select>
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="workbymaResultMap" type="com.yb.workbatch.entity.Workbyma">
+        <result column="ma_id" property="maId"/>
+        <result column="ma_name" property="maName"/>
+        <result column="ma_type" property="maType"/>
+        <result column="ma_sort" property="maSort"/>
+        <result column="ws_id" property="wsId"/>
+        <result column="ex_id" property="exId"/>
+        <result column="ws_id" property="wsId"/>
+        <result column="start_time" property="startTime"/>
+        <result column="exe_time" property="exeTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="sd_date" property="sdDate"/>
+        <result column="wb_no" property="wbNo"/>
+        <result column="us_ids" property="usIds"/>
+        <result column="sd_sort" property="sdSort"/>
+    </resultMap>
+
+
+</mapper>

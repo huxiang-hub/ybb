@@ -1,0 +1,504 @@
+2020-07-21 oee统计算法
+ALTER TABLE `yb_statis_ordreach`
+ADD COLUMN `wb_no`  varchar(50) NULL AFTER `plan_num`,
+ADD COLUMN `ws_id`  int NULL AFTER `wb_no`,
+ADD COLUMN `ws_name`  varchar(20) NULL AFTER `ws_id`;
+
+ALTER TABLE `yb_statis_ordreach`
+ADD COLUMN `wb_no`  varchar(20) NULL COMMENT '工单编号' AFTER `plan_num`,
+ADD COLUMN `ws_id`  int NULL COMMENT '班次id' AFTER `wb_no`,
+ADD COLUMN `ws_name`  varchar(20) NULL COMMENT '班次名称' AFTER `ws_id`,
+ADD COLUMN `start_time`  time NULL DEFAULT NULL COMMENT '开始时间' AFTER `ws_name`,
+ADD COLUMN `end_time`  time NULL DEFAULT NULL COMMENT '结束时间' AFTER `start_time`;
+ALTER TABLE `yb_statis_ordreach`
+MODIFY COLUMN `start_time`  datetime NULL DEFAULT NULL COMMENT '开始时间' AFTER `ws_name`,
+MODIFY COLUMN `end_time`  datetime NULL DEFAULT NULL COMMENT '结束时间' AFTER `start_time`;
+
+ALTER TABLE `yb_workbatch_shift`
+ADD COLUMN `sd_id`  int NULL COMMENT '排产单' AFTER `id`;
+
+ALTER TABLE `yb_workbatch_shiftset`
+DROP COLUMN `maintain_stay`,
+ADD COLUMN `meal_starttime`  timestamp NULL DEFAULT NULL COMMENT '吃饭开始' AFTER `meal_stay`,
+ADD COLUMN `meal_endtime`  timestamp NULL DEFAULT NULL COMMENT '吃饭结束' AFTER `meal_starttime`;
+
+新增表：
+小时达成率-备注_yb_statis_reachremark
+drop table if exists yb_statis_reachremark;
+
+/*==============================================================*/
+/* Table: yb_statis_reachremark                                 */
+/*==============================================================*/
+create table yb_statis_reachremark
+(
+   id                   int not null,
+   sr_id                int not null,
+   pro_ready_time       int comment '生产准备时间',
+   device_fault_time    int comment '设备故障时间',
+   quality_test_time    int comment '品质实验时间',
+   type_switch_time     int comment '品种切换时间',
+   manage_stop_time     int comment '管理停止时间',
+   other_loss_time      int comment '其他损失时间(分钟)',
+   other_loss_cause     varchar(200) comment '其他损失事由',
+   create_at            timestamp,
+   primary key (id)
+);
+
+alter table yb_statis_reachremark comment '小时达成率-备注_yb_statis_reachremark';
+
+ALTER TABLE `yb_workbatch_ordlink`
+ADD COLUMN `wb_no`  varchar(100) NULL AFTER `wb_id`;
+
+ALTER TABLE `yb_workbatch_shift`
+MODIFY COLUMN `id`  int(11) NOT NULL AUTO_INCREMENT COMMENT 'id' FIRST ,
+ADD COLUMN `sd_date`  varchar(10) NULL DEFAULT NULL COMMENT '排产日期' AFTER `sd_id`,
+ADD COLUMN `plan_num`  int NULL DEFAULT NULL COMMENT '计划生产数' AFTER `sd_date`,
+ADD COLUMN `plan_total_time`  int NULL DEFAULT NULL COMMENT '计划时间(分钟)' AFTER `plan_num`,
+ADD COLUMN `pro_begin_time`  timestamp NULL DEFAULT NULL COMMENT '开始生产时间' AFTER `ck_name`,
+ADD COLUMN `pro_finish_time`  timestamp NULL DEFAULT NULL COMMENT '完成时间' AFTER `pro_begin_time`;
+
+设备分类增加字段
+ALTER TABLE `yb_machine_mainfo`
+ADD COLUMN `ma_type`  varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '设备分类：maType 数据字典' AFTER `mno`;
+员工ID卡登录
+ALTER TABLE `yb_base_staffinfo`
+ADD COLUMN `id_card`  varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT 'ID卡对应数字关联' AFTER `dp_erp`;
+小时达成率新增字段
+ALTER TABLE `yb_statis_ordreach`
+MODIFY COLUMN `start_time`  timestamp NULL DEFAULT NULL COMMENT '开始时间' AFTER `ws_name`,
+MODIFY COLUMN `end_time`  timestamp NULL DEFAULT NULL COMMENT '结束时间' AFTER `start_time`,
+ADD COLUMN `plan_time`  int NULL DEFAULT NULL COMMENT '计划时间（分钟）' AFTER `plan_num`;
+
+处理班次表和设备类型关联数据
+ALTER TABLE `yb_workbatch_shiftset`
+CHANGE COLUMN `meal_starttime` `meal_onetime`  varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '当班第一次吃饭' AFTER `meal_stay`,
+CHANGE COLUMN `meal_endtime` `meal_secondtime`  varchar(100) NULL DEFAULT NULL COMMENT '第二次吃饭' AFTER `meal_onetime`,
+ADD COLUMN `meal_thirdtime`  varchar(100) NULL AFTER `meal_secondtime`;
+
+2020-07-23 小时达成率-备注
+create table yb_statis_reachremark
+(
+   id                   int not null auto_increment,
+   so_id                int not null,
+   pro_ready_time       int comment '生产准备时间',
+   device_fault_time    int comment '设备故障时间',
+   quality_test_time    int comment '品质实验时间',
+   type_switch_time     int comment '品种切换时间',
+   manage_stop_time     int comment '管理停止时间',
+   other_loss_time      int comment '其他损失时间(分钟)',
+   other_loss_lause     varchar(200) comment '其他损失事由',
+   primary key (id)
+);
+alter table yb_statis_reachremark comment '小时达成率-备注_yb_statis_reachremark';
+
+ready_time 新增准备时间点
+ALTER TABLE `yb_supervise_execute`
+ADD COLUMN `ready_time`  timestamp NULL DEFAULT NULL COMMENT '生产准备时间点' AFTER `ready_num`;
+
+drop table if exists yb_mater_batchlink;
+
+/*==============================================================*/
+/* Table: yb_mater_batchlink                                    */
+/*==============================================================*/
+create table yb_mater_batchlink
+(
+   id                   int not null auto_increment comment '主键',
+   sd_id                int(20) default NULL comment '排产Id',
+   wk_no                varchar(40) default NULL comment '工单编号',
+   material_name        varchar(80) default NULL comment '材料名称',
+   size                 varchar(40) default NULL comment '尺寸',
+   supply_name          varchar(40) default NULL comment '供应商',
+   location             varchar(40) default NULL comment '摆放位置',
+   process_num          int(40) default NULL comment '工序应产数',
+   realaccept_num       int(40) default NULL comment '实收数量',
+   plate_num            varchar(50) default NULL comment '板数（可选）',
+   us_id                int comment '发起-用户id-pmc要求人员',
+   receive_usid         int comment '收货人usid',
+   contacter_name       varchar(30) default NULL comment '收货人姓名',
+   instorage_time       timestamp NULL default NULL comment '入库提交时间-请求',
+   in_time              time comment '入库实际时间',
+   status               int comment '0发起请求1部分入库2全部入库',
+   remarks              varchar(255) default NULL comment '备注',
+   create_at            timestamp NULL default NULL comment '创建时间',
+   primary key (id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+alter table yb_mater_batchlink comment '排产物料关联表_yb_mater_batchlink';
+
+ALTER TABLE `yb_statis_ordreach`
+MODIFY COLUMN `pd_name`  varchar(1000) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '产品名称' AFTER `remark`,
+MODIFY COLUMN `sd_id`  varchar(200) NULL DEFAULT NULL COMMENT '排产单号' AFTER `ex_id`,
+MODIFY COLUMN `wb_no`  varchar(500) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '排产编号' AFTER `plan_time`;
+ALTER TABLE `yb_statis_ordreach`
+MODIFY COLUMN `pd_name`  text CHARACTER SET utf8 COLLATE utf8_general_ci NULL COMMENT '产品名称' AFTER `remark`,
+MODIFY COLUMN `plan_num`  varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '计划数量' AFTER `sd_id`;
+
+ALTER TABLE `yb_workbatch_shiftset`
+DROP COLUMN `ma_type`,
+MODIFY COLUMN `model`  int(11) NULL DEFAULT NULL COMMENT '分类：1公司2车间部门3工序4设备5设备类型' AFTER `db_id`;
+
+ALTER TABLE `yb_workbatch_ordoee`
+ADD COLUMN `create_at`  timestamp NULL DEFAULT NULL COMMENT '新增时间' AFTER `erp_speed`,
+ADD COLUMN `update_at`  timestamp NULL DEFAULT NULL COMMENT '更新时间' AFTER `create_at`;
+
+
+ALTER TABLE `yb_workbatch_shift`
+ADD COLUMN `waste_num`  int NULL COMMENT '放数（废品数）' AFTER `plan_total_time`;
+ALTER TABLE `yb_workbatch_shift`
+ADD COLUMN `sd_sort`  varchar(50) NULL COMMENT '班次排序' AFTER `sd_date`;
+
+ALTER TABLE `yb_supervise_boxinfo`
+ADD COLUMN `clear_num`  int NULL COMMENT '清零前数据' AFTER `sl_id`,
+ADD COLUMN `clear_time`  timestamp NULL COMMENT '清零时间' AFTER `clear_num`;
+
+ALTER TABLE `yb_execute_briefer`
+ADD COLUMN `sd_id`  int NULL COMMENT '排产单id' AFTER `es_id`,
+ADD COLUMN `wf_id`  int NULL COMMENT '班次单id' AFTER `sd_id`;
+
+ALTER TABLE `yb_execute_state`
+ADD COLUMN `wf_id`  int NULL COMMENT '排产班次id' AFTER `sd_id`;
+
+ALTER TABLE `yb_execute_info`
+ADD COLUMN `wf_id`  int NULL COMMENT '排产班次id' AFTER `sd_id`;
+
+ALTER TABLE `yb_machine_mainfo`
+ADD COLUMN `sort`  int NULL COMMENT '设备排序' AFTER `pro_id`;
+ALTER TABLE `yb_machine_mainfo`
+ADD COLUMN `ma_type`  varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '设备分类：maType 数据字典' AFTER `mno`;
+
+ALTER TABLE `yb_supervise_execute`
+ADD COLUMN `ex_id`  int NULL COMMENT '执行单ID' AFTER `sd_id`,
+ADD COLUMN `wf_id`  int NULL COMMENT '排产班次id' AFTER `sd_id`;
+
+ALTER TABLE `yb_base_staffinfo`
+MODIFY COLUMN `create_at`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间' AFTER `is_used`;
+
+ALTER TABLE `yb_supervise_intervalalg`
+ADD COLUMN `number`  int NULL DEFAULT NULL COMMENT '接收盒子数据' AFTER `status`;
+
+ALTER TABLE `yb_workbatch_shift`
+ADD COLUMN `wfsort_islock`  int NULL DEFAULT NULL COMMENT '//是否锁定排产顺序 0不锁定 1锁定' AFTER `shift_status`;
+ALTER TABLE `yb_statis_ordreach`
+ADD COLUMN `reach_islock`  int NULL DEFAULT NULL COMMENT '是否系统计算0不锁定1锁定(手工统计)' AFTER `end_time`;
+
+drop table if exists yb_supervise_intervalalg;
+
+/*==============================================================*/
+/* Table: yb_supervise_intervalalg                              */
+/*==============================================================*/
+create table yb_supervise_intervalalg
+(
+   id                   int unsigned zerofill not null auto_increment,
+   ma_id                int default null comment '设备id',
+   uuid                 varchar(50) default null comment '唯一编号uuid',
+   status               int default null comment '统计计数 1运行2停机3故障4离线',
+   number               int default null comment '接收盒子数据',
+   start_num            int default null comment '开始时间计数',
+   end_num              int default null comment '结束时间计数',
+   pcout                int default null comment '间隔计数',
+   start_time           timestamp null default null comment '开始时间',
+   end_time             timestamp null default null comment '结束时间',
+   diff_time            int default null comment '间隔时间（秒）',
+   curr_speed           double(10,2) default null comment '区间速度',
+   target_time          char(8) default null comment '日期时间实例：20200314',
+   model                int default null comment '分类模式1整点2半点',
+   create_at            timestamp null default null comment '创建时间',
+   update_at            timestamp null default null comment '更新时间',
+   primary key (id)
+)
+engine=innodb auto_increment=1 default charset=utf8 row_format=dynamic comment='设备状态间隔表_yb_supervise_intervalalg';
+alter table yb_supervise_intervalalg comment '实施管理记录表_yb_supervise_intervalalg';
+
+ALTER TABLE `yb_workbatch_shift`
+ADD COLUMN `status`  varchar(20) NULL DEFAULT NULL COMMENT '状态（0起草1发布2正在生产3已完成4已挂起5废弃） -1待排产ERP接入 6驳回7已排产8部分完成9未排完' AFTER `shift_status`;
+
+ALTER TABLE `yb_workbatch_ordlink`
+MODIFY COLUMN `status`  varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT 0 COMMENT '状态（0起草1发布2正在生产3已完成4已挂起5废弃） -1待排产ERP接入 6驳回7已排产8部分完成9未排完10强制结束' AFTER `update_at`;
+
+ALTER TABLE `yb_workbatch_shift`
+ADD COLUMN `plan_type`  varchar(20) NULL DEFAULT NULL COMMENT '计划类型：1生产默认、2计划保养B-B2、3计划停机C-C2' AFTER `status`,
+ADD COLUMN `type_event`  varchar(20) NULL DEFAULT NULL COMMENT '类型事件C-C2-R1、B-B2-P1' AFTER `status`;
+
+drop table if exists yb_workbatch_unlock;
+
+/*==============================================================*/
+/* Table: yb_workbatch_unlock                                   */
+/*==============================================================*/
+create table yb_workbatch_unlock
+(
+   id                   int not null auto_increment,
+   wf_id                int comment '被调整排产单',
+   before_sort          varchar(20) comment '调整前顺序',
+   after_sort           varchar(20) comment '调整后顺序',
+   swap_wfid            int comment '调整对象wfid',
+   swap_sort            varchar(20) comment '调整对象之前顺序',
+   swap_num             int comment '调整记录数量',
+   is_swap              int comment '是否交换1是交换2是插入',
+   us_id                int comment '调整人',
+   us_name              varchar(20) comment '调整人姓名',
+   create_at            timestamp comment '创建时间',
+   primary key (id)
+);
+alter table yb_workbatch_unlock comment '排产解锁_yb_workbatch_unlock';
+
+ALTER TABLE `yb_workbatch_expprint`
+ADD COLUMN `create_at`  timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '创建时间' AFTER `ctp_time`;
+
+
+ALTER TABLE `yb_workbatch_ordlink`
+ADD COLUMN `cm_name`  varchar(100) NULL DEFAULT NULL COMMENT '客户名称' AFTER `us_id`;
+ALTER TABLE `yb_workbatch_ordlink`
+ADD COLUMN `finish_num`  int NULL DEFAULT NULL COMMENT '完成数量' AFTER `cm_name`;
+
+ALTER TABLE `yb_workbatch_shift`
+ADD COLUMN `plan_type`  varchar(20) NULL DEFAULT NULL COMMENT '计划类型：1生产默认、2计划保养B-B2、3计划停机C-C2' AFTER `finish_num`,
+ADD COLUMN `type_event`  varchar(20) NULL DEFAULT NULL COMMENT '类型事件C-C2-R1、B-B2-P1' AFTER `plan_type`,
+ADD COLUMN `is_auto`  int NULL DEFAULT NULL COMMENT '是否自动接单0,否1,是（机台登录当前班次就自动接单）' AFTER `type_event`;
+
+ALTER TABLE `yb_workbatch_shift`
+ADD COLUMN `update_at`  timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间' AFTER `create_at`;
+
+ALTER TABLE `yb_statis_ordreach`
+MODIFY COLUMN `reach_rate`  decimal(8,4) NULL DEFAULT NULL COMMENT '达成率' AFTER `real_count`;
+
+DROP TABLE IF EXISTS `sys_task`;
+CREATE TABLE `sys_task` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `cron_expression` varchar(255) DEFAULT NULL COMMENT 'cron表达式',
+  `method_name` varchar(255) DEFAULT NULL COMMENT '任务调用的方法名',
+  `is_concurrent` varchar(255) DEFAULT NULL COMMENT '任务是否有状态',
+  `description` varchar(255) DEFAULT NULL COMMENT '任务描述',
+  `update_by` varchar(64) DEFAULT NULL COMMENT '更新者',
+  `bean_class` varchar(255) DEFAULT NULL COMMENT '任务执行时调用哪个类的方法 包名+类名',
+  `create_date` datetime DEFAULT NULL COMMENT '创建时间',
+  `job_status` varchar(255) DEFAULT NULL COMMENT '任务状态',
+  `job_group` varchar(255) DEFAULT NULL COMMENT '任务分组',
+  `update_date` datetime DEFAULT NULL COMMENT '更新时间',
+  `create_by` varchar(64) DEFAULT NULL COMMENT '创建者',
+  `spring_bean` varchar(255) DEFAULT NULL COMMENT 'Spring bean',
+  `job_name` varchar(255) DEFAULT NULL COMMENT '任务名',
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=8 DEFAULT CHARSET=utf8;
+
+-- ----------------------------
+-- Records of sys_task
+-- ----------------------------
+INSERT INTO `sys_task` VALUES ('2', '0/10 * * * * ?', 'run1', '1', '', '4028ea815a3d2a8c015a3d2f8d2a0002', 'com.yb.common.task.WelcomeJob', '2017-05-19 18:30:56', '0', 'group1', '2017-05-19 18:31:07', null, '', 'welcomJob');
+
+ALTER TABLE `yb_workbatch_ordlink`
+ADD COLUMN `erp_wbid`  varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT 'ERP导入施工单ID' AFTER `upprocess_time`;
+
+2020-09-21 班次修改：新增班次表，修改班次视图
+drop table if exists yb_workbatch_mainshift;
+
+/*==============================================================*/
+/* Table: yb_workbatch_mainshift                                */
+/*==============================================================*/
+create table yb_workbatch_mainshift
+(
+   id                   int not null auto_increment comment 'id',
+   ck_name              varchar(10) comment '排班名称 白班/夜班/晚班/',
+   is_used              int comment '是否启用1停用0',
+   create_at            timestamp null default null comment '创建时间',
+   primary key (id)
+);
+alter table yb_workbatch_mainshift comment 'yb_workbatch_mainshift 主要班次名称信息';
+INSERT INTO `yb_workbatch_mainshift` VALUES (45, '白班', 1, '2020-9-1 00:00:00');
+INSERT INTO `yb_workbatch_mainshift` VALUES (46, '夜班', 1, '2020-9-1 00:00:00');
+
+ALTER TABLE `yb_workbatch_shiftset`
+ADD COLUMN `ws_id`  int NULL COMMENT '班次主键id信息' AFTER `id`;
+
+修改班次视图 v_machshift
+select a.id,a.ck_name,b.ws_id,b.start_time,b.end_time,b.stay_time,b.db_id,b.us_id,b.start_date,b.end_date,b.meal_stay,b.meal_onetime,b.meal_secondtime,b.meal_thirdtime,b.model,c.id as ma_id,c.ma_type from yb_workbatch_mainshift a
+LEFT JOIN yb_workbatch_shiftset b on b.ws_id=a.id
+LEFT JOIN yb_machine_mainfo c on b.db_id = c.ma_type
+
+drop table if exists yb_rule_scaleset;
+
+/*==============================================================*/
+/* Table: yb_rule_scaleset                                      */
+/*==============================================================*/
+create table yb_rule_scaleset
+(
+   id                   int not null,
+   rs_type              int comment '类型：数据字典：1施工单表、2物料表、3设备表、4',
+   rs_tabname           int comment '不同维度的表名；',
+   rs_column            int comment '对应的字段名；',
+   rs_object            varchar(500) comment '对应返回的实体对象信息',
+   rs_datasql           varchar(500) comment '对应的sql对象字符串',
+   rs_relationsql       varchar(200) comment '储备字段：关联条件内容',
+   is_used              int comment '是否启用： 0停用1启用',
+   create_at            timestamp null default null comment '创建时间',
+   update_at            timestamp null default null comment '更新时间',
+   primary key (id)
+);
+alter table yb_rule_scaleset comment '标准产能维度设置_yb_rule_scaleset';
+
+INSERT INTO `yb_base_dict` VALUES (15, 0, '规则条件', 'RULE-CONDITION', 'ruleCond', NULL, 100, 0, '2020-9-27 14:20:54');
+INSERT INTO `yb_base_dict` VALUES (16, 15, '包含', ' like ', 'ruleCond', NULL, 100, 0, '2020-9-27 14:23:35');
+INSERT INTO `yb_base_dict` VALUES (17, 15, '不包含', ' not like ', 'ruleCond', NULL, 100, 0, '2020-9-27 14:23:48');
+INSERT INTO `yb_base_dict` VALUES (18, 15, '以开头', ' % ', 'ruleCond', NULL, 100, 0, '2020-9-27 14:23:48');
+INSERT INTO `yb_base_dict` VALUES (19, 15, '等于', ' = ', 'ruleCond', NULL, 100, 0, '2020-9-27 14:23:48');
+INSERT INTO `yb_base_dict` VALUES (20, 15, '大于', ' > ', 'ruleCond', NULL, 100, 0, '2020-9-27 14:23:48');
+INSERT INTO `yb_base_dict` VALUES (21, 15, '小于', ' < ', 'ruleCond', NULL, 100, 0, '2020-9-27 14:23:48');
+INSERT INTO `yb_base_dict` VALUES (22, 15, '大于等于', ' >= ', 'ruleCond', NULL, 100, 0, '2020-9-27 14:23:48');
+INSERT INTO `yb_base_dict` VALUES (23, 15, '小于等于', ' <= ', 'ruleCond', NULL, 100, 0, '2020-9-27 14:23:49');
+INSERT INTO `yb_base_dict` VALUES (24, 15, '范围', ' between ', 'ruleCond', NULL, 100, 0, '2020-9-27 14:23:49');
+
+2020-10-27
+设备基础信息
+ALTER TABLE `yb_machine_mainfo`
+ADD COLUMN `in_unit`  varchar(20) NULL COMMENT '输入单位：maUnit数据字典' AFTER `sort`,
+ADD COLUMN `out_unit`  varchar(20) NULL COMMENT '匹配输出单位：maUnit数据字典' AFTER `in_unit`,
+ADD COLUMN `auxiliary_unit`  varchar(20) NULL COMMENT '辅助单位：maUnit数据字典' AFTER `out_unit`,
+ADD COLUMN `erp_id`  varchar(100) NULL COMMENT 'erpUUID' AFTER `auxiliary_unit`;
+
+
+ALTER TABLE `yb_crm_customer`
+ADD COLUMN `cm_type`  int NULL AFTER `cm_shortname`,
+ADD COLUMN `grade`  int NULL COMMENT '客户等级' AFTER `addr`,
+ADD COLUMN `erp_id`  varchar(100) NULL COMMENT 'erpUUID' AFTER `create_at`;
+
+ALTER TABLE `yb_workbatch_ordlink`
+MODIFY COLUMN `ingredient_name`  varchar(500) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '辅料名称' AFTER `second_remark`;
+
+ALTER TABLE `yb_machine_mainfo`
+ADD COLUMN `is_used`  int(11) NULL COMMENT '是否启用：1启用0停用' AFTER `sort`;
+
+ALTER TABLE `yb_supervise_boxinfo`
+ADD COLUMN `bln_accept`  int(11) NULL DEFAULT NULL COMMENT '是否接单1接单0未接单' AFTER `send_time`;
+
+
+
+#############2021-1-14############执行修改表结构内容信息 wyn
+##增加待排产字段信息，并且修改状态为9未排完
+ALTER TABLE `yb_workbatch_ordlink`
+ADD COLUMN `arrange_num`  int NULL AFTER `erp_wbid`;
+
+##班次生成记录表，需要修改班次名称，设置为int型，需要修改为varchar
+ALTER TABLE `yb_workbatch_shiftinfo`
+MODIFY COLUMN `ck_name`  varchar(10) NULL DEFAULT NULL COMMENT '排班名称 白班/夜班/晚班/' AFTER `start_time`;
+##产品工序表对应
+ALTER TABLE `yb_prod_procelink`
+ADD COLUMN `pd_id`  int(11) NULL AFTER `pr_id`;
+##工单工序表对应订单
+ALTER TABLE `yb_workbatch_ordlink`
+ADD COLUMN `pd_id`  int(11) NULL AFTER `sort`;
+
+##修改审核更新表
+drop table if exists yb_execute_examine;
+
+/*==============================================================*/
+/* Table: yb_execute_examine                                    */
+/*==============================================================*/
+create table yb_execute_examine
+(
+   id                   int not null,
+   bf_id                int comment '日报id',
+   ex_userid            int comment '审核人id',
+   rpt_userid           int comment '上报人id',
+   rpt_time             timestamp comment '上报时间',
+   data_before          varchar(200) comment '审核前数据，用竖线分隔|作业数|正品数|次品数|',
+   data_after           varchar(200) comment '审核后数据，',
+   reprot_mark          varchar(1000) comment '上报备注；编写理由；图片信息',
+   ex_status            int comment '审核状态 0 未审核 1 通过 2未通过',
+   ex_way               int comment '途径1、修改审核2、正式审核界面',
+   create_at            timestamp comment '创建时间',
+   update_at            timestamp comment '更新时间',
+   primary key (id)
+);
+
+alter table yb_execute_examine comment '上报审核表_yb_execute_examine';
+
+#修改审核表两个时间字段默认值
+ALTER TABLE `yb_execute_examine`
+MODIFY COLUMN `create_at`  timestamp NULL DEFAULT '0000-00-00 00:00:00' COMMENT '创建时间' AFTER `ex_way`,
+MODIFY COLUMN `update_at`  timestamp NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间' AFTER `create_at`;
+##增加审核状态表在上报表中。审核表保存审核日志
+ALTER TABLE `yb_execute_briefer`
+ADD COLUMN `ex_status`  int(11) NULL DEFAULT 0 COMMENT '审核状态 0 未审核 1 通过 2未通过' AFTER `time_set`;
+
+ALTER TABLE `yb_base_staffinfo`
+MODIFY COLUMN `jobnum`  varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '工号（系统生成-也可以手工修改）' AFTER `name`;
+
+ALTER TABLE `yb_execute_materials`
+MODIFY COLUMN `create_at`  timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间' AFTER `us_id`,
+MODIFY COLUMN `update_at`  timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间' AFTER `create_at`;
+
+ALTER TABLE `yb_execute_materials`
+ADD COLUMN `ex_id`  int(11) NULL DEFAULT 0 COMMENT '执行单' AFTER `wf_id`;
+
+ALTER TABLE `yb_execute_materials`
+MODIFY COLUMN `ex_id`  int(11) NULL DEFAULT NULL COMMENT '执行单id' AFTER `wf_id`;
+
+
+drop table if exists yb_maintain_classifyext;
+
+/*==============================================================*/
+/* Table: yb_maintain_classifyext                               */
+/*==============================================================*/
+create table yb_maintain_classifyext
+(
+   id                   int not null,
+   mc_id                int comment '停机分类id（必选）',
+   ma_id                int comment '设备id（可选）',
+   pr_id                int comment '工序id（可选）',
+   ma_type              varchar(20) comment '设备分类：maType 数据字典',
+   fname                varchar(20) comment '停机分类',
+   fvalue               varchar(20) comment '分类标识-编码',
+   fcode                varchar(20) comment '分类编号',
+   remark               varchar(200) comment '备注信息',
+   us_id                int comment '更新人',
+   is_used              int comment '是否：启用1停用0',
+   create_at            timestamp comment '创建时间',
+   update_at            timestamp comment '更新时间',
+   primary key (id)
+);
+
+alter table yb_maintain_classifyext comment '停机分类扩展表_yb_maintain_classifyext';
+ALTER TABLE `yb_maintain_classifyext`
+MODIFY COLUMN `create_at`  timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '创建时间' AFTER `is_used`,
+MODIFY COLUMN `update_at`  timestamp NULL DEFAULT NULL COMMENT '更新时间' AFTER `create_at`;
+
+
+执行表删除字段和新增字段
+ALTER TABLE `yb_execute_info`
+DROP COLUMN `sf_start_time`,
+DROP COLUMN `sf_end_time`,
+MODIFY COLUMN `status`  int(11) NULL DEFAULT NULL COMMENT '状态：1、执行中2、执行完成3、执行结束未上报' AFTER `wf_id`,
+MODIFY COLUMN `exe_time`  datetime NULL DEFAULT NULL COMMENT 'c1开始时间' AFTER `start_time`,
+ADD COLUMN `us_id`  int NULL COMMENT '操作人id' AFTER `target_day`;
+
+#执行表增加对应的工单编号
+ALTER TABLE `yb_execute_info`
+ADD COLUMN `wb_no`  varchar(80) NULL ;
+ALTER TABLE `yb_execute_info`
+ADD COLUMN `us_id`  varchar(50) NULL COMMENT '操作人' ;
+#执行表操作人修改为字符串
+ALTER TABLE `yb_execute_info`
+MODIFY COLUMN `us_id`  varchar(50) NULL DEFAULT NULL COMMENT '操作人id' ;
+
+ALTER TABLE `yb_execute_materials`
+MODIFY COLUMN `create_at`  timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间' AFTER `us_id`,
+MODIFY COLUMN `update_at`  timestamp NULL DEFAULT '0000-00-00 00:00:00' COMMENT '更新时间' AFTER `create_at`;
+
+INSERT INTO `blade_dict` (`id`, `parent_id`, `code`, `dict_key`, `dict_value`, `sort`, `remark`, `is_deleted`) VALUES ('250', '0', 'stType', '-1', '存储类型', '0', NULL, '0');
+INSERT INTO `blade_dict` (`id`, `parent_id`, `code`, `dict_key`, `dict_value`, `sort`, `remark`, `is_deleted`) VALUES ('251', '250', 'stType', '1', '半成品', '1', NULL, '0');
+INSERT INTO `blade_dict` (`id`, `parent_id`, `code`, `dict_key`, `dict_value`, `sort`, `remark`, `is_deleted`) VALUES ('252', '250', 'stType', '2', '成品', '2', NULL, '0');
+INSERT INTO `blade_dict` (`id`, `parent_id`, `code`, `dict_key`, `dict_value`, `sort`, `remark`, `is_deleted`) VALUES ('253', '250', 'stType', '3', '原料', '3', NULL, '0');
+INSERT INTO `blade_dict` (`id`, `parent_id`, `code`, `dict_key`, `dict_value`, `sort`, `remark`, `is_deleted`) VALUES ('254', '250', 'stType', '4', '辅料', '4', NULL, '0');
+INSERT INTO `blade_dict` (`id`, `parent_id`, `code`, `dict_key`, `dict_value`, `sort`, `remark`, `is_deleted`) VALUES ('255', '250', 'stType', '5', '备品备件', '5', NULL, '0');
+
+ALTER TABLE `yb_supervise_regular`
+MODIFY COLUMN `create_at`  timestamp NULL DEFAULT NULL COMMENT '创建时间' ;
+
+alter table yb_store_inlog modify ml_id varchar(50);
+alter table yb_store_outlog modify ml_id varchar(50);
+alter table yb_store_inventory modify ml_id varchar(50);
+alter table yb_store_inventoryhis modify ml_id varchar(50);
+alter table yb_execute_materials modify mat_id varchar(50);
+alter table yb_execute_offmater modify mat_id varchar(50);
+
+

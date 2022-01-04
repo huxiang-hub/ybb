@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driverClassName: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://39.98.57.236:3378/yb_nxhr_pro_new?useSSL=false&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&tinyInt1isBit=false&allowMultiQueries=true&serverTimezone=GMT%2B8&rewriteBatchedStatements=true
+    username: root
+    password: ybbqwert
+    bulk_insert_buffer_size: 100M
+sqlserver:
+  datasource:
+    driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    url: jdbc:sqlserver://192.168.10.91:1433;DatabaseName=NXTest0401
+#    username: mes
+#    password: 123456
+    username: UBIUser
+    password: P@ssw0rd
+mybatis-plus:
+  log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+swagger:
+  enable: true
+
+#定义队列名称
+myqueue: test-que
+topicqueue: topicqueue

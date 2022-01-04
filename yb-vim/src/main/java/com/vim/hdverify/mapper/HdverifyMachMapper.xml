@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.vim.hdverify.mapper.HdverifyMachMapper">
+
+    <select id="getHdverifyMachList" resultType="com.vim.hdverify.vo.HdverifyMachVO">
+        SELECT t1.*,t2.brand FROM
+        (SELECT yhm.*,ymm.mac,ysb.`status` AS boxStatus,ysb.number
+        FROM yb_hdverify_mach yhm
+        LEFT JOIN yb_supervise_boxinfo ysb
+        ON yhm.bx_id = ysb.id
+        LEFT JOIN yb_machine_mixbox ymm
+        ON ysb.uuid = ymm.uuid) t1
+        LEFT JOIN
+        (SELECT ymm.id AS maId,ymc.brand
+        FROM yb_machine_mainfo ymm
+        LEFT JOIN yb_machine_classify ymc
+        ON ymm.mt_id =ymc.id) t2
+        ON t1.ma_id = t2.maId
+        <where>
+            <if test="maId!=null">AND t1.id =#{maId} </if>
+            <if test="maName!=null">AND t1.ma_name =#{maName} </if>
+            <if test="status!=null">AND t1.status =#{status} </if>
+        </where>
+    </select>
+
+</mapper>

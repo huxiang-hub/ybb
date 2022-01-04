@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.execute.mapper.ExecutePutstoreMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="executeBrieferResultMap" type="com.yb.execute.vo.ExecuteBrieferVO">
+        <id column="id" property="id"/>
+        <result column="es_id" property="esId"/>
+        <result column="count_num" property="countNum"/>
+        <result column="ready_num" property="readyNum"/>
+        <result column="stop_waste" property="stopWaste"/>
+        <result column="status" property="status"/>
+        <result column="box_num" property="boxNum"/>
+        <result column="product_num" property="productNum"/>
+        <result column="waste_num" property="wasteNum"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="handle" property="handle"/>
+        <result column="handle_time" property="handleTime"/>
+        <result column="create_at" property="createAt"/>
+        <result column="od_id" property="odId"/>
+        <result column="od_name" property="odName"/>
+        <result column="ex_status" property="exStatus"/>
+        <result column="put_time" property="putTime"/>
+        <result column="od_count" property="odCount"/>
+        <result column="complete_num" property="completeNum"/>
+    </resultMap>
+
+
+    <select id="selectExecutePutStorePage" resultType="com.yb.execute.vo.ExecutePutStoreVO">
+        SELECT
+        t1.*,
+        t4.name,
+        t5.batch_no AS batchNo,
+        t6.od_name AS odName
+        FROM yb_execute_putstore t1
+        LEFT JOIN yb_execute_info t2
+        ON t1.ex_id = t2.id
+        LEFT JOIN yb_workbatch_ordlink t3
+        ON t2.sd_id = t3.id
+        LEFT JOIN yb_base_staffinfo t4
+        ON t1.us_id = t4.user_id
+        LEFT JOIN yb_order_workbatch t5
+        ON t3.wb_id = t5.id
+        LEFT JOIN yb_order_ordinfo t6
+        ON t5.od_id = t6.id
+        WHERE 1=1
+        <if test="executePutStoreVO.status!=null">AND t1.status = #{executePutStoreVO.status}</if>
+        <if test="executePutStoreVO.putTime!=null">AND t1.put_time = #{executePutStoreVO.putTime}</if>
+        <if test="executePutStoreVO.receiverTime!=null">AND t1.receiver_time = #{executePutStoreVO.receiverTime}</if>
+        <if test="executePutStoreVO.putAddr!=null">AND t1.put_addr LIKE CONCAT('%',#{executePutStoreVO.putAddr},'%')</if>
+        <if test="executePutStoreVO.name!=null">AND t2.name LIKE CONCAT('%',#{executePutStoreVO.name},'%')</if>
+        <if test="executePutStoreVO.batchNo!=null">AND t2.name LIKE CONCAT('%',#{executePutStoreVO.batchNo},'%')</if>
+        <if test="executePutStoreVO.odName!=null">AND t2.name LIKE CONCAT('%',#{executePutStoreVO.odName},'%')</if>
+    </select>
+
+
+    <select id="pagePutstoreList" resultType="com.yb.execute.vo.ExecuteBrieferVO">
+        SELECT a.put_time ,c.count_num,c.waste_num,c.handle,b.sd_id,f.od_name,od_count,d.complete_num
+        FROM yb_execute_putstore a
+        JOIN yb_execute_state b ON b.id=a.es_id
+        JOIN yb_execute_briefer c ON c.es_id=b.id
+        JOIN yb_workbatch_ordlink d ON d.id=b.sd_id
+        JOIN yb_order_workbatch e ON e.id=b.wb_id
+        JOIN yb_order_ordinfo f ON f.id=e.od_id
+        <where>
+            <if test="orderId != null">
+                e.od_id=#{orderId}
+            </if>
+            <if test="orderName != null">
+                AND f.od_name LIKE concat('%',#{orderName},'%')
+            </if>
+        </where>
+        LIMIT #{current},#{size}
+    </select>
+
+    <select id="executePutstorECount" resultType="int">
+         SELECT COUNT(*)
+        FROM yb_execute_putstore a
+        JOIN yb_execute_state b ON b.id=a.es_id
+        JOIN yb_execute_briefer c ON c.es_id=b.id
+        JOIN yb_workbatch_ordlink d ON d.id=b.sd_id
+        JOIN yb_order_workbatch e ON e.id=b.wb_id
+        JOIN yb_order_ordinfo f ON f.id=e.od_id
+        <where>
+            <if test="orderId != null">
+                e.od_id=#{orderId}
+            </if>
+            <if test="orderName != null">
+                AND f.od_name LIKE concat('%',#{orderName},'%')
+            </if>
+        </where>
+
+    </select>
+
+
+
+</mapper>

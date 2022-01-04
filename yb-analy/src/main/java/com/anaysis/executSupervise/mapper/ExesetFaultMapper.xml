@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anaysis.executSupervise.mapper.ExesetFaultMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="exesetFaultResultMap" type="com.anaysis.executSupervise.entity.ExesetFault">
+        <id column="id" property="id"/>
+        <result column="ma_id" property="maId"/>
+        <result column="limit_time" property="limitTime"/>
+        <result column="disappear" property="disappear"/>
+        <result column="popup" property="popup"/>
+        <result column="sendto" property="sendto"/>
+        <result column="create_at" property="createAt"/>
+        <result column="us_id" property="usId"/>
+        <result column="update_at" property="updateAt"/>
+    </resultMap>
+    <select id="getFaultSetByMaId" resultType="com.anaysis.executSupervise.entity.ExesetFault">
+        select * from yb_exeset_fault where ma_id = #{maId}
+    </select>
+    <select id="getFaultSetByUuid" resultType="com.anaysis.executSupervise.entity.ExesetFault">
+        SELECT
+            a.*
+        FROM
+            yb_exeset_fault a
+        LEFT JOIN yb_supervise_execute b
+        ON b.ma_id = a.ma_id
+        WHERE
+            b.uuid = #{uuid}
+    </select>
+
+</mapper>

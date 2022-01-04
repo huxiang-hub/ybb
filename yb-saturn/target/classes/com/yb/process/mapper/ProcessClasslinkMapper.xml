@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.process.mapper.ProcessClasslinkMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="processClasslinkResultMap" type="com.yb.process.entity.ProcessClasslink">
+        <id column="id" property="id"/>
+        <result column="pr_id" property="prId"/>
+        <result column="py_id" property="pyId"/>
+    </resultMap>
+
+
+    <select id="selectProcessClasslinkPage" resultMap="processClasslinkResultMap">
+        select * from yb_process_classlink where is_deleted = 0
+    </select>
+
+</mapper>

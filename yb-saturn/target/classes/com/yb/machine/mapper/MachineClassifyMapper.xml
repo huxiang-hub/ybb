@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.machine.mapper.MachineClassifyMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="machineClassifyResultMap" type="com.yb.machine.entity.MachineClassify">
+        <id column="id" property="id"/>
+        <result column="brand" property="brand"/>
+        <result column="model" property="model"/>
+        <result column="specs" property="specs"/>
+        <result column="image" property="image"/>
+        <result column="speed" property="speed"/>
+        <result column="remark" property="remark"/>
+        <result column="manufacturer" property="manufacturer"/>
+        <result column="create_at" property="createAt"/>
+    </resultMap>
+
+    <select id="selectspeedByMaId" resultType="com.yb.machine.entity.MachineClassify">
+        SELECT a.speed
+        FROM yb_machine_classify a
+        LEFT JOIN yb_machine_mainfo b ON b.mt_id = a.id
+        WHERE b.id=#{maId}
+    </select>
+
+    <select id="selectMachineClassifyPage" resultMap="machineClassifyResultMap">
+        select * from yb_machine_classify where is_deleted = 0
+    </select>
+
+    <select id="getMachineInfo" resultType="com.yb.machine.entity.MachineClassify">
+        SELECT ymc.* FROM  yb_machine_classify ymc
+        LEFT JOIN  yb_machine_mainfo ymm
+        on ymm.mt_id = ymc.id
+        <where>
+            <if test="maId!=null">
+                ymm.id = #{maId}
+            </if>
+        </where>
+    </select>
+    <update id="updateMachineInfo" >
+        UPDATE yb_machine_classify SET
+        mno = #{info.mno},
+        name = #{info.name},
+        dp_id = #{info.dpId},
+        pro_type = #{info.proype}
+        <where>
+            <if test="maId!=null">
+                id = #{maId}
+            </if>
+        </where>
+    </update>
+    <select id="getAllBrand" resultType="com.yb.machine.vo.MachineClassifyVO">
+        SELECT  id AS mtId,brand,model,specs,image,speed
+         FROM yb_machine_classify
+    </select>
+
+    <select id="listByMachine" resultType="com.yb.system.dict.vo.DictVO">
+        SELECT DISTINCT a.* FROM (select * from blade_dict where code='maType' ) a
+        JOIN yb_machine_mainfo b ON a.dict_key = b.ma_type ORDER BY sort
+    </select>
+</mapper>

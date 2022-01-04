@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anaysis.sqlservermapper.HrProductMapper">
+
+
+    <select id="list" resultType="com.anaysis.entity.HrProduct">
+
+    </select>
+    <select id="getProdByErpIds" resultType="com.anaysis.entity.ProdPdinfo">
+        SELECT
+        p.ObjID AS erpId,
+        p.BOM AS pdNo,
+        p.ProdDesc AS pdName,
+        c.Length AS 长,
+        c.Width AS 宽,
+        c.Height AS 高,
+        c.M2PerPiece 单片面积,
+        c.BoardQuality AS 材质,
+        c.BoxType AS 箱型,
+        c.Flute AS 楞型,
+        c.DimensionOf AS 维度 -- 内径，外径，生产，null
+        -- 	c.PrintType AS 打印类型 -- 水印，null
+        FROM
+        Product p
+        LEFT JOIN PRODCTN c ON p.BOM = c.BOM
+        AND p.CustID = c.CustID
+        WHERE
+--         ( p.ProductStatus NOT IN ( '作废' ) OR p.ProductStatus IS NOT NULL )
+        p.BOM != 'CTN'
+        AND p.ProductType = 'CTN'
+         p.ObjID IN
+        <foreach item="item" collection="list" separator="," open="(" close=")" index="">
+            #{item}
+        </foreach>
+        UNION
+        SELECT
+        p.ObjID AS erpId,
+        p.BOM AS pdNo,
+        p.ProdDesc AS pdName,
+        c.Length AS 长,
+        c.Width AS 宽,
+        c.Height AS 高,
+        c.M2PerPiece 单片面积,
+        c.BoardQuality AS 材质,
+        c.BoxType AS 箱型,
+        c.Flute AS 楞型,
+        c.DimensionOf AS 维度 -- 内径，外径，生产，null
+        -- 	c.PrintType AS 打印类型 -- 水印，null
+        FROM
+        Product p
+        LEFT JOIN PRODOffSet c ON p.BOM = c.BOM
+        AND p.CustID = c.CustID
+        WHERE
+--         ( p.ProductStatus NOT IN ( '作废' ) OR p.ProductStatus IS NULL )
+         p.BOM != 'CTN'
+        AND p.ProductType = 'OFFSET'
+        AND p.ObjID IN
+        <foreach item="item" collection="list" separator="," open="(" close=")" index="">
+            #{item}
+        </foreach>
+        UNION
+        SELECT
+        p.ObjID AS erpId,
+        p.BOM AS pdNo,
+        p.ProdDesc AS pdName,
+        c.Length AS 长,
+        c.Width AS 宽,
+        c.Height AS 高,
+        c.M2PerPiece 单片面积,
+        c.BoardQuality AS 材质,
+        c.BoxType AS 箱型,
+        c.Flute AS 楞型,
+        c.DimensionOf AS 维度 -- 内径，外径，生产，null
+        -- 	c.PrintType AS 打印类型 -- 水印，null
+        FROM
+        Product p
+        LEFT JOIN SalesOrdSheetBoard c ON p.BOM = c.BOM
+        AND p.CustID = c.CustID
+        WHERE
+--         ( p.ProductStatus NOT IN ( '作废' ) OR p.ProductStatus IS NULL )
+         p.BOM != 'CTN'
+        AND p.ProductType = 'SheetBoard'
+        AND p.ObjID IN
+        <foreach item="item" collection="list" separator="," open="(" close=")" index="">
+            #{item}
+        </foreach>
+    </select>
+    <select id="getProdCtnByErpIds" resultType="com.anaysis.entity.ProdPdinfo">
+        SELECT
+        p.CustID as custId,
+        4 AS ptType,
+        1 AS pcId,
+        p.ObjID AS erpId,
+        p.BOM AS pdNo,
+        p.ProdDesc AS pdName,
+        c.Length AS 长,
+        c.Width AS 宽,
+        c.Height AS 高,
+        c.M2PerPiece 单片面积,
+        c.BoardQuality AS 材质,
+        c.BoxType AS 箱型,
+        c.Flute AS 楞型,
+        c.DimensionOf AS 维度 -- 内径，外径，生产，null
+        -- 	c.PrintType AS 打印类型 -- 水印，null
+        FROM
+        Product p
+        LEFT JOIN PRODCTN c ON p.BOM = c.BOM
+        AND p.CustID = c.CustID
+        WHERE
+--         ( p.ProductStatus NOT IN ( '作废' ) OR p.ProductStatus IS NULL )
+         p.BOM != 'CTN'
+        AND p.ProductType = 'CTN'
+        AND p.ObjID IN
+        <foreach item="item" collection="list" separator="," open="(" close=")" index="">
+            #{item}
+        </foreach>
+    </select>
+    <select id="getProdOffByErpIds" resultType="com.anaysis.entity.ProdPdinfo">
+        SELECT
+        p.CustID as custId,
+        5 AS ptType,
+        2 AS pcId,
+        p.ObjID AS erpId,
+        p.BOM AS pdNo,
+        p.ProdDesc AS pdName,
+        c.Length AS 长,
+        c.Width AS 宽,
+        c.Height AS 高,
+        c.M2PerPiece 单片面积,
+        c.BoardQuality AS 材质,
+        c.BoxType AS 箱型,
+        c.Flute AS 楞型,
+        c.DimensionOf AS 维度 -- 内径，外径，生产，null
+        -- 	c.PrintType AS 打印类型 -- 水印，null
+        FROM
+        Product p
+        LEFT JOIN PRODOffSet c ON p.BOM = c.BOM
+        AND p.CustID = c.CustID
+        WHERE
+--         ( p.ProductStatus NOT IN ( '作废' ) OR p.ProductStatus IS NULL )
+         p.BOM != 'CTN'
+        AND p.ProductType = 'OFFSET'
+        AND p.ObjID IN
+        <foreach item="item" collection="list" separator="," open="(" close=")" index="">
+            #{item}
+        </foreach>
+    </select>
+    <select id="getProdSheetByErpIds" resultType="com.anaysis.entity.ProdPdinfo">
+        SELECT
+        p.CustID as custId,
+        6 AS ptType,
+        3 AS pcId,
+        p.ObjID AS erpId,
+        p.BOM AS pdNo,
+        p.ProdDesc AS pdName,
+        c.Length AS 长,
+        c.Width AS 宽,
+        c.Height AS 高,
+        c.M2PerPiece 单片面积,
+        c.BoardQuality AS 材质,
+        c.BoxType AS 箱型,
+        c.Flute AS 楞型,
+        c.DimensionOf AS 维度 -- 内径，外径，生产，null
+        -- 	c.PrintType AS 打印类型 -- 水印，null
+        FROM
+        Product p
+        LEFT JOIN SalesOrdSheetBoard c ON p.BOM = c.BOM
+        AND p.CustID = c.CustID
+        WHERE
+--         ( p.ProductStatus NOT IN ( '作废' ) OR p.ProductStatus IS NULL )
+         p.BOM != 'CTN'
+        AND p.ProductType = 'SheetBoard'
+        AND p.ObjID IN
+        <foreach item="item" collection="list" separator="," open="(" close=")" index="">
+            #{item}
+        </foreach>
+    </select>
+    <select id="getProdBomHeadByErpIds" resultType="com.anaysis.entity.ProdPdinfo">
+
+    </select>
+
+</mapper>

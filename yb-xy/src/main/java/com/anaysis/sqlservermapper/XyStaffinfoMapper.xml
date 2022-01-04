@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anaysis.sqlservermapper.XyStaffinfoMapper">
+
+    <select id="list" resultType="com.anaysis.entity.BaseStaffinfo">
+        SELECT
+            a.ID AS erpId,
+            a.XM AS name,
+            a.GKH AS jobnum,
+            (CASE a.XB WHEN '男' THEN 1 WHEN '女' THEN 0 END) as sex,
+<!--            b.PID AS bcId,&#45;&#45;班组id-->
+            b.BMID AS dpErp, -- 部门id
+            a.KQKH as idCard,
+            CASE
+            WHEN ISNULL(a.SFZX,0) = 0 THEN 1
+            ELSE 0 END AS isUsed
+        FROM
+            Base_YGDA a
+        LEFT JOIN RS_BZSD_D b ON a.ID = b.YGID
+        LEFT JOIN Accounts_Users c ON a.ID = c.YGID
+        WHERE a.SFZX = 0
+    </select>
+</mapper>

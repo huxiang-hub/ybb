@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anaysis.sqlservermapper.MachineDAO">
+    <insert id="save" parameterType="com.anaysis.entity.MMSMachineEntity" statementType="CALLABLE">
+        {call jsj_save_machine(
+          #{uuid, mode=IN, jdbcType=VARCHAR},
+          #{state, mode=IN, jdbcType=VARCHAR},
+          #{count, mode=IN, jdbcType=VARCHAR},
+          #{time, mode=IN, jdbcType=VARCHAR}
+        )}
+    </insert>
+</mapper>

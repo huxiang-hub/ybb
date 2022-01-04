@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.statis.mapper.StatisMachsingleMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="statisMachsingleResultMap" type="com.yb.statis.entity.StatisMachsingle">
+        <id column="id" property="id"/>
+        <result column="sm_id" property="smId"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="work_stay" property="workStay"/>
+        <result column="maintain_stay" property="maintainStay"/>
+        <result column="mould_num" property="mouldNum"/>
+        <result column="prepare_stay" property="prepareStay"/>
+        <result column="standard_runtime" property="standardRuntime"/>
+        <result column="planutilize_stay" property="planutilizeStay"/>
+        <result column="factutilize_stay" property="factutilizeStay"/>
+        <result column="utilize_stay" property="utilizeStay"/>
+        <result column="nodefect_count" property="nodefectCount"/>
+        <result column="wates_count" property="watesCount"/>
+        <result column="task_count" property="taskCount"/>
+        <result column="work_count" property="workCount"/>
+        <result column="box_num" property="boxNum"/>
+        <result column="quality_num" property="qualityNum"/>
+        <result column="fact_speed" property="factSpeed"/>
+        <result column="fault_stay" property="faultStay"/>
+        <result column="quality_stay" property="qualityStay"/>
+        <result column="plan_stay" property="planStay"/>
+        <result column="manage_stay" property="manageStay"/>
+        <result column="abrasion_stay" property="abrasionStay"/>
+        <result column="rest_stay" property="restStay"/>
+        <result column="stay_total" property="stayTotal"/>
+        <result column="oe_id" property="oeId"/>
+        <result column="utilize_rate" property="utilizeRate"/>
+        <result column="yield_rate" property="yieldRate"/>
+        <result column="perform_rate" property="performRate"/>
+        <result column="gather_rate" property="gatherRate"/>
+        <result column="create_at" property="createAt"/>
+        <result column="update_at" property="updateAt"/>
+    </resultMap>
+
+
+    <select id="selectStatisMachsinglePage" resultMap="statisMachsingleResultMap">
+        select * from yb_statis_machsingle where is_deleted = 0
+    </select>
+
+
+    <select id="selectStatisMachsingleoEEPage" resultType="com.yb.statis.vo.StatisMachsingleVO">
+        SELECT
+        *,
+        yso.quality_num AS standQualityNum,
+        yso.prepare_stay AS standPrepareStay,
+        yso.maintain_num As standMaintainNum ,
+        yso.maintain_time As standMaintainTime,
+        yso.mould_num As standMouldNum,
+        yso.mould_time As standMouldTime,
+        yif.dp_id As dpId
+        FROM
+        yb_statis_machoee AS ysm
+         JOIN yb_statis_machsingle AS ymm ON ysm.id = ymm.sm_id
+         JOIN yb_statis_oeeset yso ON ysm.id = yso.db_id
+         JOIN yb_machine_mainfo yif ON ysm.ma_id = yif.id
+        WHERE yso.st_type='1'  and ysm.oe_type='1'
+        <if test="statisMachsingle.oeDate!=null and statisMachsingle.oeDate!=''">
+            and oe_date = #{statisMachsingle.oeDate}
+        </if>
+        <if test="statisMachsingle.maId!=null and statisMachsingle.maId!=''">
+            and  ysm.ma_id = #{statisMachsingle.maId}
+        </if>
+        <if test="statisMachsingle.prId!=null and statisMachsingle.prId!=''">
+            and ysm.ma_id in (select ma_id from yb_process_machlink where pr_id=#{statisMachsingle.prId})
+        </if>
+    </select>
+
+    <select id="PageOfMachsinglexy" resultType="com.yb.statis.vo.StatisMachsingleVO">
+        SELECT
+        *,
+        ymm.quality_num AS standQualityNum,
+        ymm.prepare_stay AS standPrepareStay,
+        ymm.maintain_num As standMaintainNum ,
+        ymm.maintain_stay As standMaintainTime,
+        ymm.mould_num As standMouldNum,
+        ymm.mould_stay As standMouldTime,
+        yif.dp_id As dpId
+        FROM
+        yb_statis_machoee AS ysm
+        JOIN yb_statis_machsingle AS ymm ON ysm.id = ymm.sm_id
+        JOIN yb_machine_mainfo yif ON ysm.ma_id = yif.id
+        WHERE ysm.oe_type='1'
+        <if test="statisMachsingle.oeDate!=null and statisMachsingle.oeDate!=''">
+            and oe_date = #{statisMachsingle.oeDate}
+        </if>
+        <if test="statisMachsingle.maType!=null and statisMachsingle.maType!=''">
+         AND yif.ma_type = #{statisMachsingle.maType}
+        </if>
+        <if test="statisMachsingle.maId!=null and statisMachsingle.maId!=''">
+            and  ysm.ma_id = #{statisMachsingle.maId}
+        </if>
+        <if test="statisMachsingle.dpId!=null and statisMachsingle.dpId!=0">
+            and  yif.dp_id = #{statisMachsingle.dpId}
+        </if>
+        <if test="statisMachsingle.wsId!=null and statisMachsingle.wsId!=0">
+            and  ysm.ws_id = #{statisMachsingle.wsId}
+        </if>
+        <if test="statisMachsingle.prId!=null and statisMachsingle.prId!=''">
+            and ysm.ma_id in (select ma_id from yb_process_machlink where pr_id=#{statisMachsingle.prId})
+        </if>
+        ORDER BY ysm.oe_date DESC
+    </select>
+</mapper>

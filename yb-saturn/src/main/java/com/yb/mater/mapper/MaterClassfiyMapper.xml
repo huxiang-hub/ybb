@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.mater.mapper.MaterClassfiyMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="materClassfiyResultMap" type="com.yb.mater.entity.MaterClassfiy">
+        <id column="id" property="id"/>
+        <result column="mc_type" property="mcType"/>
+        <result column="mc_name" property="mcName"/>
+        <result column="mc_no" property="mcNo"/>
+        <result column="create_at" property="createAt"/>
+    </resultMap>
+
+
+    <select id="selectMaterClassfiyPage" resultMap="materClassfiyResultMap">
+        select * from yb_mater_classfiy
+    </select>
+
+
+</mapper>

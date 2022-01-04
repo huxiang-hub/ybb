@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anaysis.executSupervise.mapper.ExecuteFaultMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="executeFaultResultMap" type="com.anaysis.executSupervise.entity.ExecuteFault">
+        <id column="id" property="id"/>
+        <result column="ex_id" property="exId"/>
+        <result column="status" property="status"/>
+        <result column="classify" property="classify"/>
+        <result column="reasons" property="reasons"/>
+        <result column="remake" property="remake"/>
+        <result column="handle" property="handle"/>
+        <result column="handle_time" property="handleTime"/>
+        <result column="way" property="way"/>
+        <result column="create_at" property="createAt"/>
+        <result column="delay_time" property="delayTime"/>
+    </resultMap>
+
+    <select id="getDownCount" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM yb_execute_fault a
+        LEFT JOIN yb_execute_info b ON a.ex_id = b.id
+        WHERE b.ma_id = #{maId} and a.handle = 0
+    </select>
+    <select id="getByExId" resultMap="executeFaultResultMap">
+        SELECT * FROM yb_execute_fault
+        where ex_id = #{exId}
+        and delay_time is null
+        order by create_at desc
+        limit 0,1
+    </select>
+
+</mapper>

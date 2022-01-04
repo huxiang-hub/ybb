@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.statis.mapper.StatisRegularMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="statisRegularResultMap" type="com.yb.statis.entity.StatisRegular">
+        <id column="id" property="id"/>
+        <result column="so_id" property="soId"/>
+        <result column="work_date" property="workDate"/>
+        <result column="work_time" property="workTime"/>
+        <result column="curr_stay" property="currStay"/>
+        <result column="prepare_stay" property="prepareStay"/>
+        <result column="repair_stay" property="repairStay"/>
+        <result column="fault_stay" property="faultStay"/>
+        <result column="quality_stay" property="qualityStay"/>
+        <result column="replacemod_stay" property="replacemodStay"/>
+        <result column="plan_stay" property="planStay"/>
+        <result column="manage_stay" property="manageStay"/>
+        <result column="abrasion_stay" property="abrasionStay"/>
+        <result column="rest_stay" property="restStay"/>
+        <result column="work_stay" property="workStay"/>
+        <result column="utilize_stay" property="utilizeStay"/>
+        <result column="planutilize_stay" property="planutilizeStay"/>
+        <result column="factutilize_stay" property="factutilizeStay"/>
+        <result column="utilize_rate" property="utilizeRate"/>
+        <result column="task_count" property="taskCount"/>
+        <result column="nodefect_count" property="nodefectCount"/>
+        <result column="work_count" property="workCount"/>
+        <result column="yield_rate" property="yieldRate"/>
+        <result column="fact_speed" property="factSpeed"/>
+        <result column="normal_speed" property="normalSpeed"/>
+        <result column="perform_rate" property="performRate"/>
+        <result column="gather_rate" property="gatherRate"/>
+        <result column="create_at" property="createAt"/>
+    </resultMap>
+
+
+    <select id="selectStatisRegularPage" resultMap="statisRegularResultMap">
+        select * from yb_statis_regular where is_deleted = 0
+    </select>
+
+</mapper>

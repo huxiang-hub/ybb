@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sso.mapper.SuperviseBoxinfoMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="superviseBoxinfoResultMap" type="com.sso.supervise.vo.SuperviseBoxinfoVO">
+        <id column="id" property="id"/>
+        <result column="uuid" property="uuid"/>
+        <result column="ma_id" property="maId"/>
+        <result column="status" property="status"/>
+        <result column="number" property="number"/>
+        <result column="number_of_day" property="numberOfDay"/>
+        <result column="dspeed" property="dspeed"/>
+        <result column="start_time" property="startTime"/>
+        <result column="create_at" property="createAt"/>
+        <result column="update_at" property="updateAt"/>
+        <result column="xlh" property="xlh"/>
+        <result column="sip" property="sip"/>
+        <result column="sl_id" property="slId"/>
+        <result column="us_ids" property="usIds"/>
+        <result column="name" property="name"/>
+        <result column="od_count" property="odCount"/>
+        <result column="complete_num" property="completeNum"/>
+        <result column="unfinished" property="unfinished"/>
+        <result column="limit_date" property="limitDate"/>
+        <result column="od_name" property="odName"/>
+        <result column="waste_num" property="wasteNum"/>
+        <result column="count_num" property="countNum"/>
+        <result column="od_id" property="odId"/>
+    </resultMap>
+
+
+    <select id="selectSuperviseBoxinfoPage" resultMap="superviseBoxinfoResultMap">
+        select * from yb_supervise_boxinfo where is_deleted = 0
+    </select>
+    <select id="getBoxNum" resultType="java.lang.Integer">
+        select number_of_day from v_boxinfo where macId = #{mId}
+    </select>
+
+    <select id="getMacUser" resultType="java.lang.String">
+        SELECT us_ids FROM yb_supervise_boxinfo WHERE uuid = (
+        SELECT a.bno FROM yb_machine_mixbox a WHERE a.ma_id = #{mId})
+    </select>
+    <select id="getBoxInfoByBno" resultType="com.sso.supervise.entity.SuperviseBoxinfo">
+        SELECT * FROM yb_supervise_boxinfo WHERE uuid = #{uuid_s}
+    </select>
+    <select id="getBoxInfoByMid" resultType="com.sso.supervise.entity.SuperviseBoxinfo">
+        SELECT * FROM yb_supervise_boxinfo WHERE ma_id = #{maId}
+    </select>
+
+    <select id="selectSuperviseBoxinfoVO" resultType="com.sso.supervise.vo.SuperviseBoxinfoVO">
+
+        SELECT b.id,b.name,a.number_of_day,a.dspeed,f.od_count,d.complete_num,f.limit_date,f.id od_id,f.od_name,h.waste_num,h.count_num,(f.od_count-d.complete_num) unfinished
+        FROM yb_machine_mainfo b
+        LEFT JOIN yb_supervise_boxinfo a ON a.ma_id=b.id
+        LEFT JOIN yb_supervise_execute c ON c.ma_id=a.ma_id
+        LEFT JOIN yb_workbatch_ordlink d ON d.id=c.sd_id
+        LEFT JOIN yb_order_workbatch e ON e.id=d.wb_id
+        LEFT JOIN yb_order_ordinfo f ON f.id=e.od_id
+        LEFT JOIN yb_execute_info g ON g.sd_id=d.id
+        LEFT JOIN yb_execute_briefer h ON h.ex_id=g.id
+    </select>
+
+    <select id="pageCount" resultType="int">
+        SELECT COUNT(*)
+        FROM yb_machine_mainfo b
+        LEFT JOIN yb_supervise_boxinfo a ON a.ma_id=b.id
+        LEFT JOIN yb_supervise_execute c ON c.ma_id=a.ma_id
+        LEFT JOIN yb_workbatch_ordlink d ON d.id=c.sd_id
+        LEFT JOIN yb_order_workbatch e ON e.id=d.wb_id
+        LEFT JOIN yb_order_ordinfo f ON f.id=e.od_id
+        LEFT JOIN yb_execute_info g ON g.sd_id=d.id
+        LEFT JOIN yb_execute_briefer h ON h.ex_id=g.id
+        <where>
+            <if test="status != null">
+                AND a.status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <select id="getBoxListNotStop" resultType="com.sso.supervise.vo.SuperviseBoxinfoVO">
+        SELECT * FROM yb_supervise_boxinfo WHERE `status` != '4'
+    </select>
+</mapper>

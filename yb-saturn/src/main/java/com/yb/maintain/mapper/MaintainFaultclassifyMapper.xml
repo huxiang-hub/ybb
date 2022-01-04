@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.maintain.mapper.MaintainFaultclassifyMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="maintainFaultclassifyResultMap" type="com.yb.maintain.entity.MaintainFaultclassify">
+        <id column="id" property="id"/>
+        <result column="pid" property="pid"/>
+        <result column="fname" property="fname"/>
+        <result column="fvalue" property="fvalue"/>
+        <result column="over_time" property="overTime"/>
+        <result column="waste" property="waste"/>
+        <result column="create_at" property="createAt"/>
+        <result column="us_id" property="usId"/>
+        <result column="update_at" property="updateAt"/>
+    </resultMap>
+
+
+    <select id="selectMaintainFaultclassifyPage" resultMap="maintainFaultclassifyResultMap">
+        select * from yb_maintain_faultclassify where is_deleted = 0
+    </select>
+    <select id="getFaultList" resultType="com.yb.maintain.vo.MaintainFaultclassifyVO">
+        select a.fname AS status,b.id,b.fname as classify from yb_maintain_faultclassify a
+        LEFT JOIN yb_maintain_faultclassify b
+        ON a.id = b.pid
+    </select>
+
+    <select id="getParentFvalue" resultType="java.lang.String">
+        SELECT
+        	a.fvalue
+        FROM
+        	yb_maintain_faultclassify a
+        WHERE
+        	a.id = (
+        		SELECT
+        			pid
+        		FROM
+        			yb_maintain_faultclassify b
+        		WHERE
+        			b.fvalue = #{fvalue}
+        	)
+    </select>
+
+</mapper>

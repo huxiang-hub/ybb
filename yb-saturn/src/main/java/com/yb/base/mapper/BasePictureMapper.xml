@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.base.mapper.BasePictureMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="basePictureResultMap" type="com.yb.base.entity.BasePicture">
+        <result column="id" property="id"/>
+        <result column="bt_type" property="btType"/>
+        <result column="bt_id" property="btId"/>
+        <result column="talk_id" property="talkId"/>
+        <result column="pic_title" property="picTitle"/>
+        <result column="pic_size" property="picSize"/>
+        <result column="pic_screen" property="picScreen"/>
+        <result column="pic_path" property="picPath"/>
+        <result column="pic_url" property="picUrl"/>
+        <result column="pic_minpath" property="picMinpath"/>
+        <result column="pic_minurl" property="picMinurl"/>
+        <result column="us_id" property="usId"/>
+        <result column="us_name" property="usName"/>
+        <result column="create_at" property="createAt"/>
+        <result column="update_at" property="updateAt"/>
+    </resultMap>
+
+
+<select id="getByBtIdAndBtType" resultMap="basePictureResultMap">
+select * from yb_base_picture
+where bt_id = #{btId}
+and bt_type =#{btType}
+</select>
+
+<select id="findByUuid" resultType="com.yb.fastdfs.FileSystem">
+select pic_url as filePath,id as fileId  from yb_base_picture
+where uuid = #{code}
+</select>
+
+
+
+</mapper>

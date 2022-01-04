@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.exeset.mapper.ExesetQualityMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="exesetQualityResultMap" type="com.yb.exeset.entity.ExesetQuality">
+        <id column="id" property="id"/>
+        <result column="ma_id" property="maId"/>
+        <result column="model" property="model"/>
+        <result column="limit_time" property="limitTime"/>
+        <result column="limit_num" property="limitNum"/>
+        <result column="popup" property="popup"/>
+        <result column="disappear" property="disappear"/>
+        <result column="sendto" property="sendto"/>
+        <result column="create_at" property="createAt"/>
+        <result column="us_id" property="usId"/>
+        <result column="update_at" property="updateAt"/>
+    </resultMap>
+
+
+    <select id="selectExesetQualityPage" resultMap="exesetQualityResultMap">
+        select * from yb_exeset_quality where is_deleted = 0
+    </select>
+    <select id="getQualityModel" resultType="com.yb.exeset.entity.ExesetQuality">
+        select * from yb_exeset_quality where ma_id = #{mId}
+    </select>
+    <select id="getQualityList" resultType="com.yb.execute.vo.ExecuteWasteVO">
+        SELECT a.*,b.start_time,b.end_time FROM yb_execute_waste a
+        LEFT JOIN yb_execute_info b ON a.ex_id = b.id
+        WHERE b.sd_id = #{sdId}
+    </select>
+    <update id="updateQualityPoP"  parameterType="com.yb.exeset.entity.ExesetQuality">
+        UPDATE yb_exeset_quality
+        <set>
+            <if test="flag==0">
+                <if test="limitNum!=null">limit_num =#{limitNum},</if>
+            </if>
+            <if test="flag==1">
+                <if test="limitTime!=null">limit_time =#{limitTime},</if>
+            </if>
+            <if test="disappear">disappear =#{disappear}</if>
+        </set>
+        <where>
+            <if test="maId!=null">
+                AND ma_id = #{maId}
+            </if>
+        </where>
+    </update>
+
+</mapper>

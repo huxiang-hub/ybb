@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.workbatch.mapper.OrdexecuteMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="ordexecuteResultMap" type="com.yb.workbatch.vo.OrdexecuteVO">
+        <result column="wb_no" property="wbNo"/>
+        <result column="pd_id" property="pdId"/>
+        <result column="cm_name" property="cmName"/>
+        <result column="od_no" property="odNo"/>
+        <result column="prNames" property="prnames"/>
+        <result column="planAndArrangeNum" property="planandarrangenum"/>
+        <result column="countNum" property="countnum"/>
+    </resultMap>
+
+
+    <select id="selectOrdexecutePage" resultType="com.yb.workbatch.vo.OrdexecuteVO">
+        select * from v_ordexecute where is_deleted = 0
+    </select>
+
+</mapper>

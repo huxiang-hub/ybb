@@ -1,0 +1,22 @@
+server:
+  port: 2030
+
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driverClassName: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://39.98.57.236:3378/yb_test?useSSL=false&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&tinyInt1isBit=false&allowMultiQueries=true&serverTimezone=GMT%2B8
+    username: root
+    password: ybbqwert
+    bulk_insert_buffer_size: 100M
+sqlserver:
+  datasource:
+    driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    url: jdbc:sqlserver://xypemis.oicp.net:3333;DatabaseName=xySynSmartFactoryForYbb
+    username: ybbtest
+    password: 123456qaz!!!
+
+
+#定义队列名称
+myqueue: test-que
+topicqueue: topicqueue

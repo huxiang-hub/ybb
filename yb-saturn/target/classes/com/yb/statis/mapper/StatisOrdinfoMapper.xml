@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.statis.mapper.StatisOrdinfoMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="statisOrdinfoResultMap" type="com.yb.statis.entity.StatisOrdinfo">
+        <id column="id" property="id"/>
+        <result column="od_id" property="odId"/>
+        <result column="od_num" property="odNum"/>
+        <result column="wb_id" property="wbId"/>
+        <result column="wb_num" property="wbNum"/>
+        <result column="ma_id" property="maId"/>
+        <result column="ma_name" property="maName"/>
+        <result column="pr_id" property="prId"/>
+        <result column="pr_name" property="prName"/>
+        <result column="us_id" property="usId"/>
+        <result column="us_name" property="usName"/>
+        <result column="sf_id" property="sfId"/>
+        <result column="sf_name" property="sfName"/>
+        <result column="create_at" property="createAt"/>
+    </resultMap>
+
+
+    <select id="selectStatisOrdinfoPage" resultMap="statisOrdinfoResultMap">
+        select * from yb_statis_ordinfo where is_deleted = 0
+    </select>
+
+</mapper>

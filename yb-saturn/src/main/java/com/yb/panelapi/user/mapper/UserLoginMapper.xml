@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yb.panelapi.user.mapper.UserLoginMapper">
+
+    <select id="loginByJobNum" resultType="com.yb.base.vo.BaseStaffinfoVO">
+        SELECT b.avatar,y.* FROM blade_user b LEFT JOIN yb_base_staffinfo y ON b.id = y.user_id
+        WHERE  (y.jobnum = #{jobNum}
+        AND b.`password` =#{password})
+        <if test="id!=null">OR b.id = #{id}</if>
+    </select>
+    <select id="loginByPrintChat" resultType="com.yb.base.vo.BaseStaffinfoVO">
+        SELECT b.avatar,y.*
+        FROM blade_user b
+        LEFT JOIN yb_base_staffinfo y
+        ON b.id = y.user_id
+        WHERE b.id = #{id}
+    </select>
+    <select id="getBoxInfoByMaId" resultType="com.yb.supervise.entity.SuperviseBoxinfo">
+        select * from yb_supervise_boxinfo
+        <where>
+            <if test="maId!=null">
+                ma_id=#{maId}
+            </if>
+        </where>
+    </select>
+    <update id="upDataUsIds" parameterType="java.lang.String">
+        <if test="maId!=null and usIds!=null">
+            UPDATE yb_supervise_boxinfo SET us_ids=#{usIds} WHERE  ma_id=#{maId}
+        </if>
+    </update>
+    <insert id="saveUserEvent">
+        insert into yb_execute_state (ma_id,us_id,start_at,event,status,create_at,team_id,leader_id) value (#{maId},#{usId},#{startAt},'A1','A',#{createAt},#{teamId},#{leaderId})
+    </insert>
+    <select id="getFactoryTenantId" resultType="java.lang.String">
+        SELECT  tenant_id FROM yb_base_factory
+        <where>
+            <if test="tenantId!=null"> tenant_id = #{tenantId}</if>
+        </where>
+    </select>
+
+ <select id="faceLogin" resultType="com.yb.base.vo.BaseStaffinfoVO">
+   SELECT b.avatar,y.*
+   FROM blade_user b
+   inner JOIN yb_base_staffinfo y ON b.id = y.user_id
+  WHERE  y.jobnum = #{jobNum}
+</select>
+
+</mapper>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anaysis.sqlservermapper.HrMachineMapper">
+    <select id="getByErpIds" resultType="com.anaysis.entity.MachineMainfo">
+        SELECT
+            MachCode AS name,
+            ProcessCode AS prCode,
+            ObjID AS erpId,
+--             UseProductCategory, -- 适用产品类型
+            DisplaySeq AS sort
+        FROM
+            MACHINES
+        where ObjID IN
+        <foreach item="item" collection="list" separator="," open="(" close=")" index="">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

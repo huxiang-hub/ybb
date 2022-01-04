@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.machine.mapper.MainMixboxMapper">
+
+
+    <insert id="saveMixBox" useGeneratedKeys="true" keyProperty="id" >
+      insert into bladex.yb_machine_mixbox
+        (
+            uuid,ma_id,hd_id,active,depository,mac,create_at,tenant_id
+        )
+        values
+        (
+            #{mixbox.uuid},
+            #{mixbox.maId},
+            #{mixbox.hdId},
+            #{mixbox.active},
+            #{mixbox.depository},
+            #{mixbox.mac},
+            #{mixbox.createAt},
+            #{mixbox.tenantId}
+        )
+    </insert>
+
+    <select id="findByTenantId" resultType="org.springblade.saturn.entity.MainMixbox">
+    select * from bladex.yb_machine_mixbox where tenant_id = #{tenantId}
+    </select>
+    <select id="getByUuid" resultType="org.springblade.saturn.entity.MainMixbox">
+        select * from bladex.yb_machine_mixbox where uuid = #{uuid}
+    </select>
+
+</mapper>

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anaysis.mysqlmapper.WorkbatchOrdlinkMapper">
+
+    <select id="getSdSort" resultType="java.lang.Integer">
+       SELECT
+IFNULL(sd_sort,0)	  as sdSort
+FROM
+	yb_workbatch_ordlink
+WHERE
+	1 = 1
+ORDER BY
+	sd_sort DESC
+	LIMIT 1
+    </select>
+
+    <delete id="allDelete" parameterType="java.lang.Integer">
+<!--        #生产排产管理模块-->
+<!--            #排产表-->
+            Delete from yb_workbatch_ordlink WHERE 1=1;
+<!--            #排产班次表-->
+            Delete from yb_workbatch_shift WHERE 1=1;
+<!--            #排产oee参数表-->
+            Delete from yb_workbatch_ordoee WHERE 1=1;
+<!--            #排产oee保养表-->
+            Delete from yb_workbatchordoee_maintain WHERE 1=1;
+<!--            #排产oee换膜表-->
+            Delete from yb_workbatchordoee_mould WHERE 1=1;
+<!--            #排产oee吃饭表-->
+            Delete from yb_workbatchordoee_meal WHERE 1=1;
+<!--            #板数转化表 测试人员添加-->
+            Delete from yb_workbatch_modulus WHERE 1=1;
+<!--#产品表-->
+        Delete from yb_prod_pdinfo WHERE 1=1;
+<!--    #模板表-->
+        Delete from yb_prod_pdmodel WHERE 1=1;
+<!--    #产品对应部件表-->
+        Delete from yb_prod_partsinfo WHERE 1=1;
+<!--    #产品对应物料表-->
+        Delete from yb_mater_prodlink WHERE 1=1;
+<!--    #产品对应工序表-->
+        Delete from yb_prod_procelink WHERE 1=1;
+<!--#审核表-->
+        Delete from yb_actset_checklog WHERE 1=1;
+<!--    #订单表-->
+        Delete from yb_order_ordinfo WHERE 1=1;
+<!--    #作业批次-->
+        Delete from yb_order_workbatch WHERE 1=1;
+<!--#扩展表-->
+        Delete from yb_workbatch_expcut WHERE 1=1;
+        Delete from yb_workbatch_expprint WHERE 1=1;
+
+    </delete>
+
+    <update id="setStatus" parameterType="java.lang.String">
+        update yb_workbatch_ordlink set status = "3"
+        where erp_id IN
+       <foreach item="item" collection="list" separator="," open="(" close=")" index="">
+                #{item}
+        </foreach>
+    </update>
+
+    <select id="selectByStatus" resultType="com.anaysis.entity.tmp">
+        select id, erp_id as erpId, status from yb_workbatch_ordlink where status = #{status}
+    </select>
+    <select id="selectByEroId" resultType="java.lang.Integer">
+        select id from yb_workbatch_ordlink where erp_id = #{erpId}
+    </select>
+    <select id="selectByStatusReturnErpId" resultType="com.anaysis.entity.det">
+        select id, erp_id AS erpId from yb_workbatch_ordlink where status = #{status}
+    </select>
+    <delete id="deleteByErpIds">
+        delete from yb_workbatch_ordlink where erp_id in
+        <foreach item="item" collection="list" separator="," open="(" close=")" index="">
+            #{item}
+        </foreach>
+    </delete>
+    <select id="selectByErpIds" resultType="java.lang.Integer">
+        select id from yb_workbatch_ordlink where erp_id in
+        <foreach item="item" collection="list" separator="," open="(" close=")" index="">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

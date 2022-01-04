@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.supervise.mapper.SuperviseBoxcleanMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="superviseBoxcleanResultMap" type="com.yb.supervise.entity.SuperviseBoxclean">
+        <id column="id" property="id"/>
+        <result column="mac" property="mac"/>
+        <result column="status" property="status"/>
+        <result column="number" property="number"/>
+        <result column="number_of_day" property="numberOfDay"/>
+        <result column="dspeed" property="dspeed"/>
+        <result column="update_at" property="updateAt"/>
+        <result column="op_date" property="opDate"/>
+        <result column="clean_time" property="cleanTime"/>
+    </resultMap>
+
+
+    <select id="selectSuperviseBoxcleanPage" resultMap="superviseBoxcleanResultMap">
+        select * from yb_supervise_boxclean where is_deleted = 0
+    </select>
+
+</mapper>

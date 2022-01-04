@@ -1,0 +1,8 @@
+spring:
+  profiles:
+    active: pro
+server:
+  port: 2028
+  servlet:
+    context-path: /nxhr
+

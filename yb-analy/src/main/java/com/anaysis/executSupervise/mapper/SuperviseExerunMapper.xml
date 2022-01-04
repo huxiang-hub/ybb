@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anaysis.executSupervise.mapper.SuperviseExerunMapper">
+    <!-- 通用查询映射结果 -->
+    <resultMap id="superviseExerunResultMap" type="com.anaysis.executSupervise.entity.SuperviseExerun">
+        <id     column="id" property="id"/>
+        <result column="uuid" property="uuid"/>
+        <result column="ma_id" property="maId"/>
+        <result column="sd_id" property="sdId"/>
+        <result column="number" property="number"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="stay_time" property="stayTime"/>
+        <result column="regular" property="regular"/>
+        <result column="over_time" property="overTime"/>
+        <result column="status" property="status"/>
+        <result column="us_ids" property="usIds"/>
+        <result column="create_at" property="createAt"/>
+        <result column="update_at" property="updateAt"/>
+    </resultMap>
+
+
+    <select id="getByuuid" resultType="com.anaysis.executSupervise.entity.SuperviseExerun">
+        SELECT *
+        FROM yb_supervise_exerun
+        WHERE uuid = #{uuid}
+    </select>
+    <select id="getHisexerun" resultType="com.anaysis.executSupervise.entity.SuperviseExerun">
+        SELECT *  FROM yb_supervise_exerun
+    </select>
+
+
+    <delete id="clearByalreadylog">
+        delete FROM yb_supervise_exerun where `status`=2
+    </delete>
+    <delete id="clearByuuid" >
+        delete FROM yb_supervise_exerun where uuid = #{uuid}
+    </delete>
+
+    <insert id="insertByuuid" parameterType="com.anaysis.executSupervise.entity.SuperviseExerun" useGeneratedKeys="true" keyProperty="id">
+        insert into yb_supervise_exerun
+        (
+            `uuid`,`ma_id`,`sd_id`,`number`,`start_time`,`regular`,`status`,`us_ids`,`create_at`
+        )
+        values
+        (
+            #{uuid},
+            #{maId},
+            #{sdId},
+            #{number},
+            #{startTime},
+            #{regular},
+            #{status},
+            #{usIds},
+            #{createAt}
+        )
+    </insert>
+    <update id="updateByuuid" parameterType="com.anaysis.executSupervise.entity.SuperviseExerun">
+        UPDATE yb_supervise_exerun SET end_time=#{endTime},stay_time=#{stayTime},over_time=#{overTime},status=#{status},update_at= #{updateAt},start_time= #{startTime},regular = #{regular}
+            WHERE uuid =#{uuid}
+    </update>
+
+</mapper>

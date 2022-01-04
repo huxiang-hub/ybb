@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.prod.mapper.ProdDiffMapper">
+
+    <select id="getAllProcdiff" resultType="com.yb.prod.vo.ProdDiffVO">
+      SELECT
+      ypc.id,
+      ypc.cl_name AS clName,
+      ypc.classify,
+      ypw.id AS prId,
+      ypp.diff,
+      ypc.is_used,
+      ypp.id AS diffId
+      FROM yb_prod_classify ypc
+      LEFT JOIN yb_prod_procdiff ypp
+      ON ypc.id = ypp.pc_id
+      LEFT JOIN yb_process_workinfo ypw
+      ON ypp.pr_id = ypw.id
+      <where>
+          <if test="prodDiffVO.id!=null">AND ypp.id = #{prodDiffVO.id}</if>
+          <if test="prodDiffVO.isUsed!=null"> AND  ypc.is_used =#{prodDiffVO.isUsed} </if>
+          <if test="prodDiffVO.clName!=null"> AND ypc.cl_name LIKE CONCAT('%',#{prodDiffVO.clName})</if>
+      </where>
+    </select>
+    <select id="detail" resultType="com.yb.prod.vo.ProdDiffVO">
+        SELECT
+        ypc.id,
+        ypc.cl_name AS clName,
+        ypc.classify,
+        ypw.id AS prId,
+        ypp.diff,
+        ypc.is_used,
+        ypp.id AS diffId
+        FROM yb_prod_classify ypc
+        LEFT JOIN yb_prod_procdiff ypp
+        ON ypc.id = ypp.pc_id
+        LEFT JOIN yb_process_workinfo ypw
+        ON ypp.pr_id = ypw.id
+        <where>
+            <if test="id!=null">AND ypp.id = #{id}</if>
+        </where>
+    </select>
+</mapper>

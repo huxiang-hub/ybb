@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.order.mapper.OrderOrdinfoMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="orderOrdinfoResultMap" type="com.yb.order.entity.OrderOrdinfo">
+        <id column="id" property="id"/>
+        <result column="pd_id" property="pdId"/>
+        <result column="od_name" property="odName"/>
+        <result column="od_no" property="odNo"/>
+        <result column="od_count" property="odCount"/>
+        <result column="contract_num" property="contractNum"/>
+        <result column="contract_name" property="contractName"/>
+        <result column="waste_count" property="wasteCount"/>
+        <result column="cm_id" property="cmId"/>
+        <result column="cm_shortname" property="cmShortname"/>
+        <result column="cm_name" property="cmName"/>
+        <result column="limit_date" property="limitDate"/>
+        <result column="audit_status" property="auditStatus"/>
+        <result column="production_state" property="productionState"/>
+        <result column="us_id" property="usId"/>
+        <result column="create_at" property="createAt"/>
+        <result column="remark" property="remark"/>
+    </resultMap>
+    <insert id="save" parameterType="com.yb.order.entity.OrderSchedule">
+        insert into yb_order_schedule
+        (od_id,
+         wb_id,
+         sd_id,
+         ma_id,
+         report_num,
+         waste_num,
+         total,
+         start_time,
+         end_time)
+         values
+         (
+         #{odId},
+         #{wbId},
+         #{sdId},
+         #{maId},
+         #{reportNum},
+         #{wasteNum},
+         #{total},
+         #{startTime},
+         #{endTime}
+         )
+    </insert>
+
+
+    <select id="selectOrderOrdinfoPage" resultMap="orderOrdinfoResultMap">
+        select * from yb_order_ordinfo where is_deleted = 0
+    </select>
+    <!--    根据订单的状态查询-->
+    <select id="getOrderByStatus" resultMap="orderOrdinfoResultMap" resultType="com.yb.order.vo.OrderOrdinfoVO">
+       select * from yb_order_ordinfo where production_state=#{production_state}   order by create_at desc
+   </select>
+    <!--根据订单的名字和编号去查询-->
+    <select id="seletOrderByCondition" resultMap="orderOrdinfoResultMap">
+        select * from yb_order_ordinfo where liod_nameke '%${odName}%' or od_num like '%${odNum}%' or create_at like
+        '%${createAt}%' order by create_at=#{createAt}
+        <!--        <where>-->
+        <!--            <if test="od_name!=null or od_name!='' ">and od_name like '%${odName}%'</if>-->
+        <!--            <if test="od_num!=null or od_num!='' ">and od_num like '%${odNum}%'</if>-->
+        <!--            <if test="create_at!=null or create_at!='' ">and create_at like '%${createAt}%'</if>-->
+        <!--       </where>-->
+        <!--        <choose>-->
+        <!--            <when test="create_at != null and create_at != ''">-->
+        <!--                order by ${create_at}-->
+        <!--            </when>-->
+        <!--            <otherwise>-->
+        <!--                order by id desc-->
+        <!--            </otherwise>-->
+        <!--        </choose>-->
+    </select>
+    <select id="getOrderinfoByObno" resultType="com.yb.order.vo.OrderOrdinfoVO">
+        SELECT * FROM yb_order_ordinfo WHERE od_no =#{obno}
+    </select>
+
+    <select id="selectOrderOrdinfoPages" resultType="com.yb.order.vo.OrderOrdinfoVO" >
+        select ord.*,user.real_name,ace.`status`,ace.result from
+        (select orderinfo.*,pdinfo.pd_name,pdinfo.pd_no,pdinfo.image_url,pdinfo.proce_pic from yb_order_ordinfo orderinfo left join yb_prod_pdinfo pdinfo on orderinfo.pd_id = pdinfo.id)
+        ord
+        join blade_user user on ord.us_id = user.id
+        LEFT JOIN (SELECT t1.db_id,t1.id AS logId, t1.check_time AS checkTime, t1.result, t1.status, t3.* FROM yb_actset_checklog t1 LEFT JOIN yb_actset_ckflow t2 ON t1.aw_id = t2.id LEFT JOIN yb_order_ordinfo t3 ON t1.db_id = t3.id WHERE t2.aw_type LIKE CONCAT('%', 'sale', '%') AND t2.as_id = (SELECT id FROM yb_actset_ckset WHERE as_type LIKE CONCAT('%', 'A', '%'))) ace
+        ON ace.db_id = ord.id
+        where 1 = 1
+        <if test="orderOrdinfo.cmName">
+            and ord.cm_name LIKE CONCAT('%',#{orderOrdinfo.cmName},'%')
+        </if>
+        <if test="orderOrdinfo.odNo">
+            and ord.od_no LIKE CONCAT('%',#{orderOrdinfo.odNo},'%')
+        </if>
+        ORDER BY ord.create_at desc
+    </select>
+
+    <select id="selectOrderOrdinfoPagesByUserId" resultType="com.yb.order.vo.OrderOrdinfoVO" >
+        select ord.*,user.real_name,ace.`status`,ace.result from
+        (select orderinfo.*,pdinfo.pd_name,pdinfo.pd_no,pdinfo.image_url,pdinfo.proce_pic from yb_order_ordinfo orderinfo left join yb_prod_pdinfo pdinfo on orderinfo.pd_id = pdinfo.id)
+        ord
+        join blade_user user on ord.us_id = user.id
+        LEFT JOIN (SELECT t1.db_id,t1.id AS logId, t1.check_time AS checkTime, t1.result, t1.status, t3.* FROM yb_actset_checklog t1 LEFT JOIN yb_actset_ckflow t2 ON t1.aw_id = t2.id LEFT JOIN yb_order_ordinfo t3 ON t1.db_id = t3.id WHERE t2.aw_type LIKE CONCAT('%', 'sale', '%') AND t2.as_id = (SELECT id FROM yb_actset_ckset WHERE as_type LIKE CONCAT('%', 'A', '%'))) ace
+        ON ace.db_id = ord.id
+        where ord.us_id = #{orderOrdinfo.usId}
+        <if test="orderOrdinfo.cmName">
+            and ord.cm_name LIKE CONCAT('%',#{orderOrdinfo.cmName},'%')
+        </if>
+        <if test="orderOrdinfo.odNo">
+            and ord.od_no LIKE CONCAT('%',#{orderOrdinfo.odNo},'%')
+        </if>
+        ORDER BY ord.create_at desc
+    </select>
+<!--    验证订单编号是否存在-->
+    <select id="getObnoExist" resultType="java.lang.Integer">
+        SELECT 1 FROM yb_order_ordinfo WHERE od_no = #{odNo} limit 1
+    </select>
+<!--    id查询个人-->
+    <select id="getOneById" resultType="com.yb.order.vo.OrderOrdinfoVO">
+        SELECT * FROM yb_order_ordinfo WHERE id =#{id}
+    </select>
+<!--查询正在执行中或者已经完成的订单-->
+    <select id="listsAllOrder" resultType="com.yb.order.vo.OrderOrdinfoVO">
+        SELECT * FROM yb_order_ordinfo WHERE production_state &lt;&gt; 0
+        <if test="orderOrdinfo.odName != null">
+            AND od_name LIKE CONCAt('%',#{orderOrdinfo.odName},'%')
+        </if>
+    </select>
+
+    <select id="getOrderInfoByodNo" resultType="com.yb.order.vo.OrderOrdinfoVO">
+        SELECT * from yb_order_ordinfo WHERE od_no = #{odNo}
+    </select>
+
+    <select id="getNewOdId" resultType="java.lang.String">
+        SELECT od_no from yb_order_ordinfo WHERE od_no LIKE #{od} ORDER BY create_at DESC LIMIT 1
+    </select>
+
+    <select id="getCmNameList" resultType="com.yb.order.vo.OrderOrdinfoVO">
+        SELECT yoo.*, yow.batch_no
+        FROM yb_order_ordinfo yoo
+        LEFT JOIN yb_order_workbatch yow ON yow.od_id=yoo.id
+        where
+    </select>
+
+    <select id="getMasterPlan" resultType="com.yb.statis.vo.MasterPlanVO">
+    SELECT ow.batch_no as wbNo, od.od_name as productName, od.cm_name as clientName, ow.id as wbId
+    from yb_order_ordinfo od
+    INNER join yb_order_workbatch ow on od.id=ow.od_id
+    <where>
+        <if test="request.odNo != null and request.odNo != ''">
+        and od.od_no = #{request.odNo}
+        </if>
+        <if test="request.queryTime != null ">
+        and od.create_at = #{request.queryTime}
+        </if>
+     </where>
+    </select>
+</mapper>

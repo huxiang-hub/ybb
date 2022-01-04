@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anaysis.executSupervise.mapper.SuperviseShiftcountMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="superviseIntervalResultMap" type="com.anaysis.executSupervise.entity.SuperviseShiftcount">
+        <id     column="id" property="id"/>
+        <result column="ma_id" property="maId"/>
+        <result column="uuid" property="uuid"/>
+        <result column="target_time" property="targetTime"/>
+        <result column="sf_name" property="sfName"/>
+        <result column="sf_starttime" property="sfStarttime"/>
+        <result column="sf_endtime" property="sfEndtime"/>
+        <result column="sf_stay" property="sfStay"/>
+        <result column="start_num" property="startNum"/>
+        <result column="end_num" property="endNum"/>
+        <result column="pcout" property="pcout"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="diff_time" property="diffTime"/>
+        <result column="curr_speed" property="currSpeed"/>
+        <result column="create_at" property="createAt"/>
+        <result column="update_at" property="updateAt"/>
+    </resultMap>
+
+
+
+    <select id="getLastState" resultType="com.anaysis.executSupervise.entity.SuperviseInterval">
+        SELECT * FROM yb_supervise_interval WHERE uuid = #{uuid} ORDER BY create_at DESC LIMIT 1
+    </select>
+
+    <select id="getLastStateLag" resultType="com.anaysis.executSupervise.entity.SuperviseShiftcount">
+        SELECT * FROM yb_supervise_intervalalg WHERE uuid = #{uuid} ORDER BY create_at DESC LIMIT 1
+    </select>
+
+    <select id="getId" resultType="com.anaysis.executSupervise.entity.SuperviseInterval">
+        SELECT * FROM yb_supervise_interval WHERE id = #{id}
+    </select>
+    <select id="getIdAlg" resultType="com.anaysis.executSupervise.entity.SuperviseShiftcount">
+        SELECT * FROM yb_supervise_intervalalg WHERE id = #{id}
+    </select>
+
+
+    <update id="updateLast" parameterType="com.anaysis.executSupervise.entity.SuperviseInterval">
+        update yb_supervise_interval
+        <set>
+        <if test="endNum != null">`end_num` = #{endNum}, </if>
+        <if test="pcout != null">`pcout` = #{pcout}, </if>
+        <if test="endTime != null">`end_time` = #{endTime}, </if>
+        <if test="diffTime != null">`diff_time` = #{diffTime}, </if>
+        <if test="currSpeed != null">`curr_speed` = #{currSpeed}, </if>
+        <if test="updateAt != null">`update_at` = #{updateAt} </if>
+    </set>
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateLastAlg" parameterType="com.anaysis.executSupervise.entity.SuperviseShiftcount">
+        update yb_supervise_intervalalg
+        <set>
+            <if test="endNum != null">`end_num` = #{endNum}, </if>
+            <if test="pcout != null">`pcout` = #{pcout}, </if>
+            <if test="endTime != null">`end_time` = #{endTime}, </if>
+            <if test="diffTime != null">`diff_time` = #{diffTime}, </if>
+            <if test="currSpeed != null">`curr_speed` = #{currSpeed}, </if>
+            <if test="updateAt != null">`update_at` = #{updateAt} </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+
+    <update id="update" parameterType="com.anaysis.executSupervise.entity.SuperviseInterval">
+        update yb_supervise_interval
+        <set>
+            <if test="maId != null">`ma_id` = #{maId}, </if>
+            <if test="uuid != null">`uuid` = #{uuid}, </if>
+            <if test="status != null">`status` = #{status}, </if>
+            <if test="startNum != null">`start_num` = #{startNum}, </if>
+            <if test="endNum != null">`end_num` = #{endNum}, </if>
+            <if test="pcout != null">`pcout` = #{pcout}, </if>
+            <if test="startTime != null">`start_time` = #{startTime}, </if>
+            <if test="endTime != null">`end_time` = #{endTime}, </if>
+            <if test="diffTime != null">`diff_time` = #{diffTime}, </if>
+            <if test="currSpeed != null">`curr_speed` = #{currSpeed}, </if>
+            <if test="targetTime != null">`target_time` = #{targetTime}, </if>
+            <if test="createAt != null">`create_at` = #{createAt}, </if>
+            <if test="updateAt != null">`update_at` = #{updateAt} </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <insert id="save" parameterType="com.anaysis.executSupervise.entity.SuperviseInterval" useGeneratedKeys="true" keyProperty="id">
+        insert into yb_supervise_interval
+        (
+            `ma_id`,`uuid`,`status`,`start_num`,`end_num`,`pcout`,`start_time`,`end_time`,`diff_time`,`curr_speed`,`target_time`,`create_at`,`update_at`
+        )
+        values
+        (
+            #{maId},
+            #{uuid},
+            #{status},
+            #{startNum},
+            #{endNum},
+            #{pcout},
+            #{startTime},
+            #{endTime},
+            #{diffTime},
+            #{currSpeed},
+            #{targetTime},
+            #{createAt},
+            #{updateAt}
+        )
+    </insert>
+
+    <insert id="saveAlg" parameterType="com.anaysis.executSupervise.entity.SuperviseShiftcount" useGeneratedKeys="true" keyProperty="id">
+        insert into yb_supervise_intervalalg
+        (
+            `ma_id`,`uuid`,`status`,`number`,`start_num`,`end_num`,`pcout`,`start_time`,`end_time`,`diff_time`,`curr_speed`,`target_time`,`create_at`,`update_at`,`model`
+        )
+        values
+        (
+            #{maId},
+            #{uuid},
+            #{status},
+            #{number},
+            #{startNum},
+            #{endNum},
+            #{pcout},
+            #{startTime},
+            #{endTime},
+            #{diffTime},
+            #{currSpeed},
+            #{targetTime},
+            #{createAt},
+            #{updateAt},
+            #{model}
+        )
+    </insert>
+    <select id="getPcountByMaIdAndStartTimeAndEndTime" resultType="java.lang.Integer">
+    select  sum(pcout) from yb_supervise_intervalalg
+    where ma_id = #{maid}
+    and start_time >= #{startTime}
+    and start_time &lt;= #{endTime}
+    </select>
+    <select id="getInTimeFirst" resultMap="superviseIntervalResultMap">
+    select * from yb_supervise_intervalalg
+    where create_at >= #{date}
+    and create_at &lt;= #{endDate}
+    and ma_id = #{maId}
+    order by id asc
+    limit 0,1
+    </select>
+    <select id="getInTimeLast" resultMap="superviseIntervalResultMap">
+    select * from yb_supervise_intervalalg
+    where create_at >= #{date}
+    and create_at &lt;= #{endDate}
+    and ma_id = #{maId}
+    order by id desc
+    limit 0,1
+    </select>
+    <select id="getInTimeLastSecond" resultMap="superviseIntervalResultMap">
+    select * from yb_supervise_intervalalg
+    where create_at >= #{date}
+    and create_at &lt;= #{endDate}
+    and ma_id = #{maId}
+    and start_num > #{startNum}
+    limit 0,1
+    </select>
+
+    <select id="getLastByUuid" resultMap="superviseIntervalResultMap">
+    select start_num,number,status,pcout from yb_supervise_intervalalg
+    where uuid = #{uuid}
+    order by id desc
+    limit 0,1
+    </select>
+    <select id="getSumByPcount" resultType="int">
+    select ifnull(sum(pcout),0)
+    from yb_supervise_intervalalg
+    where create_at >= #{date}
+    and create_at &lt;= #{endDate}
+    and ma_id = #{maId}
+    </select>
+
+
+</mapper>

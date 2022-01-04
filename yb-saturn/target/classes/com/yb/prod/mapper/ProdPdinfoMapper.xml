@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.prod.mapper.ProdPdinfoMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="prodPdinfoResultMap" type="com.yb.prod.entity.ProdPdinfo">
+        <id column="id" property="id"/>
+        <result column="pd_name" property="pdName"/>
+        <result column="pd_no" property="pdNo"/>
+        <result column="create_at" property="createAt"/>
+        <result column="image_url" property="imageUrl"/>
+        <result column="is_used" property="isUsed"/>
+        <result column="proce_pic" property="procePic"/>
+        <result column="model_json" property="modelJson"/>
+        <result column="pc_id" property="pcId"/>
+        <result column="cl_name" property="clName"/>
+    </resultMap>
+
+
+    <select id="selectProdPdinfoPage" resultMap="prodPdinfoResultMap">
+        select * from yb_prod_pdinfo where is_deleted = 0
+    </select>
+
+
+    <select id="getProdPdinfoVoBypdNo" resultType="com.yb.prod.vo.ProdPdinfoVO">
+        SELECT * FROM yb_prod_pdinfo WHERE pd_no=#{pbNo}
+    </select>
+
+    <select id="selectPridPdinfoByPcId" resultType="com.yb.prod.entity.ProdPdinfo">
+        SELECT * FROM yb_prod_pdinfo WHERE pc_id=#{pcId}
+        ORDER BY id DESC
+    </select>
+
+    <select id="getProdPdinfoVoBypdId" resultType="com.yb.prod.vo.ProdPdinfoVO">
+        SELECT * FROM yb_prod_pdinfo WHERE id=#{pbId}
+    </select>
+
+    <select id="getProdPdinfoByPdNo" resultType="com.yb.prod.vo.ProdPdinfoVO">
+        SELECT * FROM yb_prod_pdinfo WHERE pd_no=#{pdNo}
+    </select>
+
+    <select id="getProdPdinfoVOByWbId" resultType="com.yb.prod.vo.ProdPdinfoVO">
+        SELECT a.*,d.cl_name
+        FROM yb_prod_pdinfo a
+        LEFT JOIN yb_order_ordinfo b ON b.pd_id=a.id
+        LEFT JOIN yb_order_workbatch c ON c.od_id =b.id
+        LEFT JOIN yb_prod_classify d ON d.id=a.pc_id
+        WHERE c.id=#{wbId}
+
+    </select>
+
+    <select id="selectePdinfoList" resultType="com.yb.prod.vo.ProdPdinfoVO">
+        SELECT *
+        FROM yb_prod_pdinfo a
+        LEFT JOIN yb_prod_classify b ON a.pc_id=b.id
+        <where>
+            <if test="pdName != null">
+                a.pd_name LIKE concat('%',#{pdName},'%')
+            </if>
+            <if test="pdNo != null">
+                AND a.pd_no = #{pdNo}
+            </if>
+        </where>
+        LIMIT #{current},#{size}
+    </select>
+
+    <select id="selectePdinfoCount" resultType="int">
+        SELECT COUNT(*)
+        FROM yb_prod_pdinfo a
+        LEFT JOIN yb_prod_classify b ON a.pc_id=b.id
+        <where>
+            <if test="pdName != null">
+                a.pd_name LIKE concat('%',#{pdName},'%')
+            </if>
+            <if test="pdNo != null">
+                AND a.pd_no = #{pdNo}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectPdInFoOne" resultType="com.yb.prod.vo.ProdPdinfoVO">
+        SELECT a.*,d.cl_name
+        FROM yb_prod_pdinfo a
+        LEFT JOIN yb_prod_classify d ON d.id=a.pc_id
+        WHERE a.id=#{id}
+    </select>
+
+    <select id="getPdNo" resultType="java.lang.String">
+        SELECT DISTINCT LEFT(pd_no, 6) AS headerNo from yb_prod_pdinfo where pd_no LIKE #{pd} ORDER BY headerNo DESC LIMIT 1
+    </select>
+
+</mapper>

@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.supervise.mapper.SuperviseBoxinfoMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="superviseBoxinfoResultMap" type="com.yb.supervise.vo.SuperviseBoxinfoVO">
+        <id column="id" property="id"/>
+        <result column="uuid" property="uuid"/>
+        <result column="ma_id" property="maId"/>
+        <result column="status" property="status"/>
+        <result column="number" property="number"/>
+        <result column="number_of_day" property="numberOfDay"/>
+        <result column="dspeed" property="dspeed"/>
+        <result column="start_time" property="startTime"/>
+        <result column="create_at" property="createAt"/>
+        <result column="update_at" property="updateAt"/>
+        <result column="xlh" property="xlh"/>
+        <result column="sip" property="sip"/>
+        <result column="sl_id" property="slId"/>
+        <result column="us_ids" property="usIds"/>
+        <result column="name" property="name"/>
+        <result column="od_count" property="odCount"/>
+        <result column="complete_num" property="completeNum"/>
+        <result column="unfinished" property="unfinished"/>
+        <result column="limit_date" property="limitDate"/>
+        <result column="od_name" property="odName"/>
+        <result column="waste_num" property="wasteNum"/>
+        <result column="count_num" property="countNum"/>
+        <result column="od_id" property="odId"/>
+    </resultMap>
+
+
+    <select id="selectSuperviseBoxinfoPage" resultMap="superviseBoxinfoResultMap">
+        select * from yb_supervise_boxinfo where is_deleted = 0
+    </select>
+    <select id="getBoxNum" resultType="java.lang.Integer">
+        select number_of_day from v_boxinfo where macId = #{mId}
+    </select>
+
+    <select id="getMacUser" resultType="java.lang.String">
+        SELECT us_ids FROM yb_supervise_boxinfo WHERE uuid = (
+        SELECT a.bno FROM yb_machine_mixbox a WHERE a.ma_id = #{mId})
+    </select>
+    <select id="getBoxInfoByBno" resultType="com.yb.supervise.entity.SuperviseBoxinfo">
+        SELECT * FROM yb_supervise_boxinfo WHERE uuid = #{uuid_s}
+    </select>
+    <select id="getBoxInfoByMid" resultType="com.yb.supervise.entity.SuperviseBoxinfo">
+        SELECT * FROM yb_supervise_boxinfo WHERE ma_id = #{maId}
+    </select>
+
+    <select id="selectSuperviseBoxinfoVO" resultType="com.yb.supervise.vo.SuperviseBoxinfoVO">
+        SELECT b.id,b.name,a.number_of_day,a.dspeed,f.od_count,d.complete_num,f.limit_date,f.id od_id,
+        f.od_name,h.waste_num,h.count_num,(f.od_count-d.complete_num) unfinished
+        FROM yb_machine_mainfo b
+        LEFT JOIN yb_supervise_boxinfo a ON a.ma_id=b.id
+        LEFT JOIN yb_supervise_execute c ON c.ma_id=a.ma_id
+        LEFT JOIN yb_workbatch_ordlink d ON d.id=c.sd_id
+        LEFT JOIN yb_order_workbatch e ON e.id=d.wb_id
+        LEFT JOIN yb_order_ordinfo f ON f.id=e.od_id
+        LEFT JOIN yb_execute_info g ON g.sd_id=d.id
+        LEFT JOIN yb_execute_briefer h ON h.ex_id=g.id
+    </select>
+
+    <select id="pageCount" resultType="int">
+        SELECT COUNT(*)
+        FROM yb_machine_mainfo b
+        LEFT JOIN yb_supervise_boxinfo a ON a.ma_id=b.id
+        LEFT JOIN yb_supervise_execute c ON c.ma_id=a.ma_id
+        LEFT JOIN yb_workbatch_ordlink d ON d.id=c.sd_id
+        LEFT JOIN yb_order_workbatch e ON e.id=d.wb_id
+        LEFT JOIN yb_order_ordinfo f ON f.id=e.od_id
+        LEFT JOIN yb_execute_info g ON g.sd_id=d.id
+        LEFT JOIN yb_execute_briefer h ON h.es_id=g.id
+        <where>
+            <if test="status != null">
+                AND a.status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <select id="getBoxListNotStop" resultType="com.yb.supervise.vo.SuperviseBoxinfoVO">
+        SELECT * FROM yb_supervise_boxinfo WHERE `status` != '4'
+    </select>
+    <select id="selectDeptBoxinfoStatusList" resultType="com.yb.supervise.vo.MaStatusNumberVO">
+        SELECT
+        	b.status,
+        	IFNULL(b.bln_accept, 0) AS blnAccept,
+        	COUNT(a.id) AS statusNumber
+        FROM
+        	yb_machine_mainfo a
+        JOIN yb_supervise_boxinfo b ON a.id = b.ma_id
+        WHERE
+        	a.dp_id = #{dpId}
+        GROUP BY
+        	b.status,
+        	blnAccept
+    </select>
+    <select id="selectNumberList" resultType="com.yb.workbatch.entity.WorkbatchOrdlink">
+        SELECT
+        b.status,
+        c.dp_id,
+        a.id,
+        a.pt_id,
+        a.part_name,
+        a.ma_id,
+        a.pr_id,
+        a.pr_name,
+        a.pd_name,
+        IFNULL(b.plan_num,0) AS planNum,
+        IFNULL(b.finish_num,0) AS completeNum,
+        a.plan_number,
+        (b.plan_num - IFNULL(b.finish_num,0)) AS incompleteNum,
+        a.run_status,
+        a.`status` AS sdStatus,
+        b.ws_id,
+        a.dp_id,
+        a.us_id,
+        a.cm_name,
+        b.shift_status,
+        a.wb_no
+        FROM yb_workbatch_shift b
+        JOIN yb_workbatch_ordlink a ON a.id=b.sd_id
+        LEFT JOIN yb_machine_mainfo c ON c.id=a.ma_id
+        WHERE b.sd_date=DATE_FORMAT(now(),'%Y-%m-%d') AND b.`status` IN(1,2,3,4,7,8)
+        <if test="dpId != null">
+            AND a.dp_id=#{dpId}
+        </if>
+    </select>
+    <select id="selectSdNumber" resultType="java.lang.Integer">
+        SELECT COUNT(a.id)
+        FROM yb_workbatch_shift b
+        LEFT JOIN yb_workbatch_ordlink a ON a.id=b.sd_id
+        WHERE b.sd_date=DATE_FORMAT(now(),'%Y-%m-%d')
+        AND a.dp_id=#{dpId} AND a.`status`='3'
+    </select>
+    <select id="selectDeptBoxinfoSdList" resultType="com.yb.supervise.vo.SuperviseBoxinfoVO">
+        SELECT a.id AS
+        maId,a.`name`,b.`status`,c.exe_status,c.us_ids,c.curr_num,b.number_of_day,b.dspeed,b.update_at,d.plan_num,e.ck_name,f.batch_no,g.od_name,a.pro_id
+        AS prId,a.dp_id,d.pd_name
+        FROM yb_machine_mainfo a
+        LEFT JOIN yb_supervise_boxinfo b ON b.ma_id=a.id
+        LEFT JOIN yb_supervise_execute c ON c.ma_id=a.id
+        LEFT JOIN yb_workbatch_ordlink d ON d.id=c.sd_id
+        LEFT JOIN yb_workbatch_shift e ON e.id=d.ws_id
+        LEFT JOIN yb_order_workbatch f ON f.id=d.wb_id
+        LEFT JOIN yb_order_ordinfo g ON g.id=f.od_id
+        <where>
+            <if test="prId != null">
+                AND a.pro_id=#{prId}
+            </if>
+            <if test="dpId != null">
+                AND a.dp_id=#{dpId}
+            </if>
+        </where>
+        ORDER BY a.sort
+    </select>
+    <select id="selectDpProcess" resultType="com.yb.process.vo.ProcessWorkinfoVO">
+        SELECT DISTINCT c.*
+        FROM yb_machine_mainfo a
+        JOIN yb_process_workinfo c ON c.id=a.pro_id
+        WHERE a.dp_id=#{dpId}
+    </select>
+
+    <delete id="removerListByMaid" parameterType="java.lang.Integer">
+        DELETE FROM yb_supervise_boxinfo WHERE ma_id IN
+        <foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="selectBoxinfoList" resultType="com.yb.supervise.vo.SuperviseBoxinfoVO">
+        SELECT
+        a.id AS maId,
+        a.`name`,
+        b.`status`,
+        IFNULL(b.bln_accept,0) as blnAccept,
+        c.exe_status,
+        c.us_ids,
+        c.curr_num,
+        c.start_time,
+        b.number_of_day,
+        (b.dspeed * 60) AS dspeed,
+        b.update_at,
+        e.plan_num,
+        e.ck_name,
+        d.wb_no AS batchNo,
+        d.pd_name
+        FROM
+        yb_machine_mainfo a
+        LEFT JOIN yb_supervise_boxinfo b ON b.ma_id = a.id
+        LEFT JOIN yb_supervise_execute c ON c.ma_id = a.id
+        LEFT JOIN yb_workbatch_ordlink d ON d.id = c.sd_id
+        LEFT JOIN yb_workbatch_shift e ON e.id = c.wf_id
+        WHERE
+        b.`status` IS NOT NULL
+        <if test="prId != null">
+            AND a.pro_id=#{prId}
+        </if>
+        <if test="dpId != null">
+            AND a.dp_id=#{dpId}
+        </if>
+        GROUP BY a.id
+        ORDER BY a.sort
+    </select>
+    <select id="findByStatus" resultType="com.yb.supervise.entity.SuperviseBoxinfo">
+        SELECT * FROM yb_supervise_boxinfo
+    </select>
+
+    <select id="getBoxinfoStatusByMaId" resultType="com.yb.supervise.vo.MachineAtPresentStatusVO">
+        SELECT
+        	b.*, COUNT(a.id) AS sdNum
+        FROM
+        	(
+        		SELECT
+        			ymm.id,
+        			ymm.`name` AS maName,
+        			ymm.mno AS maNo,
+        			ybd.dp_name AS  deptName,
+        			ypw.pr_name,
+        			ysb.uuid,
+        			ysb.`status`,
+        			ysb.number,
+        			ysb.number_of_day,
+        			ysb.dspeed,
+        			ysb.start_time,
+        			ysb.create_at,
+        			ysb.update_at,
+        			ysb.xlh,
+        			ysb.sip,
+        			ysb.us_ids,
+        			ysb.sl_id,
+        			ysb.clear_num,
+        			ysb.clear_time,
+        			ysb.send_time,
+        			yws.ws_id,
+        			yws.sd_date,
+        			ywo.wb_no,
+        			ywo.od_no
+        		FROM
+        			yb_machine_mainfo ymm
+        		LEFT JOIN yb_base_deptinfo ybd ON ybd.id = ymm.dp_id
+        		LEFT JOIN yb_supervise_boxinfo ysb ON ymm.id = ysb.ma_id
+        		LEFT JOIN yb_process_workinfo ypw ON ypw.id = ymm.pro_id
+        		LEFT JOIN yb_supervise_execute yse ON yse.ma_id = ysb.ma_id
+        		LEFT JOIN yb_workbatch_shift yws ON yws.id = yse.wf_id
+        		LEFT JOIN yb_workbatch_ordlink ywo ON ywo.id = yws.sd_id
+        	) b
+        LEFT JOIN yb_workbatch_shift a ON a.sd_date = b.sd_date
+        AND a.ma_id = b.id
+        AND a.ws_id = b.ws_id
+        WHERE
+        	b.id = #{maId}
+    </select>
+    <select id="getByMaId" resultType="com.yb.supervise.entity.SuperviseExecute">
+    select * from yb_supervise_execute
+    where ma_id = #{maId}
+</select>
+
+    <select id="boxInfo" resultType="com.yb.yilong.response.BoxInfoVO">
+        select ysb.ma_id,ymm.name as maName, yei.wb_no, ysb.status, yse.exe_status as wbStatus, yse.curr_num as number,
+        yei.us_id as operator,yei.id as ex_id
+        from yb_supervise_boxinfo ysb
+        inner join yb_supervise_execute yse on ysb.ma_id = yse.ma_id
+        inner join yb_machine_mainfo ymm on ymm.id = ysb.ma_id
+        inner join yb_execute_info yei on yei.id = yse.ex_id
+        where ysb.ma_id = #{request.maId}
+    </select>
+    <select id="boxNumber" resultType="com.yb.yilong.response.BoxInfoNumberVO">
+        select ysb.number,ymm.name
+        from yb_supervise_boxinfo ysb
+        join yb_machine_mainfo ymm on ysb.ma_id =ymm.id
+        where ysb.ma_id = #{maId}
+    </select>
+</mapper>

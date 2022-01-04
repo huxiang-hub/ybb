@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.statis.mapper.StatisOeesetMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="statisOeesetResultMap" type="com.yb.statis.entity.StatisOeeset">
+        <id column="id" property="id"/>
+        <result column="st_type" property="stType"/>
+        <result column="db_id" property="dbId"/>
+        <result column="sf_starttime" property="sfStarttime"/>
+        <result column="sf_endtime" property="sfEndtime"/>
+        <result column="sf_staytime" property="sfStaytime"/>
+        <result column="reset_num" property="resetNum"/>
+        <result column="reset_time" property="resetTime"/>
+        <result column="maintain_num" property="maintainNum"/>
+        <result column="maintain_time" property="maintainTime"/>
+        <result column="mould_num" property="mouldNum"/>
+        <result column="mould_time" property="mouldTime"/>
+        <result column="quality_num" property="qualityNum"/>
+        <result column="normal_speed" property="normalSpeed"/>
+        <result column="shifts_totalnum" property="shiftsTotalnum"/>
+        <result column="pr_speed" property="prSpeed"/>
+        <result column="waste_num" property="wasteNum"/>
+        <result column="diff_num" property="diffNum"/>
+        <result column="prepare_stay" property="prepareStay"/>
+        <result column="create_a" property="createA"/>
+    </resultMap>
+
+
+    <select id="selectStatisOeesetPage" resultMap="statisOeesetResultMap">
+        select * from yb_statis_oeeset where is_deleted = 0
+    </select>
+
+</mapper>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.supervise.mapper.SuperviseWarningMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="superviseWarningResultMap" type="com.yb.supervise.entity.SuperviseWarning">
+        <id column="id" property="id"/>
+        <result column="ma_id" property="maId"/>
+        <result column="rt_id" property="rtId"/>
+        <result column="wr_type" property="wrType"/>
+        <result column="wr_leve" property="wrLeve"/>
+        <result column="wr_time" property="wrTime"/>
+        <result column="early" property="early"/>
+        <result column="us_id" property="usId"/>
+        <result column="dp_id" property="dpId"/>
+        <result column="create_at" property="createAt"/>
+    </resultMap>
+
+
+    <select id="selectSuperviseWarningPage" resultMap="superviseWarningResultMap">
+        select * from yb_supervise_warning where is_deleted = 0
+    </select>
+
+</mapper>

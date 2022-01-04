@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.statis.mapper.StatisMachoeeMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="statisMachoeeResultMap" type="com.yb.statis.entity.StatisMachoee">
+        <id column="id" property="id"/>
+        <result column="oe_date" property="oeDate"/>
+        <result column="ma_id" property="maId"/>
+        <result column="ma_name" property="maName"/>
+        <result column="us_id" property="usId"/>
+        <result column="us_name" property="usName"/>
+        <result column="sf_name" property="sfName"/>
+        <result column="create_at" property="createAt"/>
+    </resultMap>
+
+
+    <select id="selectStatisMachoeePage" resultMap="statisMachoeeResultMap">
+        select * from yb_statis_machoee where is_deleted = 0
+    </select>
+
+
+    <select id="getOeeRateByDay" resultType="com.yb.statis.vo.StatisMachoeeVO">
+        SELECT
+        *
+        FROM
+        yb_statis_machoee yma
+        JOIN yb_statis_machregular yar ON yma.id = yar.sm_id
+        JOIN yb_machine_mainfo ymm ON yma.ma_id = ymm.id
+        WHERE
+        yma.oe_type = 2
+        AND DATE_FORMAT( yma.create_at, '%Y-%m-%d' ) = #{checkDate}
+        <if test="maId!=null and maId!=''">
+            and ma_id = #{maId}
+        </if>
+        <if test="prId!=null and prId!=''">
+            AND ma_id IN (SELECT ma_id FROM yb_process_machlink WHERE pr_id=#{prId})
+        </if>
+        <if test="dpId!=null and dpId!=''">
+            and dp_id = #{dpId}
+        </if>
+        <if test="conditionArrHour!=null and conditionArrHour.size()>0">
+            and target_hour in
+            <foreach collection="conditionArrHour" open="(" close=")" separator="," index="index" item="item">
+                #{item}
+            </foreach>
+        </if>
+        <if test="conditionArrMin!=null and conditionArrMin.size()>0">
+            and target_min in
+            <foreach collection="conditionArrMin" open="(" close=")" separator="," index="index" item="item">
+                #{item}
+            </foreach>
+        </if>
+        ORDER BY yma.create_at
+    </select>
+
+    <select id="getCkMachoee" resultType="com.yb.statis.vo.StatisMachoeeVO">
+        SELECT ysm.*,ys.gather_rate
+        FROM yb_statis_machoee ysm
+        LEFT JOIN yb_statis_machsingle ys ON ys.sm_id = ysm.id
+        WHERE ysm.oe_type=1 AND YEARWEEK(DATE_FORMAT(ysm.oe_date,'%Y-%m-%d'), 1) = YEARWEEK(#{nowDate}, 1)
+        AND ysm.ma_id=#{maId}
+        order by ysm.oe_date
+    </select>
+
+    <select id="getMachoeeByWsIdANDMaId" resultType="java.lang.Double">
+        SELECT ys.gather_rate
+        FROM yb_statis_machoee ysm
+        LEFT JOIN yb_statis_machsingle ys ON ys.sm_id = ysm.id
+        WHERE ysm.oe_date=#{oeDate} AND ysm.ma_id=#{maId} AND ysm.ws_id=#{wsId}
+    </select>
+    <select id="getDayMachoee" resultType="com.yb.statis.vo.StatisMachoeeVO">
+        SELECT ysm.*, ys.gather_rate
+        FROM yb_statis_machoee ysm
+        LEFT JOIN yb_statis_machregular ys ON ys.sm_id = ysm.id
+        WHERE ysm.oe_type=2 AND YEARWEEK(DATE_FORMAT(ysm.oe_date,'%Y-%m-%d'), 1) = YEARWEEK(#{nowDate}, 1)
+        <if test="maIds != null and maIds.size()>0">
+            AND ysm.ma_id IN
+            <foreach collection="maIds" item="maId" open="("  close=")" separator=",">
+                #{maId}
+            </foreach>
+        </if>
+        order by ysm.oe_date
+    </select>
+
+    <select id="getCkMachTypeOee" resultType="com.yb.statis.vo.StatisMachoeeVO">
+         SELECT ysm.*, ys.gather_rate
+        FROM yb_statis_machoee ysm
+        LEFT JOIN yb_statis_machsingle ys ON ys.sm_id = ysm.id
+        LEFT JOIN yb_machine_mainfo ymm ON ymm.id=ysm.ma_id
+        WHERE ysm.oe_type=1 AND YEARWEEK(DATE_FORMAT(ysm.oe_date,'%Y-%m-%d'), 1) = YEARWEEK(#{nowDate}, 1)
+        <if test="maType != null and maType != ''">
+            AND ymm.ma_type=#{maType}
+        </if>
+        <if test="wsId != null and wsId != 0">
+            AND ysm.ws_id=#{wsId}
+        </if>
+    </select>
+
+    <select id="machoeeExcelExport" resultType="com.yb.statis.vo.MachoeeExcelExportVO">
+        SELECT *
+        FROM yb_statis_machoee a
+        JOIN yb_statis_machsingle b ON b.sm_id=a.id
+        WHERE DATE_FORMAT(a.oe_date, '%Y%m' ) = DATE_FORMAT( #{targetDay} , '%Y%m' )
+        GROUP BY a.ma_id,a.oe_date,a.id
+    </select>
+</mapper>

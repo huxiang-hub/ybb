@@ -1,0 +1,577 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.workbatch.mapper.WorkbatchShiftMapper">
+
+
+    <!--    <select id="selectWorkBatchShiftVoByCondition" resultType="com.yb.workbatch.vo.WorkbatchShiftVO">-->
+    <!--SELECT-->
+    <!--	*,-->
+    <!--	ywo.plan_num AS planNum ,-->
+    <!--	yoo.difficult_num AS difficutlNum-->
+    <!--FROM-->
+    <!--	yb_workbatch_shift yws-->
+    <!--	JOIN yb_workbatch_ordlink ywo ON yws.id = ywo.ws_id-->
+    <!--	JOIN yb_workbatch_ordoee yoo ON ywo.id = yoo.wk_id-->
+    <!--WHERE-->
+    <!--	ck_name = #{ckName}-->
+    <!--	AND DATE_FORMAT( yws.create_at, '%Y-%m-%d' ) = #{dateStr}-->
+    <!--    </select>-->
+
+
+    <select id="selectWorkBatchShiftVoByCondition" resultType="com.yb.workbatch.vo.WorkbatchShiftVO">
+SELECT
+	*,
+	yws.start_time as classStartTime,
+	yws.end_time as classEndTime
+FROM
+	yb_workbatch_ordlink ywo
+	left JOIN yb_workbatch_shift yws ON ywo.ws_id = yws.id
+WHERE
+	ywo.id = #{sdId}
+    </select>
+
+    <select id="getWorkShiftInfoBySdId" resultType="com.yb.workbatch.vo.WorkbatchShiftVO">
+SELECT
+	*,
+	ybs.start_time as startTime,
+	ybs.end_time as endTime
+FROM
+	yb_workbatch_ordlink ywo
+	left JOIN yb_workbatch_shift ybs ON ywo.ws_id = ybs.id
+	left JOIN v_machshift yss ON ybs.ws_id = yss.ws_id
+WHERE
+	ywo.id = #{sdId}
+    </select>
+
+    <select id="getByTime" resultType="java.lang.Integer">
+   select id from  yb_workbatch_shift
+    where  start_time >= #{time}
+    and  #{time}&lt;= end_time
+    </select>
+
+    <select id="getBySdDateAndSdId" resultType="com.yb.workbatch.entity.WorkbatchShift">
+    select * from yb_workbatch_shift
+    where sd_date = #{sdDate}
+    and sd_id = #{sdId} and ma_id=#{maId}
+    and ws_id = #{wsId} LIMIT 1
+    </select>
+
+
+    <select id="findByMaId" resultType="com.yb.workbatch.vo.WorkbatchMachShiftVO">
+    select id,ck_name,end_time,start_time,stay_time from v_machshift  where ma_id = #{maId} order by ck_name desc
+    </select>
+    <select id="findList" resultType="com.yb.workbatch.vo.WorkbatchMachShiftVO">
+    select id,ck_name,end_time,start_time,stay_time from v_machshift
+    </select>
+
+    <select id="findByMaIds" resultType="com.yb.workbatch.vo.WorkbatchMachShiftVO">
+        select id,ck_name,end_time,start_time,stay_time from v_machshift
+        <where>
+            <if test="maIds != null and maIds != ''">
+                and ma_id in
+                <foreach item="item" index="index" collection="maIds.split(',')" open="(" separator="," close=")">
+                    '${item}'
+                </foreach>
+            </if>
+        </where>
+        order by ck_name desc
+    </select>
+
+    <select id="findByMaIdWsTime" resultType="com.yb.workbatch.vo.WorkbatchMachShiftVO">
+        select id,ck_name,end_time,start_time,stay_time
+        from v_machshift
+        where ma_id = #{maId}
+           AND ((start_time &lt; end_time AND start_time &lt;= #{wsFormat} AND end_time &gt;= #{wsFormat})
+            OR (start_time &gt; end_time AND (start_time &lt;= #{wsFormat} OR end_time &gt;= #{wsFormat})))
+    </select>
+
+    <select id="getStaycount" resultType="java.lang.Integer">
+    select ${planNum}-IFNULL(sum(plan_num),0)-(select IFNULL(ywo.complete_num,0) from yb_workbatch_ordlink ywo where ywo.id = #{sdId}) from yb_workbatch_shift a
+     where a.sd_id = #{sdId}
+    </select>
+
+    <select id="getShiftByMaid" resultType="com.yb.workbatch.entity.WorkbatchShift">
+        select a.* from yb_workbatch_shift a
+        left join yb_workbatch_ordlink b on b.id=a.sd_id
+        where a.ma_id = #{maId} and a.sd_date = #{sdDate}
+        <if test="wsId!= null">
+            and a.ws_id = #{wsId}
+        </if>
+        order by a.sd_sort
+    </select>
+    <select id="getById" resultType="com.yb.workbatch.vo.WorkbatchMachShiftVO">
+    select id,ck_name,end_time,start_time,stay_time from v_machshift  where id = #{id}
+    </select>
+
+    <select id="getBywfId" resultType="com.yb.workbatch.vo.WorkbatchShiftVO">
+    select a.*,b.* from yb_workbatch_shift a
+     left join yb_workbatch_ordlink b on b.id=a.sd_id
+     where a.id = #{id}
+    </select>
+
+    <select id="getWbshiftByBfId" resultType="com.yb.workbatch.entity.WorkbatchShift">
+     select  a.* from yb_workbatch_shift a
+     left join yb_execute_briefer b on b.wf_id=a.id
+     where b.id = #{bfId}
+     group by a.id
+    </select>
+
+    <select id="getWsid" resultType="com.yb.workbatch.entity.WorkbatchShift">
+       select a.* from yb_workbatch_shift a
+        left join yb_workbatch_ordlink b on b.id=a.sd_id
+        where a.sd_id = #{sdId}
+        and a.ma_id = #{maId}
+        and a.ws_id = #{wsId}
+        and a.sd_date = #{sdDate} limit 1
+    </select>
+
+    <select id="reschedule" resultType="com.yb.workbatch.entity.WorkbatchShift">
+    select * from yb_workbatch_shift
+    where sd_id = #{sdId}
+    </select>
+
+    <update id="lockWfsort">
+        UPDATE yb_workbatch_shift SET wfsort_islock = #{islock}
+        where id IN
+        <foreach collection="ordrIds" item="id" index="index" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </update>
+    <select id="getWshiftCount" resultType="java.lang.Integer">
+        select sum(plan_num) from yb_workbatch_shift  where sd_id = #{sdId}
+    </select>
+
+    <select id="getProOrder" resultType="com.yb.workbatch.entity.WorkbatchShift">
+    select * from yb_workbatch_shift yws
+    left join yb_workbatch_ordlink ywo on yws.sd_id = ywo.id
+    where ywo.ma_id = #{madId}
+    and yws.shift_status = 1
+    </select>
+    <select id="findShiftByMaIdAndWsId" resultType="com.yb.workbatch.vo.WorkbatchMachShiftVO">
+        select id,ck_name,end_time,start_time,stay_time from v_machshift
+        where ma_id = #{maId}
+        and id = #{wsId}
+    </select>
+
+    <select id="getYetNum" resultType="java.lang.Integer">
+    select sum(finish_num) from yb_workbatch_shift
+    where sd_id = #{sdId}
+    </select>
+    <select id="findByMaIdAndWsId" resultType="com.yb.workbatch.vo.WorkbatchMachShiftVO">
+    select id,ck_name,end_time,start_time,stay_time from v_machshift  where id = #{wsId} and ma_id =#{maId}
+    </select>
+
+    <select id="getNextWorkbatchShift" resultType="com.yb.workbatch.vo.WorkbatchMachShiftVO">
+        select a.* from (select * from v_machshift where ma_id = #{maId} )a
+        left join (select * from v_machshift where ma_id = #{maId} and id =#{wsId}) b
+        on a.ma_id = b.ma_id
+        where a.start_time = b.end_time
+    </select>
+
+    <update id="shiftLockSort">
+        UPDATE yb_workbatch_shift SET wfsort_islock=#{wfsortIslock}
+        WHERE id IN
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <select id="anewWfsDSort" resultType="com.yb.workbatch.entity.WorkbatchShift">
+        select *
+        from yb_workbatch_shift
+        where id in
+        <foreach collection="wfIds" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+        order by sd_sort
+    </select>
+
+    <select id="selectSdSortList" resultType="com.yb.workbatch.entity.WorkbatchShift">
+    SELECT
+	    a.*
+    FROM
+	yb_workbatch_shift a
+    LEFT JOIN yb_workbatch_ordlink b ON b.id = a.sd_id
+    WHERE
+	    a.sd_date = #{sdDate}
+    AND a.ws_id = #{wsId}
+    AND b.ma_id = #{maId}
+    AND a. STATUS = 1
+    AND (
+	    a.shift_status = 0
+	    OR a.shift_status = 4
+        )
+    ORDER BY a.sd_sort
+    </select>
+
+    <select id="selectworkbatchShiftList" resultType="com.yb.workbatch.entity.WorkbatchShift">
+     SELECT
+	    a.*
+    FROM
+	yb_workbatch_shift a
+    LEFT JOIN yb_workbatch_ordlink b ON b.id = a.sd_id
+    WHERE
+	    a.sd_date = #{sdDate}
+    AND a.ws_id = #{wsId}
+    AND b.ma_id = #{maId}
+    AND a.sd_sort IS NOT NULL
+    ORDER BY a.sd_sort
+    </select>
+
+    <select id="getShiftCountNum" resultType="java.lang.Integer">
+    select count(1)
+    from yb_workbatch_shift yws
+    left join yb_workbatch_ordlink ywo on yws.sd_id = ywo.id
+    where yws.sd_date = #{sdDate}
+    and yws.ws_id = #{wsId}
+    and ywo.ma_id = #{maId}
+    </select>
+    <select id="findSlideShiftDetails" resultType="com.yb.workbatch.vo.SlideShiftDetailsVO">
+    SELECT
+	ymm.NAME AS maName,
+	IFNULL(SUM(yeb.product_num),0) AS reportNum,
+	IFNULL(SUM(yeb.count_num),0) AS countName,
+	yws.shift_status AS STATUS,
+	yws.start_time,
+	yws.end_time,
+	yws.pro_begin_time,
+	yws.pro_finish_time,
+	yws.plan_num,
+	yws.finish_num,
+	yws.ck_name,
+	yws.sd_date,
+	yws.sd_id
+FROM
+	yb_workbatch_shift yws
+	LEFT JOIN yb_workbatch_ordlink ywo ON yws.sd_id = ywo.id
+	LEFT JOIN yb_machine_mainfo ymm ON yws.ma_id = ymm.id
+	left join yb_execute_briefer yeb on yws.id = yeb.wf_id
+WHERE
+	yws.sd_id = #{sdId}
+GROUP BY sd_date, ck_name, maName
+ORDER BY
+	yws.start_time ASC
+    </select>
+
+
+    <select id="findShiftBysdId" resultType="com.yb.workbatch.vo.SworkbatchShiftVO">
+   select yws.*,ymm.name as maName, d.product_num as reportNum, yws.shift_status as shift_status
+    ,GROUP_CONCAT(concat(DATE_FORMAT(d.start_time,'%H:%i:%s'),'~',DATE_FORMAT(d.end_time,'%H:%i:%s')) SEPARATOR '|') as realTime
+    from yb_workbatch_shift yws
+    left join yb_workbatch_ordlink ywo on yws.sd_id = ywo.id
+    left join yb_machine_mainfo ymm on yws.ma_id = ymm.id
+    left join yb_execute_briefer d on yws.id = d.wf_id
+    where yws.sd_id = #{sdId}
+    order by yws.create_at asc
+    </select>
+
+    <select id="getDeviceCurrentOrder" resultType="com.yb.statis.vo.DeviceCurrentOrderVO">
+        select
+        ymm. NAME AS maName,
+        ywo.wb_no,
+        ywo.cm_name AS clientName,
+        yws.plan_num,
+        yws.finish_num,
+        yws.sd_date,
+        yse. EVENT AS STATUS,
+        yse.exe_status,
+        yse.curr_num,
+        yse.update_at,
+        CONVERT (
+        yws.finish_num / yws.plan_num,
+        DECIMAL (15, 2)
+        ) AS rate,
+        ywo.pd_name
+        from yb_supervise_execute yse
+        join yb_workbatch_shift yws on yse.wf_id = yws.id
+        join yb_workbatch_ordlink ywo on yws.sd_id = ywo.id
+        join yb_machine_mainfo ymm on yse.ma_id = ymm.id
+        join blade_dict bd on bd.dict_key = ymm.ma_type
+        JOIN yb_process_machlink ypm ON ypm.ma_id = yse.ma_id
+        where bd.code='maType'
+        <if test="maId != null">
+            and yse.ma_id = #{maId}
+        </if>
+        <if test="pyId != null">
+            AND ypm.py_id =  #{pyId}
+        </if>
+        <if test="dpId != null">
+            and ymm.dp_id = #{dpId}
+        </if>
+        <if test="targetDay != null and targetDay != ''">
+            and yws.sd_date = #{targetDay}
+        </if>
+        <if test="maType != null and maType != ''">
+            AND ymm.ma_type=#{maType}
+        </if>
+        <if test="wsId != null">
+            AND yws.ws_id = #{wsId}
+        </if>
+        group by yse.ma_id
+    </select>
+    <select id="getNowOrder" resultType="com.yb.workbatch.entity.WorkbatchShift">
+        select ifnull(yws.finish_num,0) as finishNum, convert(yws.finish_num/yws.plan_num,decimal(15,2)) as rate
+        from yb_supervise_execute yse
+        join yb_workbatch_shift yws on yse.wf_id = yws.id
+        <if test="maId != null">
+            where yse.ma_id = #{maId}
+        </if>
+    </select>
+    <select id="getOrdeNum" resultType="int">
+        select count(1) from yb_workbatch_shift
+        <where>
+            <!--        <if test="maId != null">-->
+            <!--         and ma_id = #{maId}-->
+            <!--        </if>-->
+            <if test="wsIds != null and wsIds.size() != 0 ">
+                and ws_id in
+                <foreach collection="wsIds" item="wsId" index="index" open="(" close=")" separator=",">
+                    #{wsId}
+                </foreach>
+            </if>
+            <if test="sdDate != null and sdDate != ''">
+                and sd_date = #{sdDate}
+            </if>
+            <if test="shiftStatus != null">
+                and shift_status = #{shiftStatus}
+            </if>
+            <if test="status != null and status != ''">
+                and status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <select id="getPlanNumBySdId" resultType="java.lang.Integer">
+    select sum(plan_num) from yb_workbatch_shift
+    where sd_id = #{sdId}
+    </select>
+    <select id="getStopNum" resultType="java.lang.Integer">
+        select ifnull(sum(plan_num),0) - ifnull(sum(finish_num),0)
+        from yb_workbatch_shift
+        <where>
+            <if test="wsIds != null and wsIds.size() != 0 ">
+                and ws_id in
+                <foreach collection="wsIds" item="wsId" index="index" open="(" close=")" separator=",">
+                    #{wsId}
+                </foreach>
+            </if>
+            <if test="sdDate != null and sdDate != ''">
+                and sd_date = #{sdDate}
+            </if>
+            <if test="status != null and status != ''">
+                and status = #{status}
+            </if>
+        </where>
+
+    </select>
+    <select id="existingSchedule" resultType="java.lang.String">
+    select sd_date from yb_workbatch_shift
+    where sd_date >= #{beginDayOfMonth}
+    and sd_date &lt;= #{endDayOfMonth}
+    and ma_id = #{maId}
+    group by sd_date
+    order by sd_date asc
+    </select>
+    <select id="todyShift" resultType="com.yb.workbatch.vo.WorkbatchShiftVO">
+        SELECT
+            s.id,
+            s.sd_id,
+            s.sd_date,
+            s.sd_sort,
+            o.pd_name,
+            s.plan_num,
+            s.finish_num,
+            s.shift_status
+        FROM
+            yb_workbatch_shift s
+            JOIN yb_workbatch_ordlink o ON s.sd_id = o.id
+        WHERE
+            s.sd_date = CURDATE() AND s.shift_status = #{shiftStatus}
+        ORDER BY
+            s.sd_sort
+    </select>
+
+    <select id="getCompleteNum" resultType="java.lang.Integer">
+        SELECT COUNT(0)
+        FROM yb_workbatch_shift
+        WHERE shift_status IN (1,2) AND sd_date=#{sdDate} AND ws_id=#{wsId} AND ma_id=#{maId }
+    </select>
+    <select id="getNotReportedNum" resultType="java.lang.Integer">
+        SELECT
+        IFNULL(sum( plan_num ) ,0)
+        FROM
+        yb_workbatch_shift a
+        WHERE
+        a.sd_id = #{sdId}
+        AND a.start_time >= str_to_date( #{shiftStratTime}, '%Y-%m-%d %H:%i:%s' )
+        AND (
+        shift_status != 2
+        AND shift_status != 4)
+    </select>
+    <select id="getReportedNum" resultType="java.lang.Integer">
+         SELECT IFNULL(sum(finish_num), 0) FROM yb_workbatch_shift WHERE sd_id = #{sdId}
+    </select>
+
+    <select id="getRepeat" resultType="com.yb.workbatch.vo.WorkbatchShiftVO">
+    select yws.*, ywo.wb_no
+    from yb_workbatch_shift yws
+    join yb_workbatch_ordlink ywo on yws.sd_id = ywo.id
+    where yws.sd_id = #{sdId}
+    and yws.ma_id = #{maId}
+    and yws.ws_id = #{wsId}
+    and yws.sd_date = #{sdDate}
+    limit 0,1
+    </select>
+    <select id="workbatchShiftBysdDate" resultType="com.yb.workbatch.entity.WorkbatchShift">
+        select a.*,b.id from yb_workbatch_shift a
+         left join yb_workbatch_ordlink b on b.id = a.sd_id
+         where (a.sd_date = #{todaySdDate} or a.sd_date = #{yesSdDate} or a.sd_date = #{beforSdDate})
+        and (shift_status!=2 or shift_status!=4)
+        and b.id is not null
+        order by a.ma_id, a.sd_sort
+    </select>
+
+    <update id="setFinishNum">
+        update yb_workbatch_shift set finish_num = #{finishnum}
+        where id = #{wfid}
+    </update>
+
+    <select id="selectByIds" resultType="com.yb.execute.vo.TakeStockVO">
+        SELECT
+        b.complete_num as sdCompleteNumber,
+        b.plan_number as sdPlanNumber,
+        c.ex_id,
+        c.id as bfId,
+        a.id as wfId,
+        b.id as sdId,
+        b.pd_name AS productName,
+        b.wb_no,
+        a.sd_date,
+        a.ck_name,
+        e.real_name,
+        c.ex_status,
+        d.name as machineName,
+        b.pr_name,
+        a.plan_num AS totalNumber,
+        c.count_num AS accomplishNumber
+        FROM
+        yb_execute_briefer c
+        left join yb_workbatch_shift a on c.wf_id = a.id
+        LEFT JOIN yb_workbatch_ordlink b ON a.sd_id = b.id
+        left join yb_machine_mainfo d on a.ma_id = d.id
+        left join blade_user e on c.handle_usid = e.id
+        <where>
+            <if test="wfIds != null and wfIds.size() != 0 ">
+                and a.id in
+                <foreach collection="wfIds" item="wfId" index="index" open="(" close=")" separator=",">
+                    #{wfId}
+                </foreach>
+            </if>
+            <if test="wbNo != null and wbNo != ''">
+                and b.wb_no like CONCAT('%',#{wbNo},'%')
+            </if>
+            <if test="maId != null and maId != ''">
+                and a.ma_id = #{maId}
+            </if>
+            <if test="prId != null and prId != ''">
+                and b.pr_id = #{prId}
+            </if>
+            <if test="exStatus != null and exStatus == 0">
+                and c.ex_status = #{exStatus}
+            </if>
+            <if test="exStatus != null and exStatus != 0">
+                and c.ex_status in (1,2)
+            </if>
+        </where>
+        order by c.create_at desc
+    </select>
+
+    <select id="getWsSumPlanNum" resultType="com.yb.statis.vo.ShiftreachListVO">
+        SELECT
+        a.ws_id,
+        a.ck_name AS wsName,
+        SUM(a.plan_num) AS planNum
+        FROM
+        yb_workbatch_shift a
+        WHERE 1=1
+        <if test="getShiftreachVO.maIdList != null and getShiftreachVO.maIdList.size() != 0">
+            AND a.ma_id IN
+            <foreach collection="getShiftreachVO.maIdList" item="maId" open="(" close=")" separator=",">
+                #{maId}
+            </foreach>
+        </if>
+        <if test="getShiftreachVO.startTime != null and getShiftreachVO.startTime != ''  and getShiftreachVO.endTime == null">
+            AND a.sd_date = #{getShiftreachVO.startTime}
+        </if>
+        <if test="getShiftreachVO.startTime != null and getShiftreachVO.startTime != '' and getShiftreachVO.endTime != null and getShiftreachVO.endTime != ''">
+            AND a.sd_date &gt;= #{getShiftreachVO.startTime}
+            AND a.sd_date &lt;= #{getShiftreachVO.endTime}
+        </if>
+        GROUP BY a.ws_id
+    </select>
+
+    <select id="getSumPlanNum" resultType="com.yb.statis.vo.ShiftreachListVO">
+        SELECT
+        a.ws_id,
+        SUM(a.plan_num) AS planNum
+        FROM
+        yb_workbatch_shift a
+        WHERE 1=1
+        <if test="getShiftreachVO.maIdList != null and getShiftreachVO.maIdList.size() != 0">
+            AND a.ma_id IN
+            <foreach collection="getShiftreachVO.maIdList" item="maId" open="(" close=")" separator=",">
+                #{maId}
+            </foreach>
+        </if>
+        <if test="getShiftreachVO.startTime != null and getShiftreachVO.startTime != ''  and getShiftreachVO.endTime == null">
+            AND a.sd_date = #{getShiftreachVO.startTime}
+        </if>
+        <if test="getShiftreachVO.startTime != null and getShiftreachVO.startTime != '' and getShiftreachVO.endTime != null and getShiftreachVO.endTime != ''">
+            AND a.sd_date &gt;= #{getShiftreachVO.startTime}
+            AND a.sd_date &lt;= #{getShiftreachVO.endTime}
+        </if>
+    </select>
+
+    <select id="getPlanShiftreachList" resultType="com.yb.statis.vo.ShiftreachListVO">
+        SELECT
+        a.ws_id,
+        a.ma_id,
+        a.ck_name AS wsName,
+        a.sd_date AS targetDate,
+        SUM(a.plan_num) AS planNum,
+        c.name AS maName
+
+        FROM
+        yb_workbatch_shift a
+        LEFT JOIN yb_machine_mainfo c ON c.id = a.ma_id
+        WHERE 1=1
+        <if test="getShiftreachVO.maIdList != null and getShiftreachVO.maIdList.size() != 0">
+            AND a.ma_id IN
+            <foreach collection="getShiftreachVO.maIdList" item="maId" open="(" close=")" separator=",">
+                #{maId}
+            </foreach>
+        </if>
+        <if test="getShiftreachVO.startTime != null and getShiftreachVO.startTime != ''  and getShiftreachVO.endTime == null">
+            AND a.sd_date = #{getShiftreachVO.startTime}
+        </if>
+        <if test="getShiftreachVO.startTime != null and getShiftreachVO.startTime != '' and getShiftreachVO.endTime != null and getShiftreachVO.endTime != ''">
+            AND a.sd_date &gt;= #{getShiftreachVO.startTime}
+            AND a.sd_date &lt;= #{getShiftreachVO.endTime}
+        </if>
+        GROUP BY a.ma_id,a.sd_date,a.ws_id
+    </select>
+
+    <select id="getShiftData" resultType="com.yb.workbatch.vo.WorkbatchShiftDataVO">
+        select a.sd_id,a.id wf_id,a.ma_id,c.wb_no,c.pd_id,c.pd_name,b.name as ma_name,
+        IFNULL(a.waste_num,0) as waste_num,IFNULL(c.waste,0) wb_waste_num,
+        c.cm_name,c.pr_id,c.pr_name,c.plan_num wbPlanNum,c.complete_num,
+        a.plan_total_time as plan_time,a.ws_id,a.ck_name as ws_name,a.plan_num,a.shift_status,a.is_auto, a.pro_begin_time,a.pro_finish_time,a.speed,a.mould_stay,
+        ifnull(sum(yeb.count_num),0) as finishNum
+          FROM yb_workbatch_shift a
+        LEFT JOIN yb_machine_mainfo b ON b.id = a.ma_id
+        LEFT JOIN yb_workbatch_ordlink c ON a.sd_id = c.id
+        join yb_execute_briefer yeb on a.id = yeb.wf_id
+        where a.id = #{wfId}
+        limit 1
+    </select>
+</mapper>

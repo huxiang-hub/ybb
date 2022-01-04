@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.workbatch.mapper.WorkbatchShiftsetMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="workbatchShiftsetResultMap" type="com.yb.workbatch.entity.WorkbatchShiftset">
+        <id column="id" property="id"/>
+        <result column="db_id" property="dbId"/>
+        <result column="ws_id" property="wsId"/>
+        <result column="model" property="model"/>
+        <result column="ck_name" property="ckName"/>
+        <result column="stay_time" property="stayTime"/>
+        <result column="start_date" property="startDate"/>
+        <result column="end_date" property="endDate"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="us_id" property="usId"/>
+        <result column="create_at" property="createAt"/>
+        <result column="update_at" property="updateAt"/>
+        <result column="meal_stay" property="mealStay"/>
+        <result column="meal_onetime" property="mealOnetime"/>
+        <result column="meal_secondtime" property="mealSecondtime"/>
+        <result column="meal_thirdtime" property="mealThirdtime"/>
+
+    </resultMap>
+
+    <select id="selectWorkbatchShiftsetPage" resultType="com.yb.workbatch.vo.WorkbatchShiftsetVO">
+        select shiftset.*,staffinfo.name AS userName from v_machshift shiftset
+        LEFT JOIN yb_base_staffinfo staffinfo ON shiftset.us_id = staffinfo.user_id
+        where 1=1
+        <if test="workbatchShiftset.ckName != null">
+            AND ck_name LIKE CONCAT('%',#{workbatchShiftset.ckName},'%')
+        </if>
+    </select>
+
+    <select id="getWorkbatchByCondition" resultType="com.yb.workbatch.vo.WorkbatchShiftsetVO">
+        SELECT * FROM v_machshift WHERE model =#{model} AND db_id=#{bdId}
+    </select>
+
+    <select id="getStartAndEndDate" resultType="com.yb.workbatch.vo.WorkbatchShiftsetVO">
+        SELECT DISTINCT end_date, start_date, model, db_id FROM v_machshift WHERE
+        model =#{model}
+        <if test="dbId != null">
+            AND db_id=#{dbId}
+        </if>
+        <if test="dbId == null">
+            AND db_id is null
+        </if>
+        AND start_date IN( SELECT DISTINCT start_date FROM v_machshift WHERE
+        model =#{model}
+        <if test="dbId != null">
+            AND db_id=#{dbId}
+        </if>
+        <if test="dbId == null">
+            AND db_id is null
+        </if>
+        )
+    </select>
+
+    <select id="getWorkbatchBydate" resultType="com.yb.workbatch.vo.WorkbatchShiftsetVO">
+        SELECT * FROM v_machshift
+        WHERE model =#{workbatchshiftsetvo.model}
+        <if test="workbatchshiftsetvo.dbId != null">
+            AND db_id=#{workbatchshiftsetvo.dbId}
+        </if>
+        <if test="workbatchshiftsetvo.dbId == null">
+            AND db_id is null
+        </if>
+        AND start_date=#{workbatchshiftsetvo.startDate}
+        AND end_date=#{workbatchshiftsetvo.endDate}
+    </select>
+
+    <select id="getWorkbatchShiftByUserIdAndCheckDate" resultType="com.yb.workbatch.vo.WorkbatchShiftsetVO">
+    SELECT
+        *
+    FROM
+	yb_base_staffinfo ybs
+	JOIN yb_base_classinfo ycc ON ybs.bc_id = ycc.id
+	JOIN v_machshift yws ON ycc.ws_id = yws.id
+	WHERE
+	 ybs.user_id = #{userId}
+	AND  #{dateStr} BETWEEN   DATE_FORMAT( yws.start_date, '%Y-%m-%d' )
+	AND DATE_FORMAT( yws.end_date, '%Y-%m-%d' )
+    </select>
+
+
+    <select id="getToDayList" resultType="com.yb.workbatch.vo.WorkbatchShiftsetVO">
+        SELECT * FROM v_machshift WHERE to_days(start_date) &lt;= to_days(now()) AND to_days(DATE_ADD(end_date, INTERVAL 1 DAY)) &gt; to_days(now())
+    </select>
+
+    <select id="getTempWorkbatchShiftByUserIdAndCheckDate" resultType="com.yb.workbatch.vo.WorkbatchShiftsetVO">
+    SELECT * FROM yb_base_staffinfo ybs
+    JOIN  yb_base_staffclass  yss  on ybs.user_id  = yss.us_id
+	JOIN  yb_base_classinfo ybc  on  yss.bc_id = ybc.id
+	JOIN  v_machshift  yws on yws.id = ybc.ws_id
+	WHERE  ybs.user_id = #{userId}
+	AND  #{dateStr}  BETWEEN   DATE_FORMAT( yws.start_date, '%Y-%m-%d' )
+	AND DATE_FORMAT( yws.end_date, '%Y-%m-%d' )
+    </select>
+
+    <select id="getList" resultMap="workbatchShiftsetResultMap">
+        select * from v_machshift
+        order by start_time asc
+    </select>
+
+    <select id="getListBytoday" resultType="com.yb.workbatch.entity.WorkbatchShiftset">
+        select *
+         from v_machshift
+        where start_time &lt; end_time and date_format(now(),'%H:%i:%S') &gt; start_time LIMIT 1
+    </select>
+    <select id="getListBytomorrow" resultType="com.yb.workbatch.entity.WorkbatchShiftset">
+        select *
+        from v_machshift
+        where start_time &gt; end_time and date_format(now(),'%H:%i:%S') &lt; end_time LIMIT 1
+    </select>
+
+    <select id="findByMaIdWsTime" resultType="com.yb.workbatch.entity.WorkbatchShiftset">
+        select a.*
+        from v_machshift a
+        LEFT JOIN yb_machine_mainfo b on b.ma_type = a.db_id
+        where b.id = #{maId}
+           AND (a.start_time &lt; a.end_time AND a.start_time &lt;= #{wsFormat} AND a.end_time &gt;= #{wsFormat})
+            OR (a.start_time &gt; a.end_time AND (a.start_time &lt;= #{wsFormat} OR a.end_time &gt;= #{wsFormat}))
+        LIMIT 1
+    </select>
+    <select id="getShiftsetByMatype" resultType="com.yb.workbatch.entity.WorkbatchShiftset">
+        select * from v_machshift where db_id = #{maType} and model = 5
+        GROUP BY ws_id order by ck_name desc
+    </select>
+    <select id="getWorkbatchShiftsetByModel" resultType="com.yb.workbatch.entity.WorkbatchShiftset">
+        select * from v_machshift where model = #{model} order by ck_name desc
+    </select>
+    <select id="selectByMaid" resultType="com.yb.workbatch.entity.WorkbatchShiftset">
+        select * from v_machshift where ws_id = #{wsId}
+        <if test="maId != null">
+            and ma_id = #{maId}
+        </if>
+        LIMIT 1
+    </select>
+    <select id="getDefaultWsid" resultType="com.yb.workbatch.entity.WorkbatchShiftset">
+        select * from v_machshift ORDER BY ma_id LIMIT 1
+    </select>
+    <select id="getMainShift" resultType="com.yb.workbatch.entity.WorkbatchShiftset">
+        select * from v_machshift GROUP BY ws_id
+    </select>
+
+    <select id="findNowWsIds" resultType="java.lang.Integer">
+    select ws_id from (
+    select ws_id,CONCAT(date_sub(date_format(NOW() ,'%Y-%m-%d' ),interval 0 day),' ',start_time) as start_time ,
+    CASE
+    WHEN end_time &lt; start_time
+    then  CONCAT(date_sub(date_format(NOW() ,'%Y-%m-%d' ),interval -1 day),' ',end_time)
+    ELSE CONCAT(date_sub(date_format(NOW() ,'%Y-%m-%d' ),interval 0 day),' ',end_time)
+    end
+    as end_time
+    from yb_workbatch_shiftset
+    GROUP BY ws_id
+    HAVING NOW()>= start_time
+    and NOW() &lt;= end_time
+    and ws_id is not null) a
+    </select>
+
+
+    <select id="page" resultType="com.yb.workbatch.vo.WorkbatchShiftsetPageVO">
+        select yws.db_id,yws.ws_id, yws.id, yws.ck_name, yws.start_time, yws.end_time,yws.start_date,yws.end_date,
+        yws.meal_onetime, yws.meal_secondtime,yws.meal_thirdtime,yws.meal_stay,yws.model,bu.name as userName
+        from yb_workbatch_shiftset yws
+        left join blade_user bu on yws.us_id = bu.id
+        join yb_workbatch_mainshift ywm on ywm.id =yws.ws_id
+        <where>
+            <if test="request.dbId != null">
+                and yws.db_id = #{request.dbId}
+            </if>
+            <if test="request.model != null">
+                and yws.model = #{request.model}
+            </if>
+        </where>
+    </select>
+    <select id="getFirstModel" resultType="java.lang.Integer">
+    select yws.model  from yb_workbatch_shiftset yws
+    order by yws.id asc
+    limit 0,1
+    </select>
+
+    <select id="getNowWsTime" resultMap="workbatchShiftsetResultMap">
+    select a.ws_id, a.start_time,a.end_time from (
+    select ws_id,CONCAT(date_sub(date_format(NOW() ,'%Y-%m-%d' ),interval 0 day),' ',start_time) as start_time ,
+    CASE
+    WHEN end_time &lt; start_time
+    then  CONCAT(date_sub(date_format(NOW() ,'%Y-%m-%d' ),interval -1 day),' ',end_time)
+    ELSE CONCAT(date_sub(date_format(NOW() ,'%Y-%m-%d' ),interval 0 day),' ',end_time)
+    end
+    as end_time
+    from v_machshift
+    where ma_id =#{maId}
+    HAVING NOW()>= start_time
+    and NOW() &lt;= end_time
+    and ws_id is not null ) a
+</select>
+    <select id="getNowWsDate" resultMap="workbatchShiftsetResultMap">
+    select ws_id,CONCAT(date_sub(date_format(NOW() ,'%Y-%m-%d' ),interval +1 day),' ',start_time) as start_time ,
+    CASE
+    WHEN end_time &lt; start_time
+    then  CONCAT(date_sub(date_format(NOW() ,'%Y-%m-%d' ),interval 0 day),' ',end_time)
+    ELSE CONCAT(date_sub(date_format(NOW() ,'%Y-%m-%d' ),interval +1 day),' ',end_time)
+    end
+    as end_time
+    from v_machshift
+	where ma_id =#{maId}
+    HAVING NOW()>= start_time
+    and NOW() &lt;= end_time
+</select>
+    <select id="getByWsIdAndMaId" resultMap="workbatchShiftsetResultMap">
+    select ws_id,start_time,end_time
+    from v_machshift
+    where ma_id =#{maId}
+    and ws_id = #{wsId}
+</select>
+    <select id="getShiftStartTime" resultType="java.lang.String">
+        SELECT
+        if(HOUR(now()) &lt; HOUR(a.start_time),CONCAT(date_sub( curdate(), INTERVAL 1 DAY ), ' ', a.start_time) ,CONCAT( curdate(), ' ', a.start_time)) AS bstart_time
+        FROM
+        yb_workbatch_shiftset a
+        LEFT JOIN yb_machine_mainfo b ON b.ma_type = a.db_id
+        WHERE
+        b.id = #{maId}
+        AND NOW() BETWEEN IF(a.start_time &lt; a.end_time,CONCAT(curdate(),' ',a.start_time),if(hour(now()) &gt; 12,CONCAT(curdate(),'
+        ',a.start_time),CONCAT(date_sub( curdate(), INTERVAL 1 DAY ), ' ', a.start_time ) ))
+        AND IF(a.start_time &lt; a.end_time,CONCAT(curdate(),' ',a.end_time),if(hour(now()) &gt; 12,CONCAT(date_sub(
+        curdate(), INTERVAL -1 DAY ), ' ', a.end_time ),CONCAT(curdate(),' ',a.end_time)))
+    </select>
+
+    <select id="getShiftsetBymaId" resultType="com.yb.workbatch.entity.WorkbatchShiftset">
+        SELECT if(HOUR(now()) &lt; HOUR(a.start_time),CONCAT(date_sub( curdate(), INTERVAL 1 DAY ), ' ', a.start_time) ,CONCAT( curdate(), ' ', a.start_time)) AS start_time
+            ,a.*  FROM
+            yb_workbatch_shiftset a
+            LEFT JOIN yb_machine_mainfo b ON b.ma_type = a.db_id
+            WHERE
+            b.id = #{maId}
+            AND NOW() BETWEEN IF(a.start_time &lt; a.end_time,CONCAT(curdate(),' ',a.start_time),if(hour(now()) &gt; 12,CONCAT(curdate(),'
+            ',a.start_time),CONCAT(date_sub( curdate(), INTERVAL 1 DAY ), ' ', a.start_time ) ))
+            AND IF(a.start_time &lt; a.end_time,CONCAT(curdate(),' ',a.end_time),if(hour(now()) &gt; 12,CONCAT(date_sub(
+            curdate(), INTERVAL -1 DAY ), ' ', a.end_time ),CONCAT(curdate(),' ',a.end_time)))
+    </select>
+
+    <select id="getNowWsid" resultType="com.yb.workbatch.vo.WorkbatchMachShiftVO">
+        SELECT c.*,
+        IF(a.start_time&lt; a.end_time,CONCAT(curdate(),' ',a.start_time),if(hour(now()) &gt; 12,CONCAT(curdate(),'
+        ',a.start_time),CONCAT(date_sub( curdate(), INTERVAL 1 DAY ), ' ', a.start_time ) )) start_time,
+        IF(a.start_time&lt; a.end_time,CONCAT(curdate(),' ',a.end_time),if(hour(now()) &gt; 12,CONCAT(date_sub( curdate(),
+        INTERVAL -1 DAY ), ' ', a.end_time ),CONCAT(curdate(),' ',a.end_time))) end_time
+        FROM
+        yb_workbatch_shiftset a
+        LEFT JOIN yb_machine_mainfo b ON b.ma_type = a.db_id
+        LEFT JOIN yb_workbatch_mainshift c ON c.id = a.ws_id
+        WHERE
+        b.id = #{maId}
+        AND NOW() BETWEEN IF(a.start_time &lt; a.end_time,CONCAT(curdate(),' ',a.start_time),if(hour(now()) &gt; 12,CONCAT(curdate(),'
+        ',a.start_time),CONCAT(date_sub( curdate(), INTERVAL 1 DAY ), ' ', a.start_time ) ))
+        AND IF(a.start_time &lt; a.end_time,CONCAT(curdate(),' ',a.end_time),if(hour(now()) &gt; 12,CONCAT(date_sub(
+        curdate(), INTERVAL -1 DAY ), ' ', a.end_time ),CONCAT(curdate(),' ',a.end_time)))
+    </select>
+
+    <select id="getShiftWsidBymodle" resultType="com.yb.workbatch.vo.WorkbatchShiftsetNowVO">
+        select a.ws_id,CASE a.model WHEN 5 THEN a.db_id END as ma_type,CASE a.model  WHEN 2 THEN a.db_id END as dp_id,CASE a.model WHEN 4 THEN a.db_id END as ma_id,a.model,b.ck_name
+        from yb_workbatch_shiftset a
+        LEFT JOIN yb_workbatch_mainshift b on b.id = a.ws_id
+        where NOW() BETWEEN CONCAT( curdate(), ' ', a.start_time ) AND IF(a.start_time > a.end_time,CONCAT( date_sub( curdate(), INTERVAL - 1 DAY ), ' ', a.end_time ),CONCAT( curdate(), ' ', a.end_time ))
+        GROUP BY a.ws_id,a.db_id
+    </select>
+
+    <select id="getShiftWsid" resultType="com.yb.workbatch.entity.WorkbatchMainshift">
+        select a.ws_id as id,b.ck_name
+        from yb_workbatch_shiftset a
+        LEFT JOIN yb_workbatch_mainshift b on b.id = a.ws_id
+        where NOW() BETWEEN CONCAT( curdate(), ' ', a.start_time ) AND IF(a.start_time > a.end_time,CONCAT( date_sub( curdate(), INTERVAL - 1 DAY ), ' ', a.end_time ),CONCAT( curdate(), ' ', a.end_time ))
+        GROUP BY a.ws_id
+    </select>
+
+    <select id="getWorkbatchShiftset" resultType="com.yb.workbatch.entity.WorkbatchShiftset">
+         select *
+    from v_machshift
+    where ma_id =#{maId}
+    and ws_id = #{wsId}
+    </select>
+</mapper>

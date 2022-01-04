@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.process.mapper.ProcessParamlinkMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="processParamlinkResultMap" type="com.yb.process.entity.ProcessParamlink">
+        <id column="id" property="id"/>
+        <result column="pr_id" property="prId"/>
+        <result column="prname" property="prname"/>
+        <result column="title" property="title"/>
+        <result column="data_type" property="dataType"/>
+        <result column="edit_type" property="editType"/>
+        <result column="enum_type" property="enumType"/>
+        <result column="enum_data" property="enumData"/>
+        <result column="pid" property="pid"/>
+        <result column="dvalue" property="dvalue"/>
+        <result column="islocal" property="islocal"/>
+        <result column="isdel" property="isdel"/>
+        <result column="create_at" property="createAt"/>
+        <result column="update_at" property="updateAt"/>
+    </resultMap>
+
+
+    <select id="selectProcessParamlinkPage" resultMap="processParamlinkResultMap">
+        select * from yb_process_paramlink where isdel = 0
+    </select>
+
+
+    <select id="selectProcessParamlinkByPrId" resultType="com.yb.process.vo.ProcessParamlinkVO">
+        select * from yb_process_paramlink where isdel = 0 and pr_id=#{prId}
+    </select>
+</mapper>

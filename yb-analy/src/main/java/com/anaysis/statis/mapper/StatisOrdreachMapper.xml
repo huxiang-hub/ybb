@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anaysis.statis.mapper.StatisOrdreachMapper">
+
+    <select id="getByMaIdAndSdIdAndTargetDayAndTargetHour" resultType="com.anaysis.statis.entity.StatisOrdreach">
+        select * from yb_statis_ordreach
+        where ma_id = #{maId}
+        and target_day = #{targetDay}
+        and target_hour = #{targetHour}
+        order by id desc
+        limit 0,1
+    </select>
+
+    <select id="findByMaIdWsTime" resultType="com.anaysis.workbatch.entity.WorkbatchShiftset">
+        select a.*
+        from yb_workbatch_shiftset a
+        LEFT JOIN yb_machine_mainfo b on b.ma_type = a.db_id
+        where b.id = #{maId}
+           AND (a.start_time &lt; a.end_time AND a.start_time &lt;= #{wsFormat} AND a.end_time &gt;= #{wsFormat})
+            OR (a.start_time &gt; a.end_time AND (a.start_time &lt;= #{wsFormat} OR a.end_time &gt;= #{wsFormat}))
+        LIMIT 1
+    </select>
+</mapper>

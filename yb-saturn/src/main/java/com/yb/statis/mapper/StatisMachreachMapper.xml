@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.statis.mapper.StatisMachreachMapper">
+
+
+    <select id="selectStatisMachreach" resultType="com.yb.statis.vo.StatisMachreachVO">
+SELECT
+	*,
+	ymm.`name` AS maName,
+	blade_user.`name` AS usName
+FROM
+	yb_statis_machreach ysm
+	JOIN blade_user ON ysm.us_id = blade_user.id
+	JOIN yb_machine_mainfo ymm ON ymm.id = ysm.ma_id
+	where  1= 1
+<if test="statisMachreach.usName!=null and statisMachreach.usName!=''">
+			and blade_user.`name`=#{statisMachreach.usName}
+</if>
+
+<if test="statisMachreach.conUpdate!=null and statisMachreach.conUpdate!=''">
+	and  DATE_FORMAT(ysm.update_at,'%Y-%m-%d')=#{statisMachreach.conUpdate}
+</if>
+
+    </select>
+    <select id="planRate" resultType="com.yb.statis.vo.StatisMachreachListVO">
+    SELECT distinct
+	ywo.pr_name, ysm.plan_num, ysm.count_num, ysm.reach_rate as rate, ywo.id, ymm.name maName,
+	ysm.create_at as finishTime, yeb.create_at as reportTime, ysm.yield_rate as yieldRate
+    FROM
+	yb_statis_machreach ysm
+	JOIN yb_machine_mainfo ymm ON ymm.id = ysm.ma_id
+	join yb_workbatch_ordlink ywo on ywo.id = ysm.sd_id
+	join yb_workbatch_shift yws on ywo.id = yws.sd_id
+	join yb_execute_briefer yeb on yeb.id = ysm.eb_id
+	<where>
+	<if test="request.maType != null and request.maType != ''">
+	and ymm.ma_type = #{request.maType}
+    </if>
+    <if test="request.wsId != null">
+    and yws.ws_id = #{request.wsId}
+    </if>
+    <if test="request.targetDay != null and request.targetDay != ''">
+    and ysm.target_date = #{request.targetDay}
+    </if>
+    <if test="request.maId != null">
+    and ysm.ma_id = #{request.maId}
+    </if>
+    <if test="request.dpId != null">
+    and ymm.dp_id = #{request.dpId}
+    </if>
+    </where>
+    </select>
+    <select id="monthPlanRate" resultType="com.yb.statis.vo.MonthStatisMachreachListVO">
+    SELECT
+	bd.dict_value as maType, AVG(ysm.reach_rate) as rate, DATE(ysm.create_at) as date, ymm.name as maName
+    FROM
+	yb_statis_machreach ysm
+	JOIN yb_machine_mainfo ymm ON ymm.id = ysm.ma_id
+	join yb_workbatch_ordlink ywo on ywo.id = ysm.sd_id
+	join yb_workbatch_shift yws on ywo.id = yws.sd_id
+	join blade_dict bd on bd.dict_key = ymm.ma_type
+	where bd.code='maType'
+	and ysm.create_at >= #{startTime}
+	and ysm.create_at &lt;= #{endTime}
+	<if test="maType != null and maType != ''">
+	and ymm.ma_type = #{maType}
+    </if>
+	<if test="wsId != null">
+	and yws.ws_id = #{wsId}
+    </if>
+     <choose>
+        <when test="maType !=null and maType != ''">
+        group by ymm.id,DATE(ysm.target_date)
+        </when>
+        <otherwise>
+        group by ymm.ma_type,DATE(ysm.target_date)
+        </otherwise>
+    </choose>
+    </select>
+    <select id="hourPlanRate" resultType="com.yb.statis.vo.DayStatisMachreachListVO">
+    select yso.target_hour as hour, bd.dict_value as maType, ymm.name as maName, ifnull(yso.reach_rate,0) as rate
+    from yb_statis_ordreach yso
+    LEFT JOIN yb_machine_mainfo ymm on ymm.id = yso.ma_id
+	join blade_dict bd on bd.dict_key = ymm.ma_type
+    where bd.code='maType'
+    <if test="maType != null and maType != ''">
+    and ymm.ma_type = #{maType}
+    </if>
+    <if test="targetDay != null and targetDay != ''">
+    and yso.target_day = target_day
+    </if>
+    <if test="maId != null ">
+    and yso.ma_id = ma_id
+    </if>
+    <choose>
+        <when test="maType !=null and maType != ''">
+        group by ymm.id,yso.target_hour,target_day
+        </when>
+        <otherwise>
+        group by ymm.ma_type,yso.target_hour,target_day
+        </otherwise>
+    </choose>
+	ORDER BY target_day,target_hour asc
+    </select>
+
+    <select id="getLastBySdId" resultType="com.yb.statis.entity.StatisMachreach">
+        select * from yb_statis_machreach
+        where wf_id = #{wfId}
+        and ma_id = #{maId}
+        and ws_id = #{wsId}
+        and target_date = #{sdDate}
+        order by create_at desc
+        limit 0,1
+    </select>
+    <select id="deviceCapacityProgress" resultType="com.yb.statis.vo.DeviceCapacityProgressListVO">
+        select ifnull(sum(yws.plan_num),0) as planNum, ifnull(sum(yws.finish_num),0) as finishNum,  convert(ifnull(sum(yws.plan_num),0)/ ifnull(sum(yws.finish_num),0),decimal(15,2)) as rate,
+        ywo.wb_no,ymm.name as maName, ymm.id as maId, bd.dict_value as maType, ywo.cm_name, ywo.pd_name
+        from yb_workbatch_shift yws
+        join yb_workbatch_ordlink ywo on yws.sd_id = ywo.id
+        join yb_machine_mainfo ymm on ywo.ma_id = ymm.id
+        join blade_dict bd on bd.dict_key = ymm.ma_type
+        JOIN yb_process_machlink ypm ON ypm.ma_id = ymm.id
+	    where bd.code='maType'
+	    <if test="targetDay != null and targetDay != ''">
+        and yws.sd_date = #{targetDay}
+        </if>
+	    <if test="pyId != null">
+        and ypm.py_id = #{pyId}
+        </if>
+        <if test="wsIds != null and wsIds.size() != 0 ">
+        and yws.ws_id in
+        <foreach collection="wsIds" item="wsId" index="index" open="(" close=")" separator=",">
+            #{wsId}
+        </foreach>
+        </if>
+        group by ywo.ma_id
+        order by bd.sort asc
+    </select>
+
+    <select id="deviceOrderNumProgress" resultType="com.yb.statis.vo.DeviceOrderNumProgressListVO">
+    select ymm.name as maName,(select count(1)
+    from yb_workbatch_shift a
+    where a.ma_id =ymm.id
+    <if test="wsIds != null and wsIds.size() != 0 ">
+        and a.ws_id in
+        <foreach collection="wsIds" item="wsId" index="index" open="(" close=")" separator=",">
+            #{wsId}
+        </foreach>
+         and a.sd_date = #{targetDay}
+    </if>)
+    as wfNum,(select count(1) from yb_workbatch_shift b where b.ma_id =ymm.id and b.ws_id <if test="wsIds != null and wsIds.size() != 0 ">
+        and b.ws_id in
+        <foreach collection="wsIds" item="wsId" index="index" open="(" close=")" separator=",">
+            #{wsId}
+        </foreach>
+            and b.sd_date = #{targetDay}
+    </if>
+      and b.shift_status = 2) as finishNum, bd.dict_value as maType
+    from yb_workbatch_shift yws
+    join yb_machine_mainfo ymm on yws.ma_id = ymm.id
+    join blade_dict bd on bd.dict_key = ymm.ma_type
+    JOIN yb_process_machlink ypm ON ypm.ma_id = ymm.id
+	where bd.code='maType'
+	<if test="targetDay != null and targetDay != ''">
+    and yws.sd_date = #{targetDay}
+    </if>
+	<if test="pyId != null">
+    and ypm.py_id = #{pyId}
+    </if>
+    <if test="wsIds != null and wsIds.size() != 0 ">
+        and yws.ws_id in
+        <foreach collection="wsIds" item="wsId" index="index" open="(" close=")" separator=",">
+            #{wsId}
+        </foreach>
+    </if>
+    group by yws.ma_id
+    order by bd.sort asc
+    </select>
+    <select id="getOrderNum" resultType="com.yb.statis.vo.DeviceOrderNumProgressListVO">
+     select(select ifnull(count(1),0)
+    from yb_workbatch_shift a
+    where a.ma_id =#{maId}
+        and a.ws_id =#{wsId}
+        and a.sd_date = #{targetDay}
+    )
+    as wfNum,(select ifnull(count(1),0)
+    from yb_workbatch_shift b
+    where b.ws_id =#{wsId}
+        and b.sd_date = #{targetDay}
+        and b.ma_id = #{maId}
+      and b.shift_status = 2) as finishNum
+    </select>
+
+</mapper>

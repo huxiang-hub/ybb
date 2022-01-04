@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.statis.mapper.StatisMachalgMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="statisMachalgResultMap" type="com.yb.statis.entity.StatisMachalg">
+        <id     column="id" property="id"/>
+        <result column="alg_date" property="algDate"/>
+        <result column="regular_time" property="regularTime"/>
+        <result column="ma_id" property="maId"/>
+        <result column="run_stay" property="runStay"/>
+        <result column="run_num" property="runNum"/>
+        <result column="stop_stay" property="stopStay"/>
+        <result column="stop_num" property="stopNum"/>
+        <result column="fault_stay" property="faultStay"/>
+        <result column="fault_num" property="faultNum"/>
+        <result column="exchange_stay" property="exchangeStay"/>
+        <result column="exchange_num" property="exchangeNum"/>
+        <result column="blankrun_stay" property="blankrunStay"/>
+        <result column="blankrun_num" property="blankrunNum"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="work_count" property="workCount"/>
+        <result column="nodefect_count" property="nodefectCount"/>
+        <result column="yield_rate" property="yieldRate"/>
+        <result column="fact_speed" property="factSpeed"/>
+        <result column="normal_speed" property="normalSpeed"/>
+        <result column="perform_rate" property="performRate"/>
+        <result column="utilize_rate" property="utilizeRate"/>
+        <result column="gather_rate" property="gatherRate"/>
+        <result column="create_at" property="createAt"/>
+        <result column="update_at" property="updateAt"/>
+    </resultMap>
+
+
+    <select id="selectStatisMachalgPage" resultMap="statisMachalgResultMap">
+        select * from yb_statis_machalg where is_deleted = 0
+    </select>
+
+</mapper>

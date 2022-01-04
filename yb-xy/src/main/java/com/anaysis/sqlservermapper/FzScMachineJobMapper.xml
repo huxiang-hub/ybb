@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anaysis.sqlservermapper.FzScMachineJobDao">
+    <select id="list" resultType="com.anaysis.sqlservermapper.domain.FzScMachineJobDO">
+        select a.iMachineJobId as iMachineJobId,a.iProductJobId as iProductJobId,a.resId as resId,a.MachineName as machineName,
+        a.id_res as idRes,a.resmc as resmc,a.resType as resType,a.id_Gzzx as idGzzx, b.*, (isnull(Bill.iAmount, 0) + isnull(Bill.iWaste, 0) + isnull(Bill.iWaste_B, 0)) as iTotalAmount,
+        Bill.iType as iBillType, c.ID_ATech as FirstTechID, d.cPlanRemark, d.cFeedbackViewRemark,
+        MKernel.cGzzxmc, MKernel.cGzzxlx, xml_A.cInfo as A_Info, xml_S.cInfo as S_Info,
+        xml_P.cInfo as P_Info, xml_PL.cInfo as PL_Info, xml_J.cInfo as J_Info,
+        ttMJ_WDesc.cDesc as cWasteDesc from ( select Job.ID as iMachineJobId, Job.ID_scProductBill_Job as iProductJobId, Job.Id_Machine as resId, isnull(Dev.cName, '') as MachineName,
+        Dev.id as id_res, Dev.cName as resmc, Dev.iType as resType, Dev.iGzzxid as id_Gzzx
+        from scMachineJob Job left join scvDevice Dev on Dev.iType &lt;&gt; 3 and Job.id_Machine = Dev.Id and Job.iType_Res = 0
+        where Job.iStatus in (1, 2, 10, 20) and Job.iJobType = 0 and Job.iType_Res = 0
+        <if test="machineId != null and machineId != ''"> and Job.id_Machine=#{machineId}</if>
+        <if test="iGzzxIds != null and iGzzxIds != ''"> and Dev.iGzzxId in (${iGzzxIds})</if>
+        and Job.nDeliverAmount>Job.nCompleteAmount
+        and cProductName &lt;&gt;'排产换单作业' ) a
+        left join scMachineJob b on a.iMachineJobId = b.ID
+        left join scMachineJobTech c on c.ID_scMachineJob = a.iMachineJobId
+        left join scMachineJobRemark d on d.ID_scMachineJob = a.iMachineJobId
+        left join MKernel on MKernel.ID = a.id_Gzzx
+        left join scProductBill_Job Bill on a.iProductJobId = Bill.ID
+        left join scJobInfo xml_A on a.iProductJobId = xml_A.ID_Job and xml_A.iType = 0
+        left join scJobInfo xml_S on a.iProductJobId = xml_S.ID_Job and xml_S.iType = 1
+        left join scJobInfo xml_P on a.iProductJobId = xml_P.ID_Job and xml_P.iType = 2
+        left join scJobInfo xml_J on a.iProductJobId = xml_J.ID_Job and xml_J.iType = 4
+        left join scJobInfo xml_PL on a.iProductJobId = xml_PL.ID_Job and xml_PL.iType = 3
+        left join scMachineJob_Desc ttMJ_WDesc on ttMJ_WDesc.ID_MJob = a.iMachineJobId and ttMJ_WDesc.iType = 0
+        where c.iIndex = 1 order by iStatus, b.dPlanStart, b.ID_Center, b.id_Machine, b.iXH, b.iSubXH, b.Id
+    </select>
+
+    <select id="count" resultType="int">
+        select count(*) from ( select Job.ID as iMachineJobId, Job.ID_scProductBill_Job as iProductJobId, Job.Id_Machine as resId,
+        isnull(Dev.cName, '') as MachineName, Dev.id as id_res, Dev.cName as resmc, Dev.iType as resType, Dev.iGzzxid as id_Gzzx
+        from scMachineJob Job left join scvDevice Dev on Dev.iType  &lt;&gt; 3 and Job.id_Machine = Dev.Id and Job.iType_Res = 0
+        where Job.iStatus in (1, 2, 10, 20) and Job.iJobType = 0 and Job.iType_Res = 0
+        <if test="machineId != null and machineId != ''"> and Job.id_Machine in (${machineId})</if>
+        <if test="iGzzxIds != null and iGzzxIds != ''"> and Dev.iGzzxId in (${iGzzxIds})</if>
+        <if test="cjobCode != null and cjobCode != ''"> and Job.cJobCode like '%${cjobCode}%'</if>
+        and Job.nDeliverAmount>Job.nCompleteAmount
+        and cProductName  &lt;&gt; '排产换单作业' ) a
+        left join scMachineJob b on a.iMachineJobId = b.ID
+        left join scMachineJobTech c on c.ID_scMachineJob = a.iMachineJobId
+        left join scMachineJobRemark d on d.ID_scMachineJob = a.iMachineJobId
+        left join MKernel on MKernel.ID = a.id_Gzzx
+        left join scProductBill_Job Bill on a.iProductJobId = Bill.ID
+        left join scJobInfo xml_A on a.iProductJobId = xml_A.ID_Job and xml_A.iType = 0
+        left join scJobInfo xml_S on a.iProductJobId = xml_S.ID_Job and xml_S.iType = 1
+        left join scJobInfo xml_P on a.iProductJobId = xml_P.ID_Job and xml_P.iType = 2
+        left join scJobInfo xml_J on a.iProductJobId = xml_J.ID_Job and xml_J.iType = 4
+        left join scJobInfo xml_PL on a.iProductJobId = xml_PL.ID_Job and xml_PL.iType = 3
+        left join scMachineJob_Desc ttMJ_WDesc on ttMJ_WDesc.ID_MJob = a.iMachineJobId and ttMJ_WDesc.iType = 0
+        where c.iIndex = 1
+    </select>
+
+    <select id="getPageList" resultType="com.anaysis.sqlservermapper.domain.FzScMachineJobDO">
+        select * from ( select *, ROW_NUMBER() OVER(Order by iStatus ) AS RowId from (select a.*, b.*, (isnull(Bill.iAmount, 0) + isnull(Bill.iWaste, 0) + isnull(Bill.iWaste_B, 0)) as iTotalAmount, Bill.iType as iBillType, c.ID_ATech as FirstTechID, d.cPlanRemark, d.cFeedbackViewRemark, MKernel.cGzzxmc, MKernel.cGzzxlx, xml_A.cInfo as A_Info, xml_S.cInfo as S_Info, xml_P.cInfo as P_Info, xml_PL.cInfo as PL_Info, xml_J.cInfo as J_Info, ttMJ_WDesc.cDesc as cWasteDesc
+        from (select Job.ID as iMachineJobId, Job.ID_scProductBill_Job as iProductJobId, Job.Id_Machine as resId, isnull(Dev.cName, '') as MachineName,
+        Dev.id as id_res, Dev.cName as resmc, Dev.iType as resType, Dev.iGzzxid as id_Gzzx  from scMachineJob Job
+        left join scvDevice Dev on Dev.iType &lt;&gt; 3 and Job.id_Machine = Dev.Id and Job.iType_Res = 0
+        where Job.iStatus in ( 1, 2, 10, 20) and Job.iJobType = 0 and Job.iType_Res = 0
+        <if test="machineId != null and machineId != ''"> and Job.id_Machine in (${machineId})</if>
+        <if test="iGzzxIds != null and iGzzxIds != ''"> and Dev.iGzzxId in (${iGzzxIds})</if>
+        <if test="cjobCode != null and cjobCode != ''"> and Job.cJobCode like '%${cjobCode}%'</if>
+        and Job.nDeliverAmount>Job.nCompleteAmount
+        and cProductName  &lt;&gt; '排产换单作业' ) a
+        left join scMachineJob b on a.iMachineJobId = b.ID
+        left join scMachineJobTech c on c.ID_scMachineJob = a.iMachineJobId
+        left join scMachineJobRemark d on d.ID_scMachineJob = a.iMachineJobId
+        left join MKernel on MKernel.ID = a.id_Gzzx
+        left join scProductBill_Job Bill on a.iProductJobId = Bill.ID
+        left join scJobInfo xml_A on a.iProductJobId = xml_A.ID_Job and xml_A.iType = 0
+        left join scJobInfo xml_S on a.iProductJobId = xml_S.ID_Job and xml_S.iType = 1
+        left join scJobInfo xml_P on a.iProductJobId = xml_P.ID_Job and xml_P.iType = 2
+        left join scJobInfo xml_J on a.iProductJobId = xml_J.ID_Job and xml_J.iType = 4
+        left join scJobInfo xml_PL on a.iProductJobId = xml_PL.ID_Job and xml_PL.iType = 3
+        left join scMachineJob_Desc ttMJ_WDesc on ttMJ_WDesc.ID_MJob = a.iMachineJobId and ttMJ_WDesc.iType = 0
+        where c.iIndex = 1
+        ) as mytab
+        ) as b  where RowId
+        <if test="offset != null and sqlserverlimit != null">
+            between #{offset} and #{sqlserverlimit}
+        </if>
+    </select>
+
+    <select id="getListByIds" resultType="com.anaysis.sqlservermapper.domain.FzScMachineJobDO">
+        select a.*, b.*, (isnull(Bill.iAmount, 0) + isnull(Bill.iWaste, 0) + isnull(Bill.iWaste_B, 0)) as iTotalAmount, Bill.iType as iBillType, c.ID_ATech as FirstTechID, d.cPlanRemark, d.cFeedbackViewRemark, MKernel.cGzzxmc, MKernel.cGzzxlx, xml_A.cInfo as A_Info, xml_S.cInfo as S_Info, xml_P.cInfo as P_Info, xml_PL.cInfo as PL_Info, xml_J.cInfo as J_Info, ttMJ_WDesc.cDesc as cWasteDesc
+        from (select Job.ID as iMachineJobId, Job.ID_scProductBill_Job as iProductJobId, Job.Id_Machine as resId, isnull(Dev.cName, '') as MachineName,
+        Dev.id as id_res, Dev.cName as resmc, Dev.iType as resType, Dev.iGzzxid as id_Gzzx  from scMachineJob Job
+        left join scvDevice Dev on Dev.iType &lt;&gt; 3 and Job.id_Machine = Dev.Id and Job.iType_Res = 0
+        where Job.iStatus in ( 1, 2, 10, 20) and Job.iJobType = 0 and Job.iType_Res = 0
+        and Job.id in (${value})
+        and Job.nDeliverAmount>Job.nCompleteAmount
+        and cProductName  &lt;&gt; '排产换单作业' ) a
+        left join scMachineJob b on a.iMachineJobId = b.ID
+        left join scMachineJobTech c on c.ID_scMachineJob = a.iMachineJobId
+        left join scMachineJobRemark d on d.ID_scMachineJob = a.iMachineJobId
+        left join MKernel on MKernel.ID = a.id_Gzzx
+        left join scProductBill_Job Bill on a.iProductJobId = Bill.ID
+        left join scJobInfo xml_A on a.iProductJobId = xml_A.ID_Job and xml_A.iType = 0
+        left join scJobInfo xml_S on a.iProductJobId = xml_S.ID_Job and xml_S.iType = 1
+        left join scJobInfo xml_P on a.iProductJobId = xml_P.ID_Job and xml_P.iType = 2
+        left join scJobInfo xml_J on a.iProductJobId = xml_J.ID_Job and xml_J.iType = 4
+        left join scJobInfo xml_PL on a.iProductJobId = xml_PL.ID_Job and xml_PL.iType = 3
+        left join scMachineJob_Desc ttMJ_WDesc on ttMJ_WDesc.ID_MJob = a.iMachineJobId and ttMJ_WDesc.iType = 0
+        where c.iIndex = 1
+    </select>
+</mapper>

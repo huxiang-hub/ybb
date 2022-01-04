@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.stroe.mapper.StoreInventoryMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.yb.stroe.entity.StoreInventory">
+        <id column="id" property="id"/>
+        <result column="st_type" property="stType"/>
+        <result column="st_id" property="stId"/>
+        <result column="st_no" property="stNo"/>
+        <result column="st_size" property="stSize"/>
+        <result column="ml_id" property="mlId"/>
+        <result column="et_id" property="etId"/>
+        <result column="lay_num" property="layNum"/>
+        <result column="create_at" property="createAt"/>
+        <result column="update_at" property="updateAt"/>
+        <result column="status" property="status"/>
+    </resultMap>
+    <select id="seatInventoryInfo" resultType="com.yb.stroe.vo.SeatInventoryVO">
+        SELECT inven.st_id AS seatId,
+        seat.st_no AS stNo,
+        seat.sr_id AS srId,
+        seat.sr_no AS srNo,
+        seat.st_type AS stType,
+        seat.st_no AS stNo,
+        seat.size,
+        seat.layer,
+        seat.tray_num AS trayNum,
+        seat.capacity,
+        seat.sort,
+        seat.x_num AS xNum,
+        seat.y_num AS yNum,
+        inven.status AS status,
+        SUM(inven.lay_num) AS useNum,
+        (seat.tray_num - SUM(inven.lay_num)) AS usableNum
+        FROM yb_store_inventory inven
+        JOIN yb_store_seat seat ON inven.st_id = seat.id
+        <if test="areaId != null and areaId!=''">
+            where inven.area_id = #{areaId}
+        </if>
+        GROUP BY inven.st_id order by seat.sort
+    </select>
+    <select id="seatInventoryInfoBySort" resultType="com.yb.stroe.vo.SeatInventoryVO">
+        SELECT inven.st_id AS seatId,
+         seat.st_no AS stNo,
+         seat.sr_id AS srId,
+         seat.sr_no AS srNo,
+         seat.st_type AS stType,
+         seat.st_no AS stNo,
+         seat.size,
+         seat.layer,
+         seat.tray_num AS trayNum,
+         seat.capacity,
+         seat.sort,
+         seat.x_num AS xNum,
+         seat.y_num AS yNum,
+         SUM(inven.lay_num) AS useNum,
+         (seat.tray_num - SUM(inven.lay_num)) AS usableNum
+         FROM yb_store_inventory inven
+         JOIN yb_store_seat seat ON inven.st_id = seat.id
+         where seat.sort >= (select sort from yb_store_seat where id = #{seatId})
+         GROUP BY inven.st_id order by seat.sort
+    </select>
+
+    <update id="updateStatus">
+        UPDATE yb_store_inventory
+        SET `status` = #{status}
+        WHERE
+        <if test="etIdList != null and etIdList.size() != 0">
+            et_id IN
+            <foreach collection="etIdList" item="etId" open="(" separator="," close=")">
+                #{etId}
+            </foreach>
+        </if>
+        <if test="etIdList == null or etIdList.size() == 0">
+            1 = 0
+        </if>
+
+    </update>
+
+    <select id="getUsableNum" resultType="java.lang.Integer">
+        SELECT
+        	(a.tray_num - SUM(IFNULL(b.lay_num, 0))) AS usableNum
+        FROM
+        	yb_store_seat a
+        LEFT JOIN yb_store_inventory b ON a.id = b.st_id
+        WHERE
+        	a.id = #{mpId}
+    </select>
+
+    <delete id="deleteByEtIdList">
+        DELETE
+        FROM
+        yb_store_inventory
+        WHERE
+        <if test="etIdList != null and etIdList.size() != 0">
+            et_id IN
+            <foreach collection="etIdList" item="etId" open="(" close=")" separator=",">
+                #{etId}
+            </foreach>
+        </if>
+        <if test="etIdList == null or etIdList.size() == 0">
+            1=2
+        </if>
+    </delete>
+
+    <update id="updateStatusBymlIdList">
+        UPDATE yb_store_inventory
+        SET `status` = #{status}
+        WHERE
+        <if test="mlIdList != null and mlIdList.size() != 0">
+            ml_id IN
+            <foreach collection="mlIdList" item="mlId" open="(" separator="," close=")">
+                #{mlId}
+            </foreach>
+        </if>
+        <if test="mlIdList == null or mlIdList.size() == 0">
+            1 = 0
+        </if>
+    </update>
+
+    <select id="pageStoreFindList" resultType="com.yb.stroe.vo.StoreInventorySemiVO">
+        select GROUP_CONCAT(b.id)as ty_ids,b.sd_id,a.st_type,c.pr_id,c.pr_name,c.pd_name,c.pd_code,c.wb_no,c.plan_num,c.complete_num,c.arrange_num,sum(et_pdnum)
+        as et_pdnum, count(*) as tyNum,a.create_at as store_time
+        from yb_store_inventory a
+        LEFT JOIN yb_execute_traycard b on a.et_id =b.id
+        LEFT JOIN yb_workbatch_ordlink c on c.id = b.sd_id
+        where  a.status=1 and a.et_id is not null
+        <if test="request.stType != null and request.stType != ''">and a.st_type = #{request.stType}</if>
+        <if test="request.wbNo != null and request.wbNo != ''">and c.wb_no like concat('%', #{request.wbNo}, '%')</if>
+        <if test="request.pdName != null and request.pdName != ''">and c.pd_name like concat('%', #{request.pdName}, '%')</if>
+        GROUP BY a.st_type,c.wb_no,c.pr_id
+        union all
+        select null as ty_ids,y.sd_id,x.st_type,z.pr_id,z.pr_name,z.pd_name,z.pd_code,z.wb_no,z.plan_num,z.complete_num,
+        z.arrange_num,sum(x.et_pdnum)as et_pdnum, count(*) as tyNum,x.create_at as store_time from yb_store_inventory x
+        LEFT JOIN yb_execute_briefer y on y.id=x.db_id
+        LEFT JOIN yb_workbatch_ordlink z on z.id = y.sd_id
+        where x.status=1 and x.db_id is not null
+        <if test="request.stType != null and request.stType != ''">and x.st_type = #{request.stType}</if>
+        <if test="request.wbNo != null and request.wbNo != ''">and z.wb_no like concat('%', #{request.wbNo}, '%')</if>
+        <if test="request.pdName != null and request.pdName != ''">and z.pd_name like concat('%', #{request.pdName}, '%')</if>
+        GROUP BY x.st_type,y.sd_id
+        ORDER BY store_time desc,st_type
+        LIMIT #{current},#{size}
+    </select>
+
+    <select id="pageStoreFindListCount" resultType="java.lang.Integer">
+        select count(*) as num
+        from yb_store_inventory a
+        LEFT JOIN yb_execute_traycard b on a.et_id =b.id
+        LEFT JOIN yb_workbatch_ordlink c on c.id = b.sd_id
+        <where>
+            a.status=1
+            <if test="request.stType != null and request.stType != ''">and a.st_type = #{request.stType}</if>
+            <if test="request.wbNo != null and request.wbNo != ''">and c.wb_no like concat('%', #{request.wbNo}, '%')</if>
+            <if test="request.pdName != null and request.pdName != ''">and c.pd_name like concat('%', #{request.pdName}, '%')</if>
+        </where>
+        GROUP BY a.st_type,c.wb_no,c.pr_id
+        ORDER BY a.st_type,c.pr_id,c.wb_no
+    </select>
+    <select id="getExcelExportData" resultType="com.yb.stroe.vo.StoreExcelExportVO">
+        SELECT
+            *
+        FROM
+            (
+            SELECT
+                a.pr_name,
+                a.od_no,
+                a.pd_name,
+                e.sr_name,
+                SUM(
+                IFNULL( d.et_pdnum, 0 )) AS num
+            FROM
+                yb_workbatch_ordlink a
+                LEFT JOIN yb_workbatch_shift b ON a.id = b.sd_id
+                LEFT JOIN yb_execute_traycard c ON b.id = c.wf_id
+                LEFT JOIN yb_store_inventory d ON c.id = d.et_id
+                LEFT JOIN yb_store_area e ON d.area_id = e.id
+            GROUP BY
+                od_no
+            ORDER BY
+                a.pr_id,
+                a.pd_id
+            ) AS r
+        WHERE
+            r.num > 0
+    </select>
+    <select id="getByBfId" resultType="com.yb.execute.vo.PhoneTrayCardVO">
+        SELECT
+            a.et_pdnum as etPdnum,
+            a.et_pdnum as dataBefore,
+            b.id as bfId,
+            b.count_num as complete_num,
+            c.pd_name,
+            c.od_no,
+            d.plan_num,
+            d.ck_name,
+            e.real_name,
+            f.name as maName
+        FROM
+            yb_store_inventory a
+            LEFT JOIN yb_execute_briefer b ON a.db_id = b.id
+            LEFT JOIN yb_workbatch_ordlink c ON b.sd_id = c.id
+            LEFT JOIN yb_workbatch_shift d ON b.wf_id = d.id
+            LEFT JOIN blade_user e ON b.handle_usid = e.id
+            LEFT JOIN yb_machine_mainfo f ON d.ma_id = f.id
+            WHERE a.et_id IS NULL AND a.db_id = #{bfId}
+    </select>
+    <select id="getByBrieferIds" resultType="com.yb.stroe.entity.StoreInventory">
+        select * from yb_store_inventory
+        where
+            db_id in
+            <foreach item="item" collection="list" separator="," open="(" close=")" index="">
+                #{item}
+            </foreach>
+            and st_model = 2
+    </select>
+    <select id="getByEtIds" resultType="com.yb.stroe.entity.StoreInventory">
+        select * from yb_store_inventory
+        where
+            et_id in
+            <foreach item="item" collection="list" separator="," open="(" close=")" index="">
+                #{item}
+            </foreach>
+    </select>
+</mapper>
+

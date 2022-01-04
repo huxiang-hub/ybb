@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anaysis.sqlservermapper.FzOrderOrdinfoDao">
+<!--    查询到前15天内-->
+    <select id="list" resultType="com.anaysis.entity.OrderOrdinfo">
+		SELECT
+        DISTINCT
+                        ttPrdct.ID AS Id,
+                        ttPrdct.cCode AS odNo,
+                        CONCAT(ttPrdct.cCode, '-', DZYWDW.cdwmc) AS odName,
+                        ttPrdct.ID_Request AS pdId,
+                        ttPrdct.iAmount AS odCount,
+                        ttPrdct.dTime_Finish AS limitDate,
+                        DZYWDW.iywdwid AS cmId,
+                        DZYWDW.cjc AS cmShortname,
+                        DZYWDW.cdwmc AS cmName,
+                        ttPrdct.ID_Login,
+                        *
+        FROM    scProduct ttPrdct /*生产订单*/
+                LEFT JOIN (
+        SELECT  a.ID ,
+                MIN(b.cCode) ccode_Order ,
+                a.ID_AClientCode , --客户料号ID
+                b.ID_Client ,   -- 客户ID
+                Vers.cCode_CBill,
+          0 AS iType
+        FROM    scSaleOrder_Product a
+                INNER JOIN scSaleOrder b ON a.ID_Order = b.ID
+                INNER JOIN scSaleOrder_Vers_Product ttS_VP ON ttS_VP.ID_Vers = b.ID_Vers
+                                                              AND ttS_VP.ID_Product = a.ID
+                LEFT  JOIN scSaleOrder_Vers Vers ON Vers.ID_Order = b.ID
+                                                    AND Vers.ID = ttS_VP.ID_Vers
+         GROUP BY a.ID,a.ID_AClientCode,b.ID_Client,Vers.cCode_CBill
+                          ) ttOrder ON ttPrdct.ID_Origin1 = ttOrder.id
+               AND ttPrdct.iType_Origin = ttOrder.iType
+                LEFT JOIN DZYWDW ON ttOrder.ID_Client = DZYWDW.iywdwid
+        WHERE
+         ttPrdct.iState IN (0, 1, 2, 5, 3)
+        AND ttPrdct.dDate >= (getdate()-15)
+	</select>
+
+	<select id="listByOdNo" resultType="com.anaysis.entity.OrderOrdinfo">
+		SELECT
+        DISTINCT
+                        ttPrdct.ID AS Id,
+                        ttPrdct.cCode AS odNo,
+                        CONCAT(ttPrdct.cCode, '-', DZYWDW.cdwmc) AS odName,
+                        ttPrdct.ID_Request AS pdId,
+                        ttPrdct.iAmount AS odCount,
+                        ttPrdct.dTime_Finish AS limitDate,
+                        DZYWDW.iywdwid AS cmId,
+                        DZYWDW.cjc AS cmShortname,
+                        DZYWDW.cdwmc AS cmName,
+                        ttPrdct.ID_Login,
+                        *
+        FROM    scProduct ttPrdct /*生产订单*/
+                LEFT JOIN (
+        SELECT  a.ID ,
+                MIN(b.cCode) ccode_Order ,
+                a.ID_AClientCode , --客户料号ID
+                b.ID_Client ,   -- 客户ID
+                Vers.cCode_CBill,
+          0 AS iType
+        FROM    scSaleOrder_Product a
+                INNER JOIN scSaleOrder b ON a.ID_Order = b.ID
+                INNER JOIN scSaleOrder_Vers_Product ttS_VP ON ttS_VP.ID_Vers = b.ID_Vers
+                                                              AND ttS_VP.ID_Product = a.ID
+                LEFT  JOIN scSaleOrder_Vers Vers ON Vers.ID_Order = b.ID
+                                                    AND Vers.ID = ttS_VP.ID_Vers
+         GROUP BY a.ID,a.ID_AClientCode,b.ID_Client,Vers.cCode_CBill
+                          ) ttOrder ON ttPrdct.ID_Origin1 = ttOrder.id
+               AND ttPrdct.iType_Origin = ttOrder.iType
+                LEFT JOIN DZYWDW ON ttOrder.ID_Client = DZYWDW.iywdwid
+        WHERE
+         ttPrdct.cCode = #{odNo}
+	</select>
+
+    <select id="getProdClassify" resultType="com.anaysis.entity.ProdClassify">
+        SELECT
+        iNoConfig AS Id,
+        strSubName AS clName
+        FROM
+            tbConfig
+        WHERE
+            icfgID > 0
+        AND strCfgname = '产品类别'
+        ORDER BY
+            icfgId,
+            iSubNo
+    </select>
+
+    <select id="getProdPdinfo" resultType="com.anaysis.entity.ProdPdinfo">
+        SELECT
+          st.ID_Request AS Id,
+          st.cName AS pdName,
+          st.cCode AS pdNo,
+        CASE
+            WHEN (st.cType_P1 IS NOT NULL AND st.cType_P1 != '') THEN tb1.Id
+            WHEN (st.cType_P IS NOT NULL AND st.cType_P != '') THEN tb.Id
+            ELSE NULL END
+        AS pcId
+        FROM
+        scAProduct st
+        LEFT JOIN (
+            SELECT
+            iNoConfig AS Id,
+            strSubName AS clName,
+            concat(iCfgID,'_',strSubCode) AS classify
+            FROM
+                tbConfig
+            WHERE
+                icfgID > 0
+            AND strCfgname = '产品类别'
+        ) tb ON st.cType_P = tb.clName
+        LEFT JOIN (
+            SELECT
+            iNoConfig AS Id,
+            strSubName AS clName,
+            concat(iCfgID,'_',strSubCode) AS classify
+            FROM
+                tbConfig
+            WHERE
+                icfgID > 0
+            AND strCfgname = '产品类别'
+        ) tb1 ON st.cType_P1 = tb1.clName
+        WHERE st.ID_Request = #{pdId} AND st.iTag_Group = 0--0为产品，1为产品组
+    </select>
+
+    <select id="getProdPdinfoVO" resultType="com.anaysis.entity.ProdPartsinfoVO">
+        SELECT
+        a.ID AS Id,
+        a.ID_Request AS pdId,
+        a.cName AS ptName,
+        a.cCode AS ptNo,
+        a.ID_AComp AS IDAComp,
+        a.ID_APComp AS IDAPComp
+        FROM
+            scAProduct_PBOM a
+            INNER JOIN scAComp b ON a.ID_AComp = b.id
+            LEFT JOIN scRemark c ON b.ID_Remark = c.ID
+        WHERE
+         a.ID_Request = #{pdId}
+        AND a.ID_APComp = 0
+    </select>
+
+    <select id="getProdPartsinfo" resultType="com.anaysis.entity.ProdPartsinfoVO">
+        SELECT
+--         a.ID AS Id,
+        a.ID_Request AS pdId,
+        a.cName AS ptName,
+        a.cCode AS ptNo,
+        a.ID_APComp AS IDAPComp,
+        a.ID_AComp AS IDAComp
+        FROM
+            scAProduct_PBOM a
+            INNER JOIN scAComp b ON a.ID_AComp = b.id
+            LEFT JOIN scRemark c ON b.ID_Remark = c.ID
+        WHERE
+         a.ID_Request = #{pdId}
+        AND a.ID_APComp != 0 AND b.iType = 0
+    </select>
+
+    <select id="getMaterMtinfo" resultType="com.anaysis.entity.MaterMtinfo">
+        SELECT
+        a.ID AS Id,
+        a.cCode AS mlNo,
+        a.cName AS mlName,
+        b.iType AS mold,
+        b.iType AS mcId
+        FROM
+            scAProduct_PBOM a
+            INNER JOIN scAComp b ON a.ID_AComp = b.id
+        WHERE a.ID_Request = #{pdId}
+        AND a.ID_APComp != 0 AND a.iAmount = 0
+    </select>
+
+    <select id="getMaterProdlinkByAPComp" resultType="com.anaysis.entity.MaterProdlink">
+        SELECT
+--         a.ID AS Id,
+        a.ID AS mlId,
+        CAST (MAX(c.iAmount) AS REAL) AS pdNum,
+	    CAST (MAX(c.iAmount) AS REAL) AS mtNum
+        FROM
+            scAProduct_PBOM a
+            INNER JOIN scAComp b ON a.ID_AComp = b.id
+        LEFT JOIN (
+            SELECT
+                ttp.ID,
+                ttp.cCode,
+                ttp.ID_Request,
+                ttAP.cName,
+                ttp.iAmount,
+                ttp.dTime_Finish
+            FROM
+                scProduct ttP
+            LEFT JOIN scAProduct_Request ttAP_V ON ttAP_V.ID = ttP.ID_Request
+            LEFT JOIN scAProduct ttAP ON ttAP.ID = ttAP_V.ID_Product
+            WHERE ttP.iState IN (0, 1, 2, 5, 3)
+        ) c ON a.ID_Request = c.ID_Request
+        WHERE a.ID_Request = #{pdId}
+        AND a.ID_APComp = #{IDAPComp} AND a.iAmount = 0
+        GROUP BY a.ID
+    </select>
+
+
+    <select id="getProdProcelink" resultType="com.anaysis.entity.ProdProcelink">
+        SELECT
+--             a.ID AS Id,
+            a.ID_Tech AS prId,
+            a.iIndex AS sortNum
+        FROM
+            scAComp_Tech a
+        LEFT JOIN scAComp_TGroup b ON a.ID_Group = b.ID
+        LEFT JOIN sysTech d ON a.ID_Tech = d.ID
+        LEFT JOIN scRemark e ON a.ID_Remark = e.ID
+        LEFT JOIN scAComp_TechExplain g ON a.ID_TechExplain = g.ID
+        LEFT JOIN scAComp_TechCheck h ON h.ID = a.ID_Check
+        WHERE
+            a.ID_Comp = #{IDComp}
+        AND a.ID_Group = (select ID_Group from scAComp_TGroup where ID_Comp=#{IDComp})
+        ORDER BY
+            a.iIndex
+    </select>
+
+</mapper>

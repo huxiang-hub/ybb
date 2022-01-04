@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.base.mapper.BaseDeptinfoMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="baseDeptinfoResultMap" type="com.yb.base.entity.BaseDeptinfo">
+        <id column="id" property="id"/>
+        <result column="p_id" property="pId"/>
+        <result column="dp_name" property="dpName"/>
+        <result column="dp_num" property="dpNum"/>
+        <result column="classify" property="classify"/>
+        <result column="sort" property="sort"/>
+        <result column="remark" property="remark"/>
+        <result column="is_deleted" property="isDeleted"/>
+    </resultMap>
+
+    <select id="selectBaseDeptinfoPage" resultMap="baseDeptinfoResultMap">
+        select * from yb_base_deptinfo where is_deleted = 0
+    </select>
+
+    <select id="baseDeptinfos"  resultType="com.yb.base.vo.BaseDeptinfoVO">
+        SELECT id,p_id,dp_name FROM yb_base_deptinfo where is_deleted = 0
+    </select>
+
+    <select id="getAllProcess" resultType="com.yb.process.vo.ProcessClassifyVO">
+        SELECT t3.dp_id as dpId,t4.py_name as pyName,t4.id as prId
+        FROM yb_process_classify t4
+        LEFT JOIN
+        (SELECT t1.dp_id,t2.pr_id FROM  yb_machine_mainfo t1
+        LEFT JOIN yb_process_machlink t2
+        ON t1.id = t2.ma_id )t3
+        ON t3.pr_id = t4.id
+        WHERE t3.dp_id = #{dpId}
+        GROUP BY dpId,pyName,prId
+    </select>
+    <select id="getDpIdByDpName" resultType="java.lang.Integer">
+        SELECT id FROM yb_base_deptinfo WHERE is_deleted = 0 and dp_name = #{dpName}
+    </select>
+    <select id="getPdNameByClassify"  resultType="com.yb.base.vo.DeptNameModel">
+        SELECT id AS dpId,dp_name AS dpName FROM yb_base_deptinfo
+         WHERE is_deleted = 0
+         AND classify = #{classify}
+    </select>
+
+    <select id="getDpNameByPrId" resultType="com.yb.base.entity.BaseDeptinfo">
+        SELECT DISTINCT a.*
+        FROM yb_base_deptinfo a
+        JOIN yb_machine_mainfo b ON b.dp_id=a.id
+        JOIN yb_process_machlink c ON c.ma_id=b.id
+        WHERE c.pr_id=#{prId}
+    </select>
+</mapper>

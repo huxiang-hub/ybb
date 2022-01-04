@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.execute.mapper.ExecuteExamineMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="executeExamineResultMap" type="com.yb.execute.vo.ExecuteExamineVO">
+        <id column="id" property="id"/>
+        <result column="es_id" property="esId"/>
+        <result column="count_num" property="countNum"/>
+        <result column="ready_num" property="readyNum"/>
+        <result column="stop_waste" property="stopWaste"/>
+        <result column="status" property="status"/>
+        <result column="box_num" property="boxNum"/>
+        <result column="product_num" property="productNum"/>
+        <result column="waste_num" property="wasteNum"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="handle" property="handle"/>
+        <result column="handle_time" property="handleTime"/>
+        <result column="create_at" property="createAt"/>
+        <result column="od_id" property="odId"/>
+        <result column="od_name" property="odName"/>
+        <result column="ex_status" property="exStatus"/>
+    </resultMap>
+
+    <select id="selectExecuteExaminePage" resultType="com.yb.execute.entity.ExecuteExamine">
+      select * from yb_execute_examine where is_deleted = 0
+    </select>
+
+    <select id="pageFindExamineList" resultType="com.yb.execute.vo.ExecuteExamineVO">
+        SELECT
+            a.ex_status,
+            a.id AS bf_id,
+            a.handle_time,
+            a.handle_usid,
+            a.product_num,
+            a.count_num,
+            a.waste_num,
+            a.alter_product_num,
+            a.alter_count_num,
+            a.alter_waste_num,
+            m.`name` AS maName,
+            yei.ma_id AS maId,
+            e.id,
+            e.part_name,
+            e.od_no,
+            e.pr_id,
+            e.pr_name,
+            e.pr_des,
+            e.pd_id,
+            e.pd_code,
+            e.pd_name,
+            e.wb_no,
+            d.plan_num AS wsPlanNum,
+            d.sd_date AS wsSdDate,
+            d.waste_num AS wsWasteNum,
+            d.shift_status,
+            d.ck_name,
+            e.part_name AS ptName,
+            e.plan_num,
+            e.complete_num,
+            e.extra_num,
+            k.`name` AS handle_usname,
+            d.id AS wfId,
+            a.start_time AS bstartTime,
+            a.end_time AS bendTime,
+            a.ready_num,
+            a.box_num,
+            e.dp_id,
+            e.cm_name
+        FROM yb_execute_briefer a
+<!--        LEFT JOIN yb_execute_examine y ON y.bf_id = a.id-->
+        LEFT JOIN yb_workbatch_shift d ON d.id=a.wf_id
+        LEFT JOIN yb_workbatch_ordlink e ON e.id = d.sd_id
+        LEFT JOIN blade_user k ON a.handle_usid = k.id
+        LEFT JOIN yb_execute_info yei ON yei.id = a.ex_id
+        LEFT JOIN yb_machine_mainfo m ON yei.ma_id = m.id
+        WHERE a.handle = 1
+            <if test="examineParamVO.pdName != null and examineParamVO.pdName != ''">
+                AND e.pd_name LIKE concat('%',#{examineParamVO.pdName},'%')
+            </if>
+            <if test="examineParamVO.wbNo != null and examineParamVO.wbNo != ''">
+                AND e.wb_no LIKE concat('%',#{examineParamVO.wbNo},'%')
+            </if>
+            <if test="examineParamVO.prName != null and examineParamVO.prName != ''">
+                AND e.pr_name LIKE concat('%',#{examineParamVO.prName},'%')
+            </if>
+            <if test="examineParamVO.maIdList != null and examineParamVO.maIdList.size() != 0">
+                AND m.id IN
+                <foreach collection="examineParamVO.maIdList" item="maId" separator="," open="(" close=")">
+                    #{maId}
+                </foreach>
+            </if>
+            <if test="examineParamVO.startTime != null and examineParamVO.startTime != '' and examineParamVO.endTime != null and examineParamVO.endTime != ''">
+                AND d.sd_date &lt;= #{examineParamVO.endTime}
+                AND d.sd_date &gt;= #{examineParamVO.startTime}
+            </if>
+            <if test="examineParamVO.startTime != null and examineParamVO.startTime != '' and (examineParamVO.endTime == null or examineParamVO.endTime == '')">
+                AND d.sd_date= #{examineParamVO.startTime}
+            </if>
+        GROUP BY a.id
+        ORDER BY a.handle_time DESC
+    </select>
+
+    <select id="executeExamineCount" resultType="int">
+        SELECT COUNT(*)
+        FROM yb_execute_briefer a
+        JOIN yb_execute_examine y ON y.bf_id=a.id
+        JOIN yb_execute_state b ON a.es_id=b.id
+        JOIN yb_order_workbatch f ON b.wb_id=f.id
+        JOIN yb_order_ordinfo c ON f.od_id=c.id
+        JOIN yb_workbatch_ordlink e ON e.id=b.sd_id
+        JOIN blade_user k ON y.rpt_userId = k.id
+        JOIN yb_machine_mainfo m ON b.ma_id = m.id
+        <where>
+            <if test="sdId != null || sdId == 0">
+                AND b.sd_id=#{sdId}
+            </if>
+            <if test="orderName != null">
+                AND c.od_name LIKE concat('%',#{orderName},'%')
+            </if>
+        </where>
+    </select>
+
+
+    <select id="getOutOfWorkRecord" resultType="com.yb.execute.vo.ExecuteExamineVO">
+    SELECT
+	   *
+    FROM
+	yb_execute_examine
+    WHERE
+	rpt_userId = #{userId}
+<!--	AND rpt_type = '1'  -->
+	AND DATE_FORMAT( rpt_time, "%Y-%m-%d" ) =#{datesStr}
+    </select>
+
+    <select id="selectExecuteExamine" resultType="com.yb.execute.vo.ExecuteExamineVO">
+     SELECT y.id AS esId,y.ex_status,a.id as bf_id,a.handle_time,a.product_num,a.count_num,a.waste_num,a.alter_product_num,a.alter_count_num,a.alter_waste_num
+        ,m.name AS maName,e.*,d.plan_num AS wsPlanNum,d.sd_date AS wsSdDate,d.waste_num AS wsWasteNum,d.shift_status,
+        d.ck_name,e.part_name AS ptName,k.name AS userName,e.id AS sdId,d.id AS wfId
+        FROM yb_execute_briefer a
+        JOIN yb_execute_examine y ON y.bf_id=a.id
+        JOIN yb_workbatch_ordlink e ON e.id=a.sd_id
+        JOIN yb_workbatch_shift d ON d.sd_id=e.id
+        JOIN blade_user k ON y.rpt_userId = a.handle_usid
+        JOIN yb_machine_mainfo m ON e.ma_id = m.id
+        WHERE y.id=#{esId}
+        GROUP BY a.id
+    </select>
+    <select id="getModifyTrayByBfId" resultType="com.yb.execute.vo.ExecuteExamineVO">
+        SELECT
+            a.*,
+            b.td_no,
+            b.tray_no,
+            c.sr_id as areaId
+        FROM
+            yb_execute_examine a
+            LEFT JOIN yb_execute_traycard b ON a.ty_id = b.id
+            LEFT JOIN yb_store_seat c ON b.mp_id = c.id
+            <where>
+                <if test="bfId != null and bfId != ''">
+                    AND a.bf_id=#{bfId}
+                </if>
+                <if test="exMold != null and exMold != ''">
+                    AND a.ex_mold = #{exMold}
+                </if>
+                and (a.data_before != a.data_after or a.store_before != a.store_after)
+            </where>
+    </select>
+</mapper>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anaysis.sqlservermapper.HrProcedureMapper">
+
+    <select id="goodProdInsert" resultType="java.util.Map">
+        DECLARE @BatchID int
+        DECLARE @ReturnMsg VARCHAR(500)
+        EXEC [SP_ODIWorkProdInsert]  #{param.machine}, #{param.wo}, #{param.bom}, #{param.processNo},
+            #{param.item}, #{param.goodQty}, #{param.shifId}, #{param.prodStartDataTime}, #{param.prodFinishDataTime}, @BatchID OUTPUT, @ReturnMsg OUTPUT
+        SELECT @BatchID AS BatchID, @ReturnMsg AS ReturnMsg
+    </select>
+
+    <select id="execProcedure" resultType="java.util.Map">
+        DECLARE @ReturnMsg VARCHAR(500)
+        EXEC ${procedureName}
+        <foreach collection="buildParam.values" separator="," item="value">
+            #{value}
+        </foreach>
+         ,@ReturnMsg OUTPUT
+        SELECT @ReturnMsg AS ReturnMsg
+    </select>
+
+    <select id="storeFinishedProdInsert" resultType="java.util.Map">
+        DECLARE @ReturnMsg VARCHAR(500)
+        EXEC ${procedureName}  #{param.woByBom}, #{param.receiveQtys}, #{param.receiveDates}, #{param.location}, #{param.locSub}, #{param.barcode}, #{param.palleteNo}, #{param.autoConfirmeds}, @ReturnMsg OUTPUT, #{param.shiftId}, #{param.wo}, #{param.bom}
+        SELECT @ReturnMsg AS ReturnMsg
+    </select>
+
+</mapper>

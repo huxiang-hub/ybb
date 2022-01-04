@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anaysis.executSupervise.mapper.ExesetQualityMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="exesetQualityResultMap" type="com.anaysis.executSupervise.entity.ExesetQuality">
+        <id column="id" property="id"/>
+        <result column="ma_id" property="maId"/>
+        <result column="model" property="model"/>
+        <result column="limit_time" property="limitTime"/>
+        <result column="limit_num" property="limitNum"/>
+        <result column="popup" property="popup"/>
+        <result column="disappear" property="disappear"/>
+        <result column="sendto" property="sendto"/>
+        <result column="create_at" property="createAt"/>
+        <result column="us_id" property="usId"/>
+        <result column="update_at" property="updateAt"/>
+    </resultMap>
+
+
+    <select id="getQualitySetByMaId" resultType="com.anaysis.executSupervise.entity.ExesetQuality">
+        select * from yb_exeset_quality where ma_id = #{maId} AND model = #{model}
+    </select>
+    <select id="getQualityCount" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM yb_execute_waste a
+        LEFT JOIN yb_execute_info b  ON a.ex_id = b.id
+        WHERE b.ma_id = #{maId} and a.handle = 0
+    </select>
+    <select id="getQualitySetByUuid" resultType="com.anaysis.executSupervise.entity.ExesetQuality">
+        SELECT
+            a.*
+        FROM
+            yb_exeset_quality a
+        LEFT JOIN yb_supervise_execute b ON b.ma_id = a.ma_id
+        WHERE
+            b.uuid = #{uuid}
+    </select>
+
+
+</mapper>

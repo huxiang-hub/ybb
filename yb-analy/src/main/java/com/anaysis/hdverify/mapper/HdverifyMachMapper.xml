@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anaysis.hdverify.mapper.HdverifyMachMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="superviseIntervalResultMap" type="com.anaysis.hdverify.entity.HdverifyMach">
+        <id     column="id" property="id"/>
+        <result column="ma_id" property="maId"/>
+        <result column="ma_name" property="maName"/>
+        <result column="ma_startnum" property="maStartnum"/>
+        <result column="ma_endnum" property="maEndnum"/>
+        <result column="ma_diff" property="maDiff"/>
+        <result column="bx_id" property="bxId"/>
+        <result column="bx_uuid" property="bxUuid"/>
+        <result column="bx_startnum" property="bxStartnum"/>
+        <result column="bx_endnum" property="bxEndnum"/>
+        <result column="bx_diff" property="bxDiff"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="stay_time" property="stayTime"/>
+        <result column="diff_rate" property="diffRate"/>
+        <result column="operator" property="operator"/>
+        <result column="create_at" property="createAt"/>
+    </resultMap>
+
+
+
+    <select id="getId" resultType="com.anaysis.hdverify.entity.HdverifyMach">
+        SELECT * FROM yb_hdverify_mach WHERE id = #{id}
+    </select>
+
+    <select id="queryByMach" parameterType="com.anaysis.hdverify.entity.HdverifyMach" resultType="com.anaysis.hdverify.entity.HdverifyMach">
+        select * from yb_hdverify_mach
+        <where>
+            <if test="maId != null and maId != ''">ma_id = #{maId} </if>
+            <if test="status != null and status != ''">status = #{status} </if>
+            <if test="operator != null and operator != ''">operator = #{operator} </if>
+            <if test="createAt != null and createAt != ''">date_format(create_at,'%Y-%m-%d') = date_format(#{createAt},'%Y-%m-%d') </if>
+        </where>
+      order by create_at desc
+    </select>
+<!--查询设备id是否为停机设备，并且返回停机的相应数据信息-->
+    <select id="isStopByMaid"  resultType="com.anaysis.executSupervise.entity.SuperviseBoxinfo">
+        select * from yb_supervise_boxinfo
+        where ma_id = #{maId} and status = '2'
+    </select>
+
+    <update id="update" parameterType="com.anaysis.hdverify.entity.HdverifyMach">
+        update yb_hdverify_mach
+        <set>
+            <if test="maEndnum != null">`ma_endnum` = #{maEndnum}, </if>
+            <if test="maDiff != null">`ma_diff` = #{maDiff}, </if>
+            <if test="bxStartnum != null">`bx_startnum` = #{bxStartnum}, </if>
+            <if test="bxEndnum != null">`bx_endnum` = #{bxEndnum}, </if>
+            <if test="bxDiff != null">`bx_diff` = #{bxDiff}, </if>
+            <if test="endTime != null">`end_time` = #{endTime}, </if>
+            <if test="stayTime != null">`stay_time` = #{stayTime}, </if>
+            <if test="diffRate != null">`diff_rate` = #{diffRate} </if>
+        </set>
+        where id = #{id}
+    </update>
+
+
+    <insert id="save" parameterType="com.anaysis.hdverify.entity.HdverifyMach" useGeneratedKeys="true" keyProperty="id">
+        insert into yb_hdverify_mach
+        (
+            `ma_id`,
+            `ma_name`,
+            `ma_startnum`,
+            `bx_id`,
+            `bx_uuid`,
+            `bx_startnum`,
+            `start_time`,
+            `operator`,
+            `create_at`
+        )
+        values
+        (
+            #{maId},
+            #{maName},
+            #{maStartnum},
+            #{bxId},
+            #{bxUuid},
+            #{bxStartnum},
+            #{startTime},
+            #{operator},
+            #{createAt}
+        )
+    </insert>
+
+    <select id="getMachList"  resultType="com.anaysis.executSupervise.vo.SuperviseBoxinfoVo">
+        select a.*,b.pr_name,b.id as pr_id ,c.dp_name ,c.id as dp_id from yb_machine_mainfo a
+        LEFT JOIN yb_process_workinfo b on a.pro_type = b.id
+        LEFT JOIN yb_base_deptinfo c on a.dp_id = c.id
+        <where>
+            <if test="prName != null and prName != ''">b.pr_name = #{prName} </if>
+            <if test="dpName != null and dpName != ''">c.dp_name = #{dpName} </if>
+        </where>
+    </select>
+
+</mapper>

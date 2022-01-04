@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anaysis.sqlservermapper.HrCustomerMapper">
+
+
+    <select id="list" resultType="com.anaysis.entity.HrCustomer">
+
+    </select>
+    <select id="getByErpIds" resultType="com.anaysis.entity.CrmCustomer">
+        SELECT
+            CustID as cmNo,
+            ObjID AS erpId,
+            CustName AS cmName,
+            CustShortName AS cmShortname,
+            CustAddress AS addr,
+            CompanyRegisterN AS uniqueNo,
+            CustName AS company,
+            ( CASE importance WHEN 'A级客户' THEN 1 END ) AS grade
+        FROM
+            Customer
+        where ObjID in
+        <foreach item="item" collection="list" separator="," open="(" close=")" index="">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

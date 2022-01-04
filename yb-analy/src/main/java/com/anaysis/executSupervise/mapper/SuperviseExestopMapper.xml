@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anaysis.executSupervise.mapper.SuperviseExestopMapper">
+
+<select id="getByUuid" resultType="com.anaysis.executSupervise.entity.SuperviseExestop">
+select * from yb_supervise_exestop
+where uuid = #{uuid}
+and status = 0
+limit 0,1
+</select>
+</mapper>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anaysis.mysqlmapper.ProdPartsinfoMapper">
+    <select id="byPdIdAndPtName" resultType="com.anaysis.entity.ProdPartsinfo">
+        SELECT * FROM yb_prod_partsinfo WHERE pd_id = #{pdId} AND pt_name = #{ptName}
+    </select>
+
+    <select id="byPId" resultType="java.lang.Integer">
+        SELECT id FROM yb_prod_partsinfo WHERE pid = #{pId} LIMIT 1
+    </select>
+
+    <select id="getByerpId" resultType="com.anaysis.entity.ProdPartsinfo">
+        select * from yb_prod_partsinfo where erp_id = #{erpId} LIMIT 1
+    </select>
+</mapper>

@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.statis.mapper.StatisShiftreachMapper">
+
+
+    <select id="selectExcelExport" resultType="com.yb.statis.vo.StatisShiftreachVO">
+        SELECT *
+        FROM yb_statis_shiftreach a
+        LEFT JOIN yb_statis_shiftreachext b ON b.sf_id=a.id
+        WHERE a.target_day=#{targetDay}
+        <if test="maType != null">
+            AND b.ma_type = #{maType}
+        </if>
+        <if test="wsId != null">
+            AND a.ws_id = #{wsId}
+        </if>
+        GROUP BY a.ma_id,ws_id,a.id
+    </select>
+
+    <select id="statisShiftreachList" resultType="com.yb.statis.vo.StatisShiftreachVO">
+         SELECT *
+        FROM yb_statis_shiftreach a
+        LEFT JOIN yb_statis_shiftreachext b ON b.sf_id=a.id
+        <where>
+            <if test="statisShiftreachVO.maType != null">
+                b.ma_type=#{statisShiftreachVO.maType}
+            </if>
+            <if test="statisShiftreachVO.maId != null">
+                AND a.ma_id=#{statisShiftreachVO.maId}
+            </if>
+            <if test="statisShiftreachVO.targetDay != null and statisShiftreachVO.targetDay != ''">
+                AND a.target_day=#{statisShiftreachVO.targetDay}
+            </if>
+            <if test="statisShiftreachVO.wsId != null">
+                AND a.ws_id=#{statisShiftreachVO.wsId}
+            </if>
+        </where>
+    </select>
+
+    <select id="getShiftreachList" resultType="com.yb.statis.vo.ShiftreachListVO">
+           SELECT
+        	a.ws_id,
+        	a.ma_id,
+        	a.target_day AS targetDate,
+        	SUM(b.product_num) AS productNum,
+        	IFNULL(SUM(b.count_num),0) AS countNum,
+        	SUM(b.waste_num) AS wasteNum,
+        	CONVERT (
+        		(
+        			SUM(b.waste_num) / SUM(b.product_num)
+        		),
+        		DECIMAL (10, 4)
+        	) AS wasteRate,
+        	c.name AS maName,
+        	d.name AS usName,
+        	e.ck_name AS wsName
+        FROM
+        	yb_execute_info a
+        LEFT JOIN yb_execute_briefer b ON b.ex_id = a.id
+        LEFT JOIN yb_machine_mainfo c ON c.id = a.ma_id
+        LEFT JOIN blade_user d ON d.id = b.handle_usid
+        LEFT JOIN yb_workbatch_mainshift e ON e.id = a.ws_id
+        WHERE 1=1
+        <if test="getShiftreachVO.maIdList != null and getShiftreachVO.maIdList.size() != 0">
+            AND a.ma_id IN
+            <foreach collection="getShiftreachVO.maIdList" item="maId" open="(" close=")" separator=",">
+                #{maId}
+            </foreach>
+         </if>
+         <if test="getShiftreachVO.startTime != null and getShiftreachVO.startTime != ''  and getShiftreachVO.endTime == null">
+           AND a.target_day = #{getShiftreachVO.startTime}
+         </if>
+         <if test="getShiftreachVO.startTime != null and getShiftreachVO.startTime != '' and getShiftreachVO.endTime != null and getShiftreachVO.endTime != ''">
+            AND a.target_day &gt;= #{getShiftreachVO.startTime}
+            AND a.target_day &lt;= #{getShiftreachVO.endTime}
+        </if>
+        GROUP BY a.ma_id,a.target_day,a.ws_id
+    </select>
+
+    <select id="getShiftreachTotal" resultType="com.yb.statis.vo.ShiftreachListVO">
+        SELECT
+        	a.ws_id,
+        	SUM(b.product_num) AS productNum,
+        	IFNULL(SUM(b.count_num),0) AS countNum,
+        	SUM(b.waste_num) AS wasteNum,
+        	CONVERT (
+        		(
+        			SUM(b.waste_num) / SUM(b.product_num)
+        		),
+        		DECIMAL (10, 4)
+        	) AS wasteRate
+        FROM
+        	yb_execute_info a
+        LEFT JOIN yb_execute_briefer b ON b.ex_id = a.id
+        LEFT JOIN yb_machine_mainfo c ON c.id = a.ma_id
+        LEFT JOIN blade_user d ON d.id = b.handle_usid
+         WHERE 1=1
+        <if test="getShiftreachVO.maIdList != null and getShiftreachVO.maIdList.size() != 0">
+            AND a.ma_id IN
+            <foreach collection="getShiftreachVO.maIdList" item="maId" open="(" close=")" separator=",">
+                #{maId}
+            </foreach>
+         </if>
+         <if test="getShiftreachVO.startTime != null and getShiftreachVO.startTime != ''  and getShiftreachVO.endTime == null">
+           AND a.target_day = #{getShiftreachVO.startTime}
+         </if>
+         <if test="getShiftreachVO.startTime != null and getShiftreachVO.startTime != '' and getShiftreachVO.endTime != null and getShiftreachVO.endTime != ''">
+            AND a.target_day &gt;= #{getShiftreachVO.startTime}
+            AND a.target_day &lt;= #{getShiftreachVO.endTime}
+        </if>
+        GROUP BY a.ws_id
+    </select>
+
+    <select id="getTotal" resultType="com.yb.statis.vo.ShiftreachListVO">
+        SELECT
+        	SUM(b.product_num) AS productNum,
+        	a.target_day AS targetDate,
+        	IFNULL(SUM(b.count_num),0) AS countNum,
+        	SUM(b.waste_num) AS wasteNum,
+        	CONVERT (
+        		(
+        			SUM(b.waste_num) / SUM(b.product_num)
+        		),
+        		DECIMAL (10, 4)
+        	) AS wasteRate
+        FROM
+        	yb_execute_info a
+        LEFT JOIN yb_execute_briefer b ON b.ex_id = a.id
+        LEFT JOIN yb_machine_mainfo c ON c.id = a.ma_id
+        LEFT JOIN blade_user d ON d.id = b.handle_usid
+         WHERE 1=1
+        <if test="getShiftreachVO.maIdList != null and getShiftreachVO.maIdList.size() != 0">
+            AND a.ma_id IN
+            <foreach collection="getShiftreachVO.maIdList" item="maId" open="(" close=")" separator=",">
+                #{maId}
+            </foreach>
+         </if>
+         <if test="getShiftreachVO.startTime != null and getShiftreachVO.startTime != ''  and getShiftreachVO.endTime == null">
+           AND a.target_day = #{getShiftreachVO.startTime}
+         </if>
+         <if test="getShiftreachVO.startTime != null and getShiftreachVO.startTime != '' and getShiftreachVO.endTime != null and getShiftreachVO.endTime != ''">
+            AND a.target_day &gt;= #{getShiftreachVO.startTime}
+            AND a.target_day &lt;= #{getShiftreachVO.endTime}
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yb.panelapi.user.mapper.BaseFactoryMapper">
+
+
+<select id="getFactoryName" resultType="java.lang.String">
+select fname from yb_base_factory
+where is_used = 1
+limit 0,1
+</select>
+</mapper>

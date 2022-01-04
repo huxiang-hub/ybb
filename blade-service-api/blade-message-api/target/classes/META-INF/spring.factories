@@ -1,0 +1,8 @@
+net.dreamlu.mica.feign.MicaFeignAutoConfiguration=\
+  org.springblade.message.feign.FzClient,\
+  org.springblade.message.feign.ImMessageClient,\
+  org.springblade.message.feign.XyClient
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  org.springblade.message.feign.ImMessageClientFallBack,\
+  org.springblade.message.feign.XyClientFallBack,\
+  org.springblade.message.feign.FzClientFallBack

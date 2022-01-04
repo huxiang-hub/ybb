@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.execute.mapper.ExecuteFaultMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="executeFaultResultMap" type="com.yb.execute.entity.ExecuteFault">
+        <id column="id" property="id"/>
+        <result column="status" property="status"/>
+        <result column="classify" property="classify"/>
+        <result column="reasons" property="reasons"/>
+        <result column="remake" property="remake"/>
+        <result column="handle" property="handle"/>
+        <result column="handle_time" property="handleTime"/>
+        <result column="way" property="way"/>
+        <result column="create_at" property="createAt"/>
+    </resultMap>
+
+
+    <select id="selectExecuteFaultPage" resultType="com.yb.execute.vo.ExecuteFaultVO">
+        SELECT
+        a.id,
+        a.ma_id,
+        a.wf_id,
+        a.ws_id,
+        a.us_id,
+        a.start_at,
+        a.end_at,
+        a.duration,
+        a.ef_type,
+        a.`status`,
+        a.classify,
+        a.reasons,
+        a.remake,
+        a.way,
+        a.model,
+        a.delay_time,
+        a.handle,
+        a.handle_time,
+        a.waste_num,
+        a.confirm_waste,
+        a.create_at,
+        b.fname AS downtimeReasons,
+        c.fname,
+        d.`name` AS maName
+        FROM
+        yb_execute_fault a
+        LEFT JOIN yb_maintain_faultclassify b ON b.fvalue=a.`status`
+        LEFT JOIN yb_maintain_faultclassify c ON c.fvalue=a.classify
+        LEFT JOIN yb_machine_mainfo d ON d.id = a.ma_id
+        <where>
+            <if test="executeFault.maName!=null">
+                AND d.`name` LIKE CONCAT('%',#{executeFault.maName},'%')
+            </if>
+            <if test="executeFault.maId!=null">
+                AND a.ma_id = #{executeFault.maId}
+            </if>
+            <if test="executeFault.wsId!=null">
+                AND a.ws_id = #{executeFault.wsId}
+            </if>
+            <if test="executeFault.wfId!=null">
+                AND a.wf_id = #{executeFault.wfId}
+            </if>
+            <!--  <if test="executeFault.duration!=null">
+                  AND a.duration BETWEEN #{} AND #{}
+              </if>-->
+        </where>
+    </select>
+    <select id="getCount" resultType="java.lang.Integer">
+        select a.* from yb_execute_fault a
+        LEFT JOIN yb_execute_info b
+        on b.id=a.ex_id where b.ma_id=#{mId}
+    </select>
+    <select id="getExecuteFaultList" resultType="com.yb.execute.vo.FaultMachineVO">
+        SELECT
+        	yef.id,
+        	yef.ma_id,
+        	yef.wf_id,
+        	yef.ws_id,
+        	yef.us_id,
+        	yef.start_at,
+        	yef.end_at,
+        	IFNULL(yef.duration, 0) AS duration,
+        	yef.ef_type,
+        	yef.`status`,
+        	yef.classify,
+        	yef.reasons,
+        	yef.remake,
+        	yef.way,
+        	yef.model,
+        	yef.delay_time,
+        	yef.handle,
+        	yef.handle_time,
+        	yef.waste_num,
+        	yef.confirm_waste,
+        	ybs.`name` AS usName,
+        	ymf.fname
+        FROM
+        	yb_execute_fault yef
+        LEFT JOIN yb_base_staffinfo ybs ON ybs.user_id = yef.us_id
+        LEFT JOIN yb_maintain_faultclassify ymf ON ymf.fvalue = yef.classify
+        WHERE yef.ma_id = #{maId}
+        AND yef.start_at BETWEEN #{startDate} AND #{endDate}
+        AND yef.end_at != "0000-00-00 00:00:00"
+        AND yef.duration &gt;= 60
+        ORDER BY yef.wf_id
+    </select>
+
+
+    <select id="selectByOrderId" resultType="com.yb.execute.vo.ExecuteFaultVO">
+        SELECT a.*,b.us_id,c.name as us_name ,b.start_at,b.end_at FROM yb_execute_fault a
+        LEFT JOIN yb_execute_info b
+        ON a.ex_id = b.id
+        LEFT JOIN yb_base_staffinfo c
+        ON c.user_id = b.us_id
+        WHERE b.sd_id = #{id}
+    </select>
+
+
+    <select id="getClassfyList" resultType="com.yb.execute.vo.ExecuteFaultVO">
+      SELECT DISTINCT classify
+        FROM yb_execute_fault
+    </select>
+
+    <select id="selectExecuteFaultPages" resultType="com.yb.execute.vo.ExecuteFaultVO">
+        SELECT
+        * ,yes.ma_id as machineId
+        FROM
+        yb_execute_fault yef
+        JOIN yb_execute_state yes ON yes.id = yef.es_id
+        JOIN yb_machine_mainfo ymm on ymm.id = yes.ma_id
+        <if test="executeFault.maId!=null and executeFault.maId!=''">
+            and ma_id = #{executeFault.maId}
+        </if>
+        <if test="executeFault.classify!=null and executeFault.classify!=''">
+            and  classify = #{executeFault.classify}
+        </if>
+        <if test="executeFault.exceptionTime!=null and executeFault.exceptionTime!=''">
+            and delay_time >#{executeFault.exceptionTime}
+        </if>
+    </select>
+
+
+    <select id="getStopInitiative" resultType="com.yb.execute.entity.ExecuteFault">
+        SELECT * FROM `yb_execute_fault`
+            WHERE ma_id= #{maId}
+            AND end_at = "0000-00-00 00:00:00"
+    </select>
+
+    <select id="getAllUnconfirmedNum" resultType="java.lang.Integer">
+        SELECT
+        	COUNT(0)
+        FROM
+        	yb_execute_fault yef
+        WHERE
+        	yef.handle = 0
+        AND ma_id = #{maId}
+        AND start_at BETWEEN #{startDate} AND #{endDate}
+        AND end_at != "0000-00-00 00:00:00"
+        AND duration &gt;= 60
+    </select>
+
+    <select id="executeFaultList" resultType="com.yb.execute.vo.ExecuteFaultVO">
+        SELECT
+        a.id,
+        a.ma_id,
+        a.wf_id,
+        a.ws_id,
+        a.us_id,
+        a.start_at,
+        a.end_at,
+        a.duration,
+        a.ef_type,
+        a.`status`,
+        a.classify,
+        a.reasons,
+        a.remake,
+        a.way,
+        a.model,
+        a.delay_time,
+        a.handle,
+        a.handle_time,
+        a.waste_num,
+        a.confirm_waste,
+        a.create_at,
+        b.`name` AS maName,
+        c.ck_name AS wsName,
+        d.fname,
+        e.fname AS downtimeReasons
+        FROM
+        yb_execute_fault a
+        LEFT JOIN yb_machine_mainfo b ON b.id = a.ma_id
+        LEFT JOIN yb_workbatch_mainshift c ON c.id = a.ws_id
+        LEFT JOIN yb_maintain_faultclassify d ON d.fvalue = a.classify
+        LEFT JOIN yb_maintain_faultclassify e ON e.fvalue = a.`status`
+        WHERE
+        a.start_at BETWEEN #{executeFaultRequest.startTime}
+        AND #{executeFaultRequest.endTime}
+        AND a.end_at != "0000-00-00 00:00:00"
+        AND a.duration &gt;= 60
+        <if test="executeFaultRequest.maIdList != null and executeFaultRequest.maIdList.size() != 0">
+            AND a.ma_id IN
+            <foreach collection="executeFaultRequest.maIdList" item="maId" open="(" close=")" separator=",">
+                #{maId}
+            </foreach>
+        </if>
+        <if test="executeFaultRequest.classify != null and executeFaultRequest.classify != ''">
+              AND a.classify = #{executeFaultRequest.classify}
+        </if>
+<!--        <if test="executeFaultRequest.prId != null">-->
+<!--            AND a.ma_id IN-->
+<!--        </if>-->
+    </select>
+    <select id="downPage" resultType="com.yb.yilong.response.MachineDownPageVO">
+        select ybf.id, ybf.start_at, ymm.name, ybf.end_at from yb_execute_fault ybf
+        left join yb_machine_mainfo ymm on ybf.ma_id = ymm.id
+        where ma_id =#{request.maId}
+        and  start_at >= #{request.startTime}
+        <if test="request.endTime!=null ">
+        and start_at &lt;= #{request.endTime}
+        </if>
+    </select>
+</mapper>

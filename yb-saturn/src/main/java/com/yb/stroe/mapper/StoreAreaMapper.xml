@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.stroe.mapper.StoreAreaMapper">
+
+    <select id="selectStoreAreaByStId" resultType="com.yb.stroe.entity.StoreArea">
+        SELECT *
+        FROM yb_store_area a
+        LEFT JOIN yb_store_seat b ON b.sr_id=a.id
+        WHERE b.id=#{stId}
+    </select>
+
+</mapper>

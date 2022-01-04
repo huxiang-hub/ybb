@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.actset.mapper.ActsetCkflowMapper">
+    <!-- 通用查询映射结果 -->
+    <resultMap id="ckflowResultMap" type="com.yb.actset.entity.ActsetCkflow">
+        <id column="id" property="id"/>
+        <result column="as_id" property="asId"/>
+        <result column="aw_name" property="awName"/>
+        <result column="aw_type" property="awType"/>
+        <result column="target" property="target"/>
+        <result column="dp_id" property="dpId"/>
+        <result column="us_id" property="usId"/>
+        <result column="limit_time" property="limitTime"/>
+        <result column="is_reason" property="isReason"/>
+        <result column="sort" property="sort"/>
+        <result column="create_at" property="createAt"/>
+    </resultMap>
+    <select id="getActsetCkflow" resultType="com.yb.actset.vo.ActsetCkflowVO">
+        SELECT  t1.id,t1.as_id ,t1.us_id,t1.limit_time,t2.leve
+        FROM yb_actset_ckflow t1
+        LEFT JOIN yb_actset_ckset t2
+        ON t1.as_id = t2.id
+        WHERE t2.as_type LIKE CONCAT('%',#{asType},'%')
+        AND t1.aw_type LIKE CONCAT('%',#{awType},'%')
+        AND t2.is_used = 1
+    </select>
+    <select id="getNextActsetCkflow" resultType="com.yb.actset.entity.ActsetCkflow">
+        <!--
+        SELECT * FROM yb_actset_ckflow WHERE  id =
+        (SELECT MIN(id) FROM yb_actset_ckflow WHERE id IN
+        (SELECT id FROM (SELECT id FROM yb_actset_ckflow WHERE as_id IN
+        (SELECT as_id FROM yb_actset_ckflow WHERE id = #{awId})
+        ORDER BY sort ASC LIMIT #{leve}) t1) AND id > #{awId} )
+        -->
+        SELECT * FROM	yb_actset_ckflow WHERE id =
+        (SELECT id FROM
+        (SELECT id,sort FROM (SELECT id ,sort FROM yb_actset_ckflow WHERE as_id IN
+        (SELECT as_id FROM yb_actset_ckflow WHERE id = #{awId})
+        ORDER BY sort ASC LIMIT #{leve}) t1) t6 WHERE t6.sort > #{sort}  LIMIT 1 )
+    </select>
+    <select id="getUpLevelActsetCkflow" resultType="com.yb.actset.entity.ActsetCkflow">
+        <!--
+         SELECT * FROM yb_actset_ckflow WHERE  id =
+        (SELECT MAX(id) FROM yb_actset_ckflow WHERE id IN
+        (SELECT id FROM (SELECT id FROM yb_actset_ckflow WHERE as_id IN
+        (SELECT as_id FROM yb_actset_ckflow WHERE id = #{awId})
+        ORDER BY sort ASC LIMIT #{leve}) t1) AND id &lt; #{awId} )
+         -->
+        SELECT * FROM yb_actset_ckflow WHERE id =
+        (SELECT id FROM
+        (SELECT * FROM
+        (SELECT id,sort FROM (SELECT id ,sort FROM yb_actset_ckflow WHERE as_id IN
+        (SELECT as_id FROM yb_actset_ckflow WHERE id = #{awId})
+        ORDER BY sort DESC LIMIT #{leve}) t1) t6 WHERE t6.sort &lt; #{sort} )t7  LIMIT 1  )
+    </select>
+    <select id="getCheckSort" resultMap="ckflowResultMap">
+        SELECT * FROM yb_actset_ckflow
+        WHERE as_id = #{asId} ORDER BY sort ASC LIMIT #{leave}
+    </select>
+    <select id="getCheckSortInfo" resultType="com.yb.actset.vo.CheckViewModel">
+        SELECT
+        t6.id,
+        t6.result,
+        t6.checkTime,
+        t6.status,
+        t6.aw_name AS awName,
+        t7.name,
+        t7.phone,
+        t7.jobs
+        FROM
+        (SELECT t4.*, t5.us_id FROM
+        (SELECT t1.aw_name,t3.result, t3.status, t3.aw_id, t3.check_time AS checkTime,t3.id FROM
+        (SELECT id, sort,aw_name, us_id FROM yb_actset_ckflow WHERE as_id = #{asId} LIMIT #{leave}) t1
+        RIGHT JOIN (SELECT aw_id,id, result, status, check_time FROM yb_actset_checklog WHERE db_id = #{orderId}) t3 ON t1.id = t3.aw_id) t4
+        LEFT JOIN yb_actset_ckflow t5 ON t4.aw_id = t5.id) t6
+        LEFT JOIN yb_base_staffinfo t7 ON t6.us_id = t7.user_id ORDER BY t6.checkTime
+    </select>
+    <select id="getSetCheckSortInfo" resultType="com.yb.actset.vo.CheckViewModel">
+       SELECT
+        t2.name,
+        t2.phone,
+        t2.jobs,
+		t1.aw_name AS awName
+        FROM (SELECT * FROM yb_actset_ckflow WHERE as_id = #{asId}  LIMIT #{leave}) t1
+        LEFT JOIN yb_base_staffinfo t2
+        ON t2.user_id = t1.us_id
+        ORDER BY t1.sort
+    </select>
+
+</mapper>

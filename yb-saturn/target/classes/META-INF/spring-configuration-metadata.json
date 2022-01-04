@@ -1,0 +1,39 @@
+{
+  "groups": [
+    {
+      "name": "spring.datasource",
+      "type": "javax.sql.DataSource",
+      "sourceType": "com.yb.dynamicData.config.DataSourceConfig",
+      "sourceMethod": "getDataSource()"
+    },
+    {
+      "name": "spring.datasource.druid",
+      "type": "javax.sql.DataSource",
+      "sourceType": "com.yb.dynamicData.config.DruidConfiguration",
+      "sourceMethod": "dataSourceOne()"
+    },
+    {
+      "name": "spring.redis.redisson",
+      "type": "com.yb.config.RedissonProperties",
+      "sourceType": "com.yb.config.RedissonProperties"
+    },
+    {
+      "name": "ybsaturn.document",
+      "type": "com.yb.auth.props.SaRouteProperties",
+      "sourceType": "com.yb.auth.props.SaRouteProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "spring.redis.redisson.config",
+      "type": "java.lang.String",
+      "sourceType": "com.yb.config.RedissonProperties"
+    },
+    {
+      "name": "ybsaturn.document.resources",
+      "type": "java.util.List<com.yb.auth.props.SaRouteResource>",
+      "sourceType": "com.yb.auth.props.SaRouteProperties"
+    }
+  ],
+  "hints": []
+}

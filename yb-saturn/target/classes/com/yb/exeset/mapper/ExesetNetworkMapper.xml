@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.exeset.mapper.ExesetNetworkMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="exesetNetworkResultMap" type="com.yb.exeset.entity.ExesetNetwork">
+        <id column="id" property="id"/>
+        <result column="ma_id" property="maId"/>
+        <result column="server_addr" property="serverAddr"/>
+        <result column="server_port" property="serverPort"/>
+        <result column="is_update" property="isUpdate"/>
+        <result column="is_chart" property="isChart"/>
+        <result column="wifi_name" property="wifiName"/>
+        <result column="wifi_password" property="wifiPassword"/>
+        <result column="wifi_ip" property="wifiIp"/>
+        <result column="wifi_covercode" property="wifiCovercode"/>
+        <result column="wifi_wayget" property="wifiWayget"/>
+        <result column="screen_ip" property="screenIp"/>
+        <result column="screen_port" property="screenPort"/>
+        <result column="create_at" property="createAt"/>
+        <result column="update_at" property="updateAt"/>
+
+    </resultMap>
+
+
+    <select id="selectExesetNetworkPage" resultMap="exesetNetworkResultMap">
+        select * from yb_exeset_network where is_deleted = 0
+    </select>
+
+    <select id="getNetwork" resultType="com.yb.exeset.entity.ExesetNetwork">
+        SELECT * FROM yb_exeset_network WHERE ma_id = #{maId}
+    </select>
+    <update id="setNetwork" parameterType="com.yb.exeset.entity.ExesetNetwork">
+        UPDATE yb_exeset_network
+          <set>
+              <if test="id!=null">box_wifi = #{boxWifi},</if>
+              <if test="serverAddr!=null">server_addr = #{serverAddr},</if>
+              <if test="serverPort!=null">server_port = #{serverPort},</if>
+              <if test="isUpdate!=null">is_update = #{isUpdate},</if>
+              <if test="isChart!=null">is_chart = #{isChart},</if>
+              <if test="wifiName!=null">wifi_name =#{wifiName},</if>
+              <if test="wifiPassword!=null">wifi_password =#{wifiPassword}</if>
+              <if test="wifiIp!=null">wifi_ip = #{wifiIp},</if>
+              <if test="wifiCovercode!=null">wifi_covercode = #{wifiCovercode},</if>
+              <if test="wifiWayget!=null">wifi_wayget = #{wifiWayget},</if>
+              <if test="screenIp!=null">screen_ip = #{screenIp},</if>
+              <if test="screenPort!=null">screen_port = #{screenPort},</if>
+              <if test="createAt!=null">create_at = #{createAt},</if>
+              <if test="updateAt!=null">update_at =#{updateAt}</if>
+          </set>
+          <where>
+              <if test="maId!=null"> ma_id =#{maId}</if>
+          </where>
+    </update>
+    <update id="setIsChart" parameterType="java.lang.Integer">
+        UPDATE yb_exeset_network
+        <set>
+            <if test="isChart==1" >is_chart = 1</if>
+            <if test="isChart==0" >is_chart = 0</if>
+        </set>
+        WHERE ma_id =#{maId}
+    </update>
+
+</mapper>

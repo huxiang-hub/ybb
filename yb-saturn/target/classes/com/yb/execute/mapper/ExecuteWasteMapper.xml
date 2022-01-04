@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.execute.mapper.ExecuteWasteMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="executeWasteResultMap" type="com.yb.execute.entity.ExecuteWaste">
+        <id column="id" property="id"/>
+        <result column="es_id" property="esId"/>
+        <result column="us_id" property="usId"/>
+        <result column="handle" property="handle"/>
+        <result column="ws_type" property="wsType"/>
+        <result column="handle_time" property="handleTime"/>
+        <result column="waste" property="waste"/>
+        <result column="reason" property="reason"/>
+        <result column="remarks" property="remarks"/>
+        <result column="delay_time" property="delayTime"/>
+        <result column="create_at" property="createAt"/>
+    </resultMap>
+
+
+    <select id="selectExecuteWastePage" resultType="com.yb.execute.vo.ExecuteWasteVO">
+        SELECT
+        a.waste,
+        a.handle_time,
+        a.create_at,
+        c.model,
+        c.limit_num,
+        c.limit_time,
+        d.id as maId,
+        d.`name` as macName,
+        e.od_no,
+        f.`name` as userName
+        FROM yb_execute_waste a
+        LEFT JOIN yb_exeset_quality c
+        ON b.ma_id = c.ma_id
+        LEFT JOIN yb_machine_mainfo d
+        ON b.ma_id = d.id
+        LEFT JOIN yb_workbatch_ordlink e
+        ON b.sd_id = e.id
+        LEFT JOIN yb_base_staffinfo f
+        ON a.us_id = f.user_id
+        WHERE a.handle = 1
+    </select>
+    <select id="selectWasteBySdId" resultType="java.lang.Integer">
+        SELECT IFNULL(sum(a.waste),0) as wastenum FROM yb_execute_waste a
+        LEFT JOIN yb_execute_info b ON a.ex_id = b.id
+        WHERE b.sd_id = #{sdId}
+    </select>
+
+    <select id="getWateByTime" resultType="com.yb.execute.vo.ExecuteWasteVO">
+        SELECT * FROM yb_execute_waste WHERE create_at  BETWEEN #{startTime} AND #{endTime}
+    </select>
+
+</mapper>

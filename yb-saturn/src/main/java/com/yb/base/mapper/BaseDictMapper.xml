@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.base.mapper.BaseDictMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="baseDictResultMap" type="com.yb.base.entity.BaseDict">
+        <id column="id" property="id"/>
+        <result column="p_id" property="pId"/>
+        <result column="dt_name" property="dtName"/>
+        <result column="dt_value" property="dtValue"/>
+        <result column="dt_type" property="dtType"/>
+        <result column="remark" property="remark"/>
+        <result column="sort" property="sort"/>
+        <result column="isdel" property="isdel"/>
+        <result column="create_at" property="createAt"/>
+    </resultMap>
+
+
+    <select id="selectBaseDictPage" resultMap="baseDictResultMap">
+        select * from yb_base_dict where is_deleted = 0
+    </select>
+
+</mapper>

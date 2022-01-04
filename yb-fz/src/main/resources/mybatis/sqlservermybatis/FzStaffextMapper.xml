@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anaysis.sqlservermapper.FzStaffextMapper">
+
+    <select id="list" resultType="com.anaysis.entity.BaseStaffext">
+        SELECT id      AS id,
+               cZgbh   AS jobnum,
+               ibmid   AS dpid,
+               cbmmc   AS cdeptname,
+               czgxm   AS name,
+               (
+                   CASE cxb
+                       WHEN '男' THEN
+                           1
+                       WHEN '女' THEN
+                           0
+                       END
+                   )   AS sex,
+               czw     AS cpost,
+               (
+                   CASE iDisabled
+                       WHEN 1 THEN
+                           0
+                       WHEN 0 THEN
+                           1
+                       END
+                   )   AS isUsed,
+               cbusphone,
+               cmobphone,
+               cnote,
+               ciccard,
+               iDisabled,
+               ilogon,
+               ichgpwd,
+               cweixin,
+               cqq,
+               cemail,
+               CASE cPassword
+                   WHEN '' THEN
+                       1
+                   ELSE
+                       0
+                   END AS iEmpty
+        FROM Dzzg
+    </select>
+</mapper>

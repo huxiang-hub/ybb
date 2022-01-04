@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.workbatch.mapper.WorkbatchShiftinfoMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="workbatchShiftinfoResultMap" type="com.yb.workbatch.entity.WorkbatchShiftinfo">
+        <id column="id" property="id"/>
+        <result column="ws_id" property="wsId"/>
+        <result column="db_id" property="dbId"/>
+        <result column="ctype" property="ctype"/>
+        <result column="is_work" property="isWork"/>
+        <result column="check_date" property="checkDate"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="fixed_time" property="fixedTime"/>
+        <result column="user_id" property="userId"/>
+        <result column="create_at" property="createAt"/>
+    </resultMap>
+
+
+    <select id="selectWorkbatchShiftinfoPage" resultMap="workbatchShiftinfoResultMap">
+        select * from yb_workbatch_shiftinfo where is_deleted = 0
+    </select>
+
+    <select id="getWorkBatchListByCondition" resultType="com.yb.workbatch.vo.WorkbatchShiftinfoVO">
+      SELECT * FROM yb_workbatch_shiftinfo WHERE check_date = #{date} AND us_id = #{userId}
+    </select>
+
+</mapper>

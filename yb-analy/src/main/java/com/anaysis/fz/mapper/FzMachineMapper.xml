@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anaysis.fz.mapper.FzMachineMapper">
+    <select id="list" resultType="com.anaysis.entity.FzMachineDO">
+        select a.id as id,a.cJzbh as cJzbh,a.cJzmc as cJzmc,a.iGzzxId as iGzzxId,a.cbmbh as cbmbh,b.cbmmc as cbmmc, a.cjzlxmc as cjzlxmc FROM dbo.MKerJzmb a
+        LEFT JOIN dbo.scvDevice b on b.id=a.id
+        where a.iGzzxId in(${iGzzxId}) and a.iStopUse=0
+        <choose>
+            <when test="sort != null and sort.trim() != ''">
+                order by ${sort} ${order}
+            </when>
+        </choose>
+    </select>
+</mapper>

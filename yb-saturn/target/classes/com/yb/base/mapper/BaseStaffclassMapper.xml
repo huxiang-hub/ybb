@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.base.mapper.BaseStaffclassMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="baseStaffclassResultMap" type="com.yb.base.entity.BaseStaffclass">
+        <id column="id" property="id"/>
+        <result column="us_id" property="usId"/>
+        <result column="bc_id" property="bcId"/>
+        <result column="is_used" property="isUsed"/>
+        <result column="start_date" property="startDate"/>
+        <result column="end_date" property="endDate"/>
+        <result column="create_at" property="createAt"/>
+        <result column="update_at" property="updateAt"/>
+    </resultMap>
+
+
+    <select id="selectBaseStaffclassPage" resultMap="baseStaffclassResultMap">
+        select * from yb_base_staffclass where is_used = 1
+    </select>
+
+    <select id="getGoOutUser" resultType="com.yb.base.vo.BaseStaffclassVO">
+        SELECT staffclass.*, classinfo.bc_name AS newClass FROM yb_base_staffclass staffclass
+        LEFT JOIN yb_base_classinfo classinfo
+        ON staffclass.bc_id = classinfo.id
+        WHERE staffclass.is_used = 1
+        AND staffclass.us_id=#{userId}
+    </select>
+    <update id="updateIsUsedByIds" parameterType="java.lang.Integer">
+        UPDATE yb_base_staffclass SET is_used = 0 WHERE is_used = 1 AND us_id
+        IN
+        <foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+    <update id="updataByisused" parameterType="java.lang.Integer">
+        UPDATE yb_base_staffclass SET is_used = 0 WHERE is_used = 1 AND to_days(DATE_ADD(end_date, INTERVAL 1 DAY)) = to_days(now())
+    </update>
+
+    <update id="updateIsUsedBybcIds" parameterType="java.lang.Integer">
+        UPDATE yb_base_staffclass SET is_used = 0 WHERE is_used = 1 AND bc_id
+        IN
+        <foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+</mapper>

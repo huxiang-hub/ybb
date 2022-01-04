@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anaysis.executSupervise.mapper.SuperviseBoxinfoMapper">
+
+    <select id="getBoxInfoByBno" resultType="com.anaysis.executSupervise.entity.SuperviseBoxinfo">
+        SELECT * FROM yb_supervise_boxinfo WHERE uuid = #{uuid}
+    </select>
+
+
+    <update id="update" parameterType="com.anaysis.executSupervise.entity.SuperviseBoxinfo">
+        update yb_supervise_boxinfo
+        <set>
+            <if test="maId != null">`ma_id` = #{maId}, </if>
+            <if test="status != null">`status` = #{status}, </if>
+            <if test="number != null">`number` = #{number}, </if>
+            <if test="dspeed != null">`dspeed` = #{dspeed},</if>
+            <if test="xlh != null">`xlh` = #{xlh},</if>
+            <if test="numberOfDay != null">`number_of_day` = #{numberOfDay},</if>
+            <if test="updateAt != null">`update_at` = #{updateAt},</if>
+            <if test="sip != null">`sip` = #{sip}, </if>
+            <if test="slId != null">`sl_id` = #{slId}</if>
+            <if test="sendTime != null"> `send_time` = #{sendTime}</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <select id="getList" resultType="com.anaysis.executSupervise.entity.SuperviseBoxinfo">
+        SELECT * FROM yb_supervise_boxinfo
+    </select>
+
+    <update id="clearZero" parameterType="com.anaysis.executSupervise.entity.SuperviseBoxinfo">
+    update yb_supervise_boxinfo
+    set  number_of_day = 0, clear_num = #{clearNum} , clear_time = now(),update_at = now(),
+    version = version+1
+    where id = #{id}
+    </update>
+
+
+    <insert id="save" parameterType="com.anaysis.executSupervise.entity.SuperviseBoxinfo" useGeneratedKeys="true" keyProperty="id">
+        insert into yb_supervise_boxinfo
+        (
+            `uuid`,`sip`,`batch`,`status`,`number`,`xlh`,`number_of_day`,`create_at`,`update_at`,`slId`
+        )
+        values
+        (
+            #{uuid},
+            #{sip},
+            #{batch},
+            #{status},
+            #{number},
+            #{xlh},
+            #{numberOfDay},
+            #{createAt},
+            #{updateAt},
+            #{slId}
+        )
+    </insert>
+
+    <select id="getListByrun" resultType="com.anaysis.executSupervise.vo.SuperviseBoxinfoVo">
+        SELECT a.id,a.uuid,a.ma_id,a.`status`,a.number,a.number_of_day,a.dspeed,a.start_time,a.create_at,a.update_at,a.xlh,a.sip,a.sl_id,b.sd_Id,
+               CASE WHEN c.keep_run is null THEN 5 ELSE c.keep_run END as keep_run,b.us_ids as us_ids
+        FROM yb_supervise_boxinfo a
+                 left join yb_supervise_execute b on b.uuid=a.uuid
+                 left join yb_process_machlink c on c.ma_id=a.ma_id
+                 left join yb_workbatch_ordlink d on d.id = b.sd_id
+        WHERE a.status = 1
+    </select>
+
+    <select id="getBoxVoByuuid" resultType="com.anaysis.executSupervise.vo.SuperviseBoxinfoVo">
+    SELECT DISTINCT a.id,a.uuid,a.ma_id,a.`status`,a.number,a.number_of_day,a.dspeed,a.start_time,a.create_at,a.update_at,a.xlh,a.sip,a.sl_id,b.sd_Id,
+           CASE WHEN c.keep_run is null THEN 5 ELSE c.keep_run END as keep_run,b.us_ids as us_ids
+    FROM yb_supervise_boxinfo a
+             left join yb_supervise_execute b on b.uuid=a.uuid
+             left join yb_process_machlink c on c.ma_id=a.ma_id
+             left join yb_workbatch_ordlink d on d.id = b.sd_id
+    WHERE a.uuid=#{uuid}
+    </select>
+</mapper>

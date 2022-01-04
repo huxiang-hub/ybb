@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yb.machine.mapper.MachineMixboxMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="machineMixboxResultMap" type="com.yb.machine.entity.MachineMixbox">
+        <id column="id" property="id"/>
+        <result column="ma_id" property="maId"/>
+        <result column="uuid" property="uuid"/>
+        <result column="hd_id" property="hdId"/>
+        <result column="batch" property="batch"/>
+        <result column="remark" property="remark"/>
+        <result column="active" property="active"/>
+        <result column="depository" property="depository"/>
+        <result column="mac" property="mac"/>
+        <result column="create_at" property="createAt"/>
+    </resultMap>
+
+
+    <select id="selectMachineMixboxPage" resultMap="machineMixboxResultMap">
+        select * from yb_machine_mixbox where is_deleted = 0
+    </select>
+
+    <select id="selectBoxByBno" resultMap="machineMixboxResultMap">
+        select * from yb_machine_mixbox where uuid = #{uuid}
+    </select>
+
+    <update id="setMixboxByMaId" >
+      UPDATE yb_machine_mixbox SET active = 0,ma_id = -1
+      <where>
+          <if test="uuid!=null">
+              uuid=#{uuid}
+          </if>
+      </where>
+    </update>
+    <update id="addMixboxByMaId" >
+      UPDATE yb_machine_mixbox SET active = 1,ma_id = #{maId} WHERE uuid=#{uuid}
+    </update>
+    <select id="getBlindBox" resultType="com.yb.machine.entity.MachineMixbox">
+       SELECT * FROM yb_machine_mixbox WHERE ma_id = -1 OR ma_id IS NULL
+    </select>
+
+    <update id="setMixboxByListMaId" >
+        UPDATE yb_machine_mixbox SET active = 0,ma_id = -1
+        where ma_id IN
+        <foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+    <!--blade X 搬运的功能-->
+    <select id="getDeptInfo" resultType="com.yb.base.entity.BaseDeptinfo">
+    SELECT dp_name FROM
+</select>
+    <select id="getMachineMixboxPage" resultType="com.yb.machine.vo.MachineMixboxVO">
+        SELECT t1.*,
+        t2.name
+        FROM yb_machine_mixbox t1
+        LEFT JOIN yb_machine_mainfo t2
+        ON t1.ma_id = t2.id
+        WHERE 1=1
+        <if test="mixboxVO.uuid!=null">AND t1.uuid LIKE CONCAT('%',#{mixboxVO.uuid},'%')</if>
+        <if test="mixboxVO.name!=null">AND t2.name LIKE CONCAT('%',#{mixboxVO.name},'%')</if>
+    </select>
+    <select id="findMixboxIsExit"  resultType="com.yb.machine.vo.MachineMixboxVO" >
+        SELECT  * FROM yb_machine_mixbox WHERE  uuid = #{uuid}
+    </select>
+</mapper>
